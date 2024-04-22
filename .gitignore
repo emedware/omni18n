@@ -1,0 +1,17 @@
+.DS_Store
+node_modules
+/dist
+/.svelte-kit
+/semantic
+.env.*
+!.env.example
+.vercel
+.output
+/src/svemantic
+/static/dist
+/static/modules
+/raw
+/temp
+.vercel
+.vscode/settings.json
+*.pe
