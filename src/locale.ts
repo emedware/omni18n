@@ -95,10 +95,11 @@ function translator(locale: Locale, keys: string[] = []) {
 		get: (target, key, receiver) => {
 			switch(key) {
 				case 'toString':
-				case Symbol.toPrimitive:
 				case Symbol.toStringTag:
 				case 'valueOf':
 					return translation()
+				case Symbol.toPrimitive:
+					return target
 				case 'constructor':
 					return String
 			}

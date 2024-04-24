@@ -22,9 +22,10 @@ describe('Static functionality', () => {
 	})
 
 	test('several kind of text access', () => {
-		expect(''+T.en.fld.name).toBe('Name')
-		expect(''+T.en.fld.name()).toBe('Name')
-		expect(''+T.en.fld['name']).toBe('Name')
+		const fields = T.en.fld
+		expect(''+fields.name).toBe('Name')
+		expect(fields.name()).toBe('Name')
+		expect(''+fields['name']).toBe('Name')
 		expect(''+T.en['fld.name']).toBe('Name')
 	})
 });
