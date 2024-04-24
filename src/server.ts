@@ -1,25 +1,32 @@
-import { CondensedDictionary } from "./common";
-
-interface RawEntry {
-	text: string
-	zone: string
-}
-
-export type RawDictionary = Record<string, RawEntry>
+/// <reference path="./geni18n.d.ts" />
+/**
+ * Abstract file used between the http layer and the database
+ */
 
 export interface DB {
 	/**
-	 * Modifies/removes the value for the key [key, dialect]
+	 * Modifies/add the value for the key [key, locale]
 	 * @param key string key
-	 * @param dialect A language and perhaps a country
-	 * @param value A text value - if undefined, removes the entry
+	 * @param locale A language and perhaps a country
+	 * @param value A text value
 	 */
-	modify(key: string, dialect: Intl.UnicodeBCP47LocaleIdentifier, value?: string): Promise<void>;
+	modify(key: string, locale: Intl.UnicodeBCP47LocaleIdentifier, value: string): Promise<void>;
 	/**
-	 * Retrieves all the values for a certain dialect 
-	 * @param dialect A language and perhaps a country
+	 * Creates or deletes a key
+	 * @param key The key to manipulate
+	 * @param zone The zone to create the key in, or undefined to delete it
 	 */
-	list(dialect: Intl.UnicodeBCP47LocaleIdentifier): Promise<RawDictionary>;
+	create(key: string, zone: string): Promise<void>;
+	/**
+	 * Removes a key (and all its translations)
+	 * @param key The key to remove
+	 */
+	remove(key: string): Promise<void>;
+	/**
+	 * Retrieves all the values for a certain locale 
+	 * @param locale A language and perhaps a country
+	 */
+	list(locale: Intl.UnicodeBCP47LocaleIdentifier, zones: string[]): Promise<Geni18n.RawDictionary>;
 }
 
 // TODO zones
@@ -28,37 +35,45 @@ export interface DB {
  * Server class that should be instantiated once and used to interact with the database
  */
 export default class Server {
-	private dialectCache: Record<string, RawDictionary> = {}
 	constructor(private db: DB) {}
 	// TODO: cache & return events
 	/**
-	 * Modifies the value for the key [key, dialect]
+	 * Modifies the value for the key [key, locale]
 	 * This function will among other things interact with the DB
 	 * @param key string key
-	 * @param dialect A language and perhaps a country
+	 * @param locale A language and perhaps a country
 	 * @param value A text value - if undefined, removes the entry
 	 */
-	async modify(key: string, dialect: Intl.UnicodeBCP47LocaleIdentifier, value?: string): Promise<void> {
-		await this.db.modify(key, dialect, value)
+	async modify(key: string, locale: Intl.UnicodeBCP47LocaleIdentifier, value: string): Promise<void> {
+		await this.db.modify(key, locale, value)
 	}
-	private async list(dialect: Intl.UnicodeBCP47LocaleIdentifier, zone: string): Promise<Record<string, string>> {
-		if(!this.dialectCache[dialect]) this.dialectCache[dialect] = await this.db.list(dialect);
-		return Object.fromEntries(
-			Object.entries(this.dialectCache[dialect])
-				.filter(([_, entry]) => !entry.zone || entry.zone === zone || zone.startsWith(`${entry.zone}.`))
-				.map(([key, entry]) => [key, entry.text])
-		)
+	async create(key: string, zone: string, translations: Record<Intl.UnicodeBCP47LocaleIdentifier, string> = {}): Promise<void> {
+		await this.db.create(key, zone)
+		await Promise.all(Object.entries(translations).map(([locale, value]) => this.modify(key, locale, value)))
+	}
+	async remove(key: string): Promise<void> {
+		await this.db.remove(key)
 	}
 	/**
+	 * List entries directly from DB
+	 * @param locale The exact locale to use
+	 * @param zones The list of zones to retrieve
+	 * @returns 
+	 */
+	private async list(locale: Intl.UnicodeBCP47LocaleIdentifier, zones: string[]): Promise<Record<string, string>> {
+		return this.db.list(locale, zones);
+	}
+	
+	/**
 	 * Used by APIs or page loaders to get the dictionary in a condensed form
-	 * @param dialect 
+	 * @param locale 
 	 * @param zone 
 	 * @returns 
 	 */
-	async condense(dialect: Intl.UnicodeBCP47LocaleIdentifier, zone = ''): Promise<CondensedDictionary> {
-		const parts = dialect.split('-'),
-			raws = await Promise.all(parts.map((_, i) => this.list(parts.slice(0, i + 1).join('-'), zone))),
-			result: CondensedDictionary = {}
+	async condense(locale: Intl.UnicodeBCP47LocaleIdentifier, zones = ['']): Promise<Geni18n.CondensedDictionary> {
+		const parts = locale.split('-'),
+			raws = await Promise.all(parts.map((_, i) => this.list(parts.slice(0, i + 1).join('-'), zones))),
+			result: Geni18n.CondensedDictionary = {}
 		for(const raw of raws) {
 			for(const key in raw) {
 				const value = raw[key],
@@ -68,7 +83,7 @@ export default class Server {
 				for(const k of keys) {
 					if(!current[k]) current[k] = {}
 					else if(typeof current[k] === 'string') current[k] = { '': current[k] }
-					current = current[k] as CondensedDictionary
+					current = current[k] as Geni18n.CondensedDictionary
 				}
 				if(current[lastKey] && typeof current[lastKey] !== 'string')
 					current[lastKey][''] = value

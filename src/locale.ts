@@ -1,4 +1,7 @@
-import { CondensedDictionary } from "./common";
+/// <reference path="./geni18n.d.ts" />
+/**
+ * i18n consumption/usage, both client and server side.
+ */
 import objectParser from 'js-object-parser'
 
 // TODO: add `set` ability for translators?
@@ -15,16 +18,6 @@ function objectArgument(arg: string): string | Record<string, string> {
 	return Object.fromEntries(arg.split(',').map((part) => part.split(':').map((part) => part.trim())) as [string, string][])
 }
 
-// Override these to have custom error messages and logging
-export const reports = {
-	missing(dictionary: Dictionary, keys: string[]) {
-		return `[${keys.join('.')}]`;
-	},
-	error(dictionary: Dictionary, error: string) {
-		return `[!${error}]`;
-	}
-}
-
 // Can be extended externally
 // TODO validate arguments?
 export const translationFunctions = {
@@ -38,13 +31,13 @@ export const translationFunctions = {
 		if(typeof numOptions === 'string') return this.error(`Invalid number options: ${numOptions}`)
 		return num.toLocaleString(this.locale, numOptions)
 	},
-	ordinal(this: Dictionary, str: string) {
+	ordinal(this: Locale, str: string) {
 		if(!this.internals.ordinals) return this.missing(['internals.ordinals']);
 		const num = parseInt(str);
 		if(isNaN(num)) return this.error(`${str} is not a number`)
 		return this.internals.ordinals[this.ordinalRules.select(num)].replace('$', str)
 	},
-	plural(this: Dictionary, str: string, designation: string, plural?: string) {
+	plural(this: Locale, str: string, designation: string, plural?: string) {
 		const num = parseInt(str);
 		if(isNaN(num)) return this.error(`${str} is not a number`)
 		const rule = this.cardinalRules.select(num);
@@ -57,7 +50,7 @@ export const translationFunctions = {
 		return rule in rules ? rules[rule] :
 			this.error(`Rule "${rule}" not found in ${designation}`)
 	},
-	cases(this: Dictionary, str: string, cases: string) {
+	cases(this: Locale, str: string, cases: string) {
 		const casesObj = objectArgument(cases)
 		if(typeof casesObj === 'string') return this.error(`Invalid cases object: ${casesObj}`)
 		return str in casesObj ? casesObj[str] :
@@ -65,19 +58,20 @@ export const translationFunctions = {
 	}
 }
 
-function translate(dictionary: Dictionary, keys: string[], args: any[]) {
+function translate(dictionary: Locale, keys: string[], args: any[]) {
 	let current = dictionary.condensed, value: string | undefined
 	for(const key of keys) {
 		if(!current[key]) break
 		else if(typeof current[key] === 'string') value = current[key] as string
 		else {
 			if(current[key]['']) value = current[key][''] as string
-			current = current[key] as CondensedDictionary
+			current = current[key] as Geni18n.CondensedDictionary
 		}
 	}
 	if(!value) return dictionary.missing(keys)
 	const placeholders = (value.match(/{(.*?)}/g)?.map((placeholder) => placeholder.slice(1, -1)) || []).map(
 		(placeholder) => {
+			// Special {0} for "First argument" syntax
 			if(/^\d+$/.test(placeholder)) return args[parseInt(placeholder)]
 			else {
 				const [func, ...params] = placeholder.split('|').map((part) => part.trim()).map(
@@ -93,16 +87,25 @@ function translate(dictionary: Dictionary, keys: string[], args: any[]) {
 	return parts.map((part, i) => `${part}${placeholders[i]||''}`).join('')
 }
 
-function translator(Dictionary: Dictionary, keys: string[] = []) {
+function translator(locale: Locale, keys: string[] = []) {
 	function translation(...args: any[]) {
-		return translate(Dictionary, keys, args)
+		return translate(locale, keys, args)
 	}
-	translation.toString = translation
-	const result = new Proxy(translation, {
-		get: (_, key) => {
-			if(typeof key !== 'string') throw new TranslationError('Invalid key')
-			keys.push(...key.split('.'))
-			return result
+	return new Proxy(translation, {
+		get: (target, key, receiver) => {
+			switch(key) {
+				case 'toString':
+				case Symbol.toPrimitive:
+				case Symbol.toStringTag:
+				case 'valueOf':
+					return translation()
+				case 'constructor':
+					return String
+			}
+			//if(key in target) return Reflect.get(target, key, receiver);
+			if(typeof key !== 'string')
+				throw new TranslationError(`Invalid key type: ${typeof key}`)
+			return translator(locale, keys.concat(key.split('.')))
 		}
 	})
 }
@@ -126,7 +129,7 @@ export interface Internals {
 	plurals?: Record<string, string>
 }
 
-function parseInternals(dictionary: CondensedDictionary | string) {
+function parseInternals(dictionary: Geni18n.CondensedDictionary | string) {
 	if(!dictionary) return {}
 	if(typeof dictionary === 'string') return objectParser.parse(dictionary)
 	const result = dictionary[''] ? objectParser.parse(dictionary['']) : {}
@@ -136,37 +139,87 @@ function parseInternals(dictionary: CondensedDictionary | string) {
 	return result
 }
 
-class Dictionary {
+function recurExtend(dst: Geni18n.CondensedDictionary, src: Geni18n.CondensedDictionary) {
+	for(const key in src) {
+		if(!dst[key]) dst[key] = src[key]
+		else if(typeof dst[key] === 'object' && typeof src[key] === 'object') recurExtend(dst[key] as Geni18n.CondensedDictionary, src[key] as Geni18n.CondensedDictionary)
+		else if(typeof dst[key] === 'object') dst[key][''] = src[key];
+		else if(typeof src[key] === 'object') dst[key] = { '': dst[key], ...<Geni18n.CondensedDictionary>src[key] }
+	}
+}
+
+export default class Locale {
 	readonly ordinalRules: Intl.PluralRules
 	readonly cardinalRules: Intl.PluralRules
 	readonly internals: Internals = {}
-	constructor(public locale: Intl.UnicodeBCP47LocaleIdentifier, public condensed: CondensedDictionary) {
-		const translation = (key: string, ...args: any[]) => translate(this, key.split('.'), args)
+	readonly loadedZones: string[] = []
+	condensed: Geni18n.CondensedDictionary = {}
+	private toLoadZones: string[] = []
+	private loadingTimer: any | undefined = undefined
+	public renderedZone: string
 
+	public loaded: Promise<void> = Promise.resolve()
+	private resolveLoaded: ()=>void = ()=>{}
+
+	/**
+	 * This should be called several times per rendering. If a user control has a specific zone, this should be
+	 * called while rendering this UC. It allows to:
+	 * - debug the missing/buggy translations
+	 * - make sure only the needed translations end up downloaded
+	 * With Svelte, this should be called in each "context" change indeed
+	 */
+	public enter(zone: string) {
+		this.renderedZone = zone
+		if(this.toLoadZones.includes(zone) || this.loadedZones.includes(zone)) return;
+		this.toLoadZones.push(zone)
+		if(this.loadingTimer) return
+		this.loaded = new Promise((resolve) => this.resolveLoaded = resolve)
+		this.loadingTimer = setTimeout(async () => {
+			const toLoad = this.toLoadZones
+			this.toLoadZones = []
+			this.loadingTimer = undefined
+			this.download(toLoad)
+		})
+	}
+
+	private async download(zones: string[]) {
+		const toLoad = zones.filter((zone) => !this.loadedZones.includes(zone));
+		if(toLoad.length) {
+			this.loadedZones.push(...toLoad);
+			const imported = await this.condenser(this.locale, toLoad);
+			recurExtend(this.condensed, imported);
+		}
+		this.resolveLoaded()
+		this.resolveLoaded = ()=>{}
+	}
+
+	setLocale(locale: Intl.UnicodeBCP47LocaleIdentifier) {
+		if(this.locale === locale) return
+		this.locale = locale
+		const toLoad = this.loadedZones
+		this.loadedZones.length = 0
+		this.condensed = {}
+		this.download(toLoad)
+	}
+
+	constructor(
+		public locale: Intl.UnicodeBCP47LocaleIdentifier,
+		// On the server side, this is `server.condensed`. From the client-side this is an http request of some sort
+		public condenser: (locale: Intl.UnicodeBCP47LocaleIdentifier, zones: string[])=> Promise<Geni18n.CondensedDictionary>
+	) {
 		this.ordinalRules = new Intl.PluralRules(locale, { type: "ordinal" });
 		this.cardinalRules = new Intl.PluralRules(locale, { type: "cardinal" });
-
-		if(condensed.internals) this.internals = parseInternals(condensed.internals)
-
-        return <Dictionary><unknown>new Proxy(translation, {
-            get: (target, prop, receiver) => {
-                if (prop in this) {
-                    return Reflect.get(this, prop, receiver);
-                }
-                const keys = (prop as string).split('.')
-                if (typeof prop === 'string' && keys[0] in this.condensed) {
-                    return translator(this, keys);
-                }
-                return Reflect.get(target, prop, receiver);
-            },
-            set: (target, prop, value) => {
-                if (prop in this) {
-                    return Reflect.set(this, prop, value);
-                }
-                return Reflect.set(target, prop, value);
-            }
-        });
+		this.enter('')
+		if(this.condensed.internals) this.internals = parseInternals(this.condensed.internals)
 	}
-	missing(keys: string[]) { return reports.missing(this, keys) }
-	error(error: string) { return reports.error(this, error) }
+	get translation() {
+		return translator(this)
+	}
+	// Plîze override us
+	missing(keys: string[]) {
+		return `[${keys.join('.')}]`;
+	}
+	error(error: string) {
+		return `[!${error}]`;
+	}
 }
