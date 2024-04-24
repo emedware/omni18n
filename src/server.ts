@@ -104,36 +104,44 @@ const subscriptions = new Map<
  */
 export class InteractiveServer extends Server {
 	modifiedValues: Record<string, string | undefined> = {}
-	raiseOneModified = new Defer(async () => {
-		this.modified(this.modifiedValues)
-		this.modifiedValues = {}
-	})
-	saved = Promise.resolve()
+	modifications: [string, Geni18n.LocaleName, string, string | undefined][] = []
 
 	constructor(
 		protected db: InteractiveDB,
-		private modified: (entries: Record<string, string | undefined>) => void
+		private modified: (entries: Record<string, string | undefined>) => Promise<void>
 	) {
 		super(db)
 		subscriptions.set(this, { locale: '', zones: [] })
 	}
 
-	async raiseModified(key: string, locale: Geni18n.LocaleName, zone: string, text?: string) {
-		for (const [server, specs] of subscriptions.entries()) {
-			// find all the locales the server use who are descendant of the modified locale
-			// example: locale = 'fr' & specs.locale = 'fr-BE-WA': avoid raising if the key is present in 'fr-BE' and 'fr-BE-WA'
-			if (specs.locale) debugger
-			const isSpecified = await this.db.isSpecified(
-				key,
-				localeTree(specs.locale.substring(locale.length + 1)).map(
-					(subLocale) => `${locale}-${subLocale}`
-				)
-			)
-			if (specs.zones.includes(zone) && specs.locale.startsWith(locale) && !isSpecified) {
-				server.modifiedValues[key] = text
-				server.saved = server.raiseOneModified.defer()
+	async save() {
+		const servers = new Set<InteractiveServer>()
+		for (const [key, locale, zone, text] of this.modifications) {
+			for (const [server, specs] of subscriptions.entries()) {
+				// find all the locales the server use who are descendant of the modified locale
+				// example: locale = 'fr' & specs.locale = 'fr-BE-WA': avoid raising if the key is present in 'fr-BE' and 'fr-BE-WA'
+				if (
+					specs.zones.includes(zone) &&
+					specs.locale.startsWith(locale) &&
+					!(await this.db.isSpecified(
+						key,
+						localeTree(specs.locale.substring(locale.length + 1)).map(
+							(subLocale) => `${locale}-${subLocale}`
+						)
+					))
+				) {
+					server.modifiedValues[key] = text
+					servers.add(server)
+				}
 			}
 		}
+		this.modifications = []
+		return Promise.all(Array.from(servers.entries()).map(([server]) => server.raiseOneModified()))
+	}
+
+	async raiseOneModified() {
+		if (Object.keys(this.modifiedValues).length) await this.modified(this.modifiedValues)
+		this.modifiedValues = {}
 	}
 
 	destroy() {
@@ -165,7 +173,7 @@ export class InteractiveServer extends Server {
 	 */
 	async modify(key: string, locale: Geni18n.LocaleName, text: string): Promise<void> {
 		const zone = await this.db.modify(key, locale, text)
-		if (zone !== false) await this.raiseModified(key, locale, zone, text)
+		if (zone !== false) this.modifications.push([key, locale, zone, text])
 	}
 	/**
 	 * Modify/creates a key
@@ -188,6 +196,6 @@ export class InteractiveServer extends Server {
 	}
 	async remove(key: string): Promise<void> {
 		const { zone, locales } = await this.db.remove(key)
-		for (const locale of locales) await this.raiseModified(key, locale, zone, undefined)
+		for (const locale of locales) this.modifications.push([key, locale, zone, undefined])
 	}
 }

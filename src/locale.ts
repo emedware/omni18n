@@ -179,7 +179,7 @@ export default class Locale {
 	readonly ordinalRules: Intl.PluralRules
 	readonly cardinalRules: Intl.PluralRules
 	internals: Internals = {}
-	readonly loadedZones: string[] = []
+	loadedZones: string[] = []
 	condensed: Geni18n.CondensedDictionary = {}
 	private toLoadZones: string[] = []
 	private loading = new Defer()
@@ -235,7 +235,7 @@ export default class Locale {
 		if (this.locale === locale) return
 		this.locale = locale
 		const toLoad = this.loadedZones
-		this.loadedZones.length = 0
+		this.loadedZones = []
 		this.condensed = {}
 		this.internals = {}
 		await this.download(toLoad)
@@ -263,9 +263,11 @@ export default class Locale {
 
 	// Plîze override us
 	missing(keys: string[]) {
+		// report this.loadedZones
 		return `[${keys.join('.')}]`
 	}
 	error(error: string, spec?: any) {
+		// report spec
 		return `[!${error}]`
 	}
 }

@@ -4,12 +4,13 @@ import { Zone, directMem } from './db'
 
 describe('Static functionality', () => {
 	// This is for test purpose: in general usage, only one locale/T is used
-	let T: Record<string, any>,
+	let server: I18nServer,
+		T: Record<string, any>,
 		locales: Record<string, Locale>,
 		loads: any[] = []
 
 	beforeAll(async () => {
-		const server = new I18nServer(
+		server = new I18nServer(
 			directMem({
 				'fld.name': { en: 'Name', fr: 'Nom', [Zone]: '' },
 				'fld.bdate': { en: 'Birthday', fr: 'Date de naissance', [Zone]: '' },
@@ -30,6 +31,12 @@ describe('Static functionality', () => {
 				'specs.number': { '': '{number|$0}', [Zone]: '' },
 				'specs.price': { '': '{number|$1|style: currency, currency: $0}', [Zone]: '' },
 				'specs.ordinal': { '': '{ordinal|$0}', [Zone]: '' },
+				'msg.entries': {
+					// unused example
+					en: 'There are {number|$0} {plural|$0|entry|entries}',
+					fr: 'Il y a {number|$0} {plural|$0|entrée}',
+					[Zone]: ''
+				},
 				'internals.ordinals': {
 					en: "{one: '$st', two: '$nd', few: '$rd', other: '$th'}",
 					fr: "{one: '$er', other: '$ème'}",
@@ -53,24 +60,11 @@ describe('Static functionality', () => {
 		T = Object.fromEntries(Object.entries(locales).map(([key, value]) => [key, value.translation]))
 	})
 
-	test('zones', async () => {
-		expect(loads).toEqual([
-			{ locale: 'en-US', zones: ['', 'adm'] },
-			{ locale: 'fr-BE', zones: [''] }
-		])
-		expect(T.be.cmd.ban()).toBe('[cmd.ban]')
-		loads = []
-		locales.be.enter('adm')
-		await locales.be.loaded
-		expect(loads).toEqual([{ locale: 'fr-BE', zones: ['adm'] }])
-		expect(T.en.cmd.ban()).toBe('Ban user')
-		expect(T.be.cmd.ban()).toBe("Bannir l'utilisateur")
-	})
-
 	test('several kind of text access', () => {
 		const fields = T.en.fld
 		expect('' + fields.name).toBe('Name')
 		expect('' + fields.name.short).toBe('Name')
+		expect('' + fields.bdate).toBe('Birthday')
 		expect('' + fields.bdate.short).toBe('B-dy')
 		expect(fields.name()).toBe('Name')
 		expect('' + fields['name']).toBe('Name')
@@ -131,8 +125,8 @@ describe('Static functionality', () => {
 
 	test('number', () => {
 		// Warning: direct strings fail as the "space" used is some kind of special "&nbsp;" or sth
-		const big = 123456789.123,
-			price = 52.52
+		const big = 123456789.123456789,
+			price = 6752.52
 		expect(T.en.specs.number(big)).toBe(big.toLocaleString('en-US'))
 		expect(T.en.specs.price('USD', price)).toBe(
 			price.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
@@ -141,5 +135,28 @@ describe('Static functionality', () => {
 		expect(T.be.specs.price('EUR', price)).toBe(
 			price.toLocaleString('fr-BE', { style: 'currency', currency: 'EUR' })
 		)
+	})
+
+	test('zones', async () => {
+		expect(loads).toEqual([
+			{ locale: 'en-US', zones: ['', 'adm'] },
+			{ locale: 'fr-BE', zones: [''] }
+		])
+		expect(T.be.cmd.ban()).toBe('[cmd.ban]')
+		loads = []
+		locales.be.enter('adm')
+		await locales.be.loaded
+		expect(loads).toEqual([{ locale: 'fr-BE', zones: ['adm'] }])
+		expect(T.en.cmd.ban()).toBe('Ban user')
+		expect(T.be.cmd.ban()).toBe("Bannir l'utilisateur")
+	})
+
+	test('change locale', async () => {
+		const locale = new Locale('en-US', server.condense.bind(server)),
+			T = locale.translation
+		await locale.loaded
+		expect(T.msg.greet()).toBe('Hello here')
+		await locale.setLocale('fr')
+		expect(T.msg.greet()).toBe('Salut tout le monde')
 	})
 })

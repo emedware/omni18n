@@ -15,7 +15,7 @@ describe('Dynamic functionality', () => {
 				'cmd.customize': { en: 'Customize', 'en-UK': 'Customise', [Zone]: '' },
 				'cmd.save': { en: 'Save', [Zone]: 'adm' }
 			}),
-			(entries: Record<string, string | undefined>) => {
+			async (entries: Record<string, string | undefined>) => {
 				if (locale) {
 					//ignore the initialization
 					modifications.push(entries)
@@ -32,7 +32,7 @@ describe('Dynamic functionality', () => {
 		expect(T.fld.name()).toBe('Name')
 		expect(modifications).toEqual([])
 		await server.modify('fld.name', 'en', 'Surname')
-		await server.saved
+		await server.save()
 		expect(modifications).toEqual([{ 'fld.name': 'Surname' }])
 		modifications = []
 		expect(T.fld.name()).toBe('Surname')
@@ -42,12 +42,12 @@ describe('Dynamic functionality', () => {
 		expect(T.cmd.customize()).toBe('Customise')
 		expect(modifications).toEqual([])
 		await server.modify('cmd.customize', 'en', 'Customize it')
-		await server.saved
+		await server.save()
 		// The generic english entry has been modified, but we use the 'en-UK' one, not just 'en'
 		expect(modifications).toEqual([])
 		expect(T.cmd.customize()).toBe('Customise')
 		await server.modify('cmd.customize', 'en-UK', 'Customise it')
-		await server.saved
+		await server.save()
 		expect(modifications).toEqual([{ 'cmd.customize': 'Customise it' }])
 		modifications = []
 		expect(T.cmd.customize()).toBe('Customise it')
@@ -57,16 +57,31 @@ describe('Dynamic functionality', () => {
 		expect(T.cmd.save()).toBe('[cmd.save]')
 		expect(modifications).toEqual([])
 		await server.modify('cmd.save', 'en', 'Save it')
-		await server.saved
+		await server.save()
 		expect(modifications).toEqual([])
 		expect(T.cmd.save()).toBe('[cmd.save]')
 		locale.enter('adm')
 		await locale.loaded
 		expect(T.cmd.save()).toBe('Save it')
 		await server.modify('cmd.save', 'en', 'Save')
-		await server.saved
+		await server.save()
 		expect(modifications).toEqual([{ 'cmd.save': 'Save' }])
 		modifications = []
 		expect(T.cmd.save()).toBe('Save')
+	})
+
+	test('add/remove', async () => {
+		expect(T.cmd.delete()).toBe('[cmd.delete]')
+		expect(modifications).toEqual([])
+		await server.key('cmd.delete', '', { en: 'Delete', 'en-UK': 'Remove' })
+		await server.save()
+		expect(modifications).toEqual([{ 'cmd.delete': 'Remove' }])
+		modifications = []
+		expect(T.cmd.delete()).toBe('Remove')
+		await server.remove('cmd.delete')
+		await server.save()
+		expect(modifications).toEqual([{ 'cmd.delete': undefined }])
+		modifications = []
+		expect(T.cmd.delete()).toBe('[cmd.delete]')
 	})
 })
