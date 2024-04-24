@@ -14,5 +14,3 @@ node_modules
 /temp
 .vercel
 .vscode/settings.json
-*.pe
-db/*
