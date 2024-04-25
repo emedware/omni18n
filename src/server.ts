@@ -1,7 +1,5 @@
 /// <reference path="./geni18n.d.ts" />
 
-import Defer from './defer'
-
 /**
  * Abstract file used between the http layer and the database
  */
@@ -53,8 +51,10 @@ function localeTree(locale: Geni18n.LocaleName) {
 /**
  * Server class that should be instantiated once and used to interact with the database
  */
-export default class Server {
-	constructor(protected db: DB) {}
+export default class I18nServer {
+	constructor(protected db: DB) {
+		this.condense = this.condense.bind(this)
+	}
 
 	/**
 	 * Used by APIs or page loaders to get the dictionary in a condensed form
@@ -102,7 +102,7 @@ const subscriptions = new Map<
 /**
  * Instance of a server who raises events when the dictionary is modified
  */
-export class InteractiveServer extends Server {
+export class InteractiveServer extends I18nServer {
 	modifiedValues: Record<string, string | undefined> = {}
 	modifications: [string, Geni18n.LocaleName, string, string | undefined][] = []
 

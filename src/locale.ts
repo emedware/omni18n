@@ -5,7 +5,7 @@
 import { parse } from 'hjson'
 import Defer from './defer'
 
-// TODO: add `set` ability for translators?
+// TODO rename the class Locale (and its instances) to `I18n` for example?
 
 class TranslationError extends Error {
 	constructor(message: string) {
@@ -14,18 +14,54 @@ class TranslationError extends Error {
 	}
 }
 
+export interface TContext {
+	key: string
+	zones: string[]
+	locale: Locale
+}
+
 function objectArgument(arg: any): string | Record<string, string> {
 	if (typeof arg === 'object') return arg
 	// Here we throw as it means the code gave a wrong argument
 	if (typeof arg !== 'string') throw new TranslationError(`Invalid argument type: ${typeof arg}`)
-	if (!arg.includes(':')) return arg
+	if (!/[^:]:/.test(arg)) return arg.replace(/::/g, ':')
 	return Object.fromEntries(
-		arg.split(',').map((part) => part.split(':').map((part) => part.trim())) as [string, string][]
+		arg
+			.replace(/::/g, '\u0000')
+			.split(',')
+			.map((part) => part.split(':', 2).map((part) => part.replace(/\u0000/g, ':').trim()))
 	)
 }
 
-// Can be extended externally
-export const processors = {
+export const formats = {
+	date: {
+		date: {
+			dateStyle: 'short'
+		},
+		time: {
+			timeStyle: 'short'
+		}
+	},
+	number: {
+		decimal: { style: 'decimal' },
+		percent: { style: 'percent' },
+		scientific: { notation: 'scientific' },
+		engineering: { notation: 'engineering' },
+		compact: { notation: 'compact' }
+	},
+	relative: {
+		short: {
+			numeric: 'always',
+			style: 'short'
+		},
+		long: {
+			numeric: 'auto',
+			style: 'long'
+		}
+	}
+}
+
+export let processors = {
 	upper(str: string) {
 		return str.toUpperCase()
 	},
@@ -35,87 +71,109 @@ export const processors = {
 	title(str: string) {
 		return str.replace(/\b\w/g, (letter) => letter.toUpperCase())
 	},
-	number(str: string, options?: any) {
-		const num = parseFloat(str)
-		if (isNaN(num)) return this.error('NaN', str)
-		const numOptions = options ? objectArgument(options) : {}
-		if (typeof numOptions === 'string') return this.error('Invalid number options', numOptions)
-		return num.toLocaleString(this.locale, numOptions)
-	},
-	ordinal(this: Locale, str: string) {
-		if (!this.internals.ordinals) return this.missing(['internals.ordinals'])
+	ordinal(this: TContext, str: string) {
+		const { locale } = this
+		if (!locale.internals.ordinals) return locale.missing({ ...this, key: 'internals.ordinals' })
 		const num = parseInt(str)
-		if (isNaN(num)) return this.error('NaN', str)
-		return this.internals.ordinals[this.ordinalRules.select(num)].replace('$', str)
+		if (isNaN(num)) return locale.error('NaN', { str, ...this })
+		return locale.internals.ordinals[locale.ordinalRules.select(num)].replace('$', str)
 	},
-	plural(this: Locale, str: string, designation: string, plural?: string) {
-		const num = parseInt(str)
-		if (isNaN(num)) return this.error('NaN', str)
-		const rule = this.cardinalRules.select(num)
-		const rules = plural ? { one: designation, other: plural } : objectArgument(designation)
+	plural(this: TContext, str: string, designation: string, plural?: string) {
+		const num = parseInt(str),
+			{ locale } = this
+		if (isNaN(num)) return locale.error('NaN', { str, ...this })
+		const rule = locale.cardinalRules.select(num)
+		const rules = plural ? { one: designation, other: plural } : designation
 
 		if (typeof rules === 'string') {
-			if (!this.internals.plurals) return this.missing(['internals.plurals'])
-			if (!this.internals.plurals[rule]) return this.error('Missing rule in plurals', rule)
-			return this.internals.plurals[rule].replace('$', designation)
+			if (!locale.internals.plurals) return locale.missing({ ...this, key: 'internals.plurals' })
+			if (!locale.internals.plurals[rule])
+				return locale.error('Missing rule in plurals', { rule, ...this })
+			return locale.internals.plurals[rule].replace('$', designation)
 		}
-		return rule in rules ? rules[rule] : this.error('Rule not found', { rule, designation })
+		return rule in rules
+			? rules[rule]
+			: locale.error('Rule not found', { rule, designation, ...this })
 	},
-	cases(this: Locale, str: string, cases: any) {
-		const casesObj = objectArgument(cases)
-		if (typeof casesObj === 'string') return this.error('Invalid cases', casesObj)
-		return str in casesObj ? casesObj[str] : this.error('Case not found', { str, cases })
+	number(this: TContext, str: string, options?: any) {
+		const num = parseFloat(str),
+			{ locale } = this
+		if (isNaN(num)) return locale.error('NaN', { str, ...this })
+		if (typeof options === 'string') {
+			if (!(options in formats.number))
+				return locale.error('Invalid number options', { options, ...this })
+			options = formats.number[options]
+		}
+		return num.toLocaleString(locale.locale, options)
+	},
+	date(this: TContext, str: string, options?: any) {
+		const nbr = parseInt(str),
+			date = new Date(nbr),
+			{ locale } = this
+		if (isNaN(nbr)) return locale.error('Invalid date', { str, ...this })
+		if (typeof options === 'string') {
+			if (!(options in formats.date))
+				return locale.error('Invalid date options', { options, ...this })
+			options = formats.date[options]
+		}
+		if (locale.timeZone) options = { timeZone: locale.timeZone, ...options }
+		return date.toLocaleString(locale.locale, options)
+	},
+	relative(this: TContext, str: string, options?: any) {
+		const content = /(-?\d+)\s*(\w+)/.exec(str),
+			{ locale } = this
+		if (!content) return locale.error('Invalid relative format', { str, ...this })
+		const nbr = parseInt(content[1]),
+			unit = content[2]
+		const units = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year']
+		units.push(...units.map((unit) => unit + 's'))
+
+		if (isNaN(nbr)) return locale.error('Invalid number', { str, ...this })
+		if (!units.includes(unit)) return locale.error('Invalid unit', { unit, ...this })
+		if (typeof options === 'string') {
+			if (!(options in formats.relative))
+				return locale.error('Invalid date options', { options, ...this })
+			options = formats.date[options]
+		}
+		return new Intl.RelativeTimeFormat(locale.locale, options).format(
+			nbr,
+			<Intl.RelativeTimeFormatUnit>unit
+		)
+	},
+	region(this: TContext, str: string) {
+		return new Intl.DisplayNames([this.locale.locale], { type: 'region' }).of(str)
+	},
+	language(this: TContext, str: string) {
+		return new Intl.DisplayNames([this.locale.locale], { type: 'language' }).of(str)
+	},
+	script(this: TContext, str: string) {
+		return new Intl.DisplayNames([this.locale.locale], { type: 'script' }).of(str)
+	},
+	currency(this: TContext, str: string) {
+		return new Intl.DisplayNames([this.locale.locale], { type: 'currency' }).of(str)
 	}
 }
 
-function translate(locale: Locale, keys: string[], args: any[]) {
+function translate(context: TContext, args: any[]) {
+	const { locale, key } = context,
+		keys = key.split('.')
 	let current = locale.condensed,
 		value: string | undefined
-	for (const key of keys) {
-		if (!current[key]) break
-		else if (typeof current[key] === 'string') value = current[key] as string
+
+	for (const k of keys) {
+		if (!current[k]) break
+		else if (typeof current[k] === 'string') value = current[k] as string
 		else {
-			if (current[key]['']) value = current[key][''] as string
-			current = current[key] as Geni18n.CondensedDictionary
+			if (current[k]['']) value = current[k][''] as string
+			current = current[k] as Geni18n.CondensedDictionary
 		}
 	}
-	if (!value) return locale.missing(keys)
-	function arg(i: string | number, dft?: string) {
-		if (typeof i === 'string' && /^\d+$/.test(i)) i = parseInt(i)
-		return args[i] !== undefined
-			? args[i]
-			: dft !== undefined
-				? dft
-				: locale.error('Missing arg', i)
-	}
-	const placeholders = (
-			value.match(/{(.*?)}/g)?.map((placeholder) => placeholder.slice(1, -1)) || []
-		).map((placeholder) => {
-			// Special {0}, {0|default} for "First argument" syntax
-			const simpleArg = /^(\d+)(?:\s*\|\s*(.*)\s*)?$/.exec(placeholder)
-			if (simpleArg) return arg(simpleArg[1], simpleArg[2])
-			else {
-				const [proc, ...params] = placeholder
-					.split('|')
-					.map((part) => part.trim())
-					.map((part) => part.replace(/\$(\d+)(?:\[(.*?)\])?/g, (_, num, dft) => arg(num, dft)))
-				if (proc in processors)
-					try {
-						return processors[proc].call(locale, ...params)
-					} catch (error) {
-						return locale.error('Error in processor', { proc, error })
-					}
-				return translate(locale, proc.split('.'), params)
-			}
-		}),
-		parts = value.split(/{.*?}/)
-
-	return locale.postProcessor(parts.map((part, i) => `${part}${placeholders[i] || ''}`).join(''))
+	return value ? locale.interpolate(context, value, args) : locale.missing(context)
 }
 
-function translator(locale: Locale, keys: string[] = []) {
+function translator(context: TContext) {
 	function translation(...args: any[]) {
-		return translate(locale, keys, args)
+		return translate(context, args)
 	}
 	return new Proxy(translation, {
 		get: (target, key) => {
@@ -130,7 +188,7 @@ function translator(locale: Locale, keys: string[] = []) {
 					return String
 			}
 			if (typeof key !== 'string') throw new TranslationError(`Invalid key type: ${typeof key}`)
-			return translator(locale, keys.concat(key.split('.')))
+			return translator({ ...context, key: context.key ? `${context.key}.${key}` : key })
 		}
 	})
 }
@@ -183,10 +241,10 @@ export default class Locale {
 	condensed: Geni18n.CondensedDictionary = {}
 	private toLoadZones: string[] = []
 	private loading = new Defer()
-	public renderedZone: string
-	readonly translation = translator(this)
 
 	public loaded: Promise<void> = Promise.resolve()
+
+	public timeZone: string | undefined // = Intl.DateTimeFormat().resolvedOptions().timeZone
 
 	constructor(
 		public locale: Geni18n.LocaleName,
@@ -194,8 +252,7 @@ export default class Locale {
 		public condenser: (
 			locale: Geni18n.LocaleName,
 			zones: string[]
-		) => Promise<Geni18n.CondensedDictionary>,
-		public postProcessor: (text: string) => string = (text) => text
+		) => Promise<Geni18n.CondensedDictionary>
 	) {
 		this.ordinalRules = new Intl.PluralRules(locale, { type: 'ordinal' })
 		this.cardinalRules = new Intl.PluralRules(locale, { type: 'cardinal' })
@@ -203,21 +260,24 @@ export default class Locale {
 	}
 
 	/**
-	 * This should be called several times per rendering. If a user control has a specific zone, this should be
-	 * called while rendering this UC. It allows to:
-	 * - debug the missing/buggy translations
-	 * - make sure only the needed translations end up downloaded
-	 * With Svelte, this should be called in each "context" change indeed
+	 * This should be called for each user-control, page, ...
+	 * If zoning per user role, the call can specify no zone and the zone can be specified on main page-load or user change
+	 * If zoning per user-control/page, the call should specify the zone (path separated by '.')
+	 * @param zones Zones entered
+	 * @returns The translator
 	 */
-	public enter(zone: string) {
-		this.renderedZone = zone
-		if (this.toLoadZones.includes(zone) || this.loadedZones.includes(zone)) return
-		this.toLoadZones.push(zone)
-		this.loaded = this.loading.defer(async () => {
-			const toLoad = this.toLoadZones
-			this.toLoadZones = []
-			await this.download(toLoad)
-		})
+	public enter(...zones: string[]) {
+		const knownZones = [...this.loadedZones, ...this.toLoadZones],
+			toAdd = zones.filter((zone) => !knownZones.includes(zone))
+		if (toAdd.length) {
+			this.toLoadZones.push(...toAdd)
+			this.loaded = this.loading.defer(async () => {
+				const toLoad = this.toLoadZones
+				this.toLoadZones = []
+				await this.download(toLoad)
+			})
+		}
+		return translator({ locale: this, zones, key: '' })
 	}
 
 	private async download(zones: string[]) {
@@ -261,13 +321,77 @@ export default class Locale {
 		}
 	}
 
-	// Plîze override us
-	missing(keys: string[]) {
-		// report this.loadedZones
-		return `[${keys.join('.')}]`
+	//#region Overridable methods
+
+	interpolate(context: TContext, text: string, args: any[]) {
+		const { key, zones } = context
+		function arg(i: string | number, dft?: string) {
+			if (typeof i === 'string' && /^\d+$/.test(i)) i = parseInt(i)
+			if (i === 0) return key
+			const lastArg = args[args.length - 1],
+				val =
+					i === '$'
+						? '$'
+						: i === ''
+							? lastArg
+							: typeof i === 'number'
+								? args[i - 1]
+								: typeof lastArg === 'object' && i in lastArg
+									? lastArg[i]
+									: undefined
+			if (val instanceof Date) return '' + val.getTime()
+			if (typeof val === 'object')
+				return Object.entries(val)
+					.map(([key, value]) => `${key}: ${value}`)
+					.join(', ')
+			if (typeof val === 'number') return '' + val
+			return val !== undefined
+				? val
+				: dft !== undefined
+					? dft
+					: this.error('Missing arg', { arg: i, key })
+		}
+		const placeholders = (
+				text.match(/{(.*?)}/g)?.map((placeholder) => placeholder.slice(1, -1)) || []
+			).map((placeholder) => {
+				// Special {=0}, {=0|default} for "First argument" syntax
+				const simpleArg = /^=(\w*)(?:\s*\|\s*(.*)\s*)?$/.exec(placeholder)
+				if (simpleArg) return arg(simpleArg[1], simpleArg[2])
+				else {
+					const [proc, ...params] = placeholder
+						.split('|')
+						.map((part) => part.trim())
+						.map((part) => part.replace(/\$(\w*)(?:\[(.*?)\])?/g, (_, num, dft) => arg(num, dft)))
+						.map((part) => objectArgument(part))
+					if (typeof proc === 'object')
+						return params.length !== 1 || typeof params[0] !== 'string'
+							? this.error('Case needs a string case', { params, ...context })
+							: params[0] in proc
+								? proc[params[0]]
+								: this.error('Case not found', { case: params[0], cases: proc, ...context })
+					if (proc.includes('.')) return translate({ ...context, key: proc }, params)
+					if (!(proc in processors)) return this.error('Unknown processor', { proc, ...context })
+					try {
+						return processors[proc].call(context, ...params)
+					} catch (error) {
+						return this.error('Error in processor', { proc, error, ...context })
+					}
+				}
+			}),
+			parts = text.split(/{.*?}/)
+
+		return parts.map((part, i) => `${part}${placeholders[i] || ''}`).join('')
 	}
-	error(error: string, spec?: any) {
+
+	// Plîze override us
+	missing({ key, zones }: TContext) {
+		// report this.locale, this.loadedZones
+		return `[${key}]`
+	}
+	error(error: string, spec: TContext & Record<string, any>) {
 		// report spec
 		return `[!${error}]`
 	}
+
+	//#endregion
 }

@@ -1,5 +1,38 @@
 # geni18n
 
+Generic i18n library managing the fullstack interaction and the fact the dictionaries are stored in a DB edited by the translators through a(/the same) web application - managing translation errors, missing keys, ... and if you wish, "user suggestions"
+
+It can even manage update of all (concerned) clients when a translation is modified
+
+## General structure
+
+The library is composed of a server part and a client part.
+
+The server takes an object containing a `list` function that will query the DB and expose a `condensed` function that retrieve a condensed (processed) version of the dictionary (completely json-able).
+
+The client part is a `Locale` that will remember a locale, but manage the queries to the server and language changes
+This locale will produce `Translators` who are described in typescript by the type `any`, or you can specify yours for your dictionary structure.
+
+### Server side
+
+```ts
+import { I18nServer, Locale } from 'geni18n'
+
+const server = new I18nServer(myDBinterface)
+const locale = new Locale('en-US', server.condensed)
+const T = locale.enter()
+
+console.log(T.msg.hello) // Will display the entry `msg.hello` for the `en-US` (or `en`) locale
+```
+
+### Full-stack usage
+
+The full-stack case will insert the http protocol between `locale` and `server`. The `condense` function takes few arguments and return a json-able object.
+
+### Interactive mode
+
+In interactive mode (using `InteractiveServer`), the DB interface contains modification functions and the server exposes modification function, that will modify the DB but also raise events. In this case, an `InteractiveServer` instance has to be created for every client, with an interface toward the DB and a callback for event raising.
+
 ## Concepts
 
 ### Keys
@@ -19,19 +52,19 @@ Example:
 }
 ```
 
-In this case, _both_ `T.fld.name` _and_ `T.fld.name.short` will retrieve `"Name"`, so that, if the project use shortened notations, it can display T.fld[field].short without demanding all the fields to have a `short` version in all languages
+In this case, _both_ `T.fld.name` _and_ `T.fld.name.short` will retrieve `"Name"`, so that, if the project use shortened notations, it can display `T.fld[field].short` without demanding all the fields to have a `short` version in all languages
 
 ### Locales
 
 If we take the examples of `en-GB` and `en-US`, three locales are going to be used: `en-GB` and `en-US` of course, `en` who will take care of all the common english texts and `''` (the empty-named local) who contains technical things common to all languages.
 So, downloading `en-US` will download `''` overwritten with `en` then overwritten with `en-US`.
 
-Common things example: `format.price: '{number|$1|style: currency, currency: $0}'` for prices allowing `T.format.price(currency, amount)`
+Common things are formats for example: `format.price: '{number|$2|style: currency, currency: $1}'` for prices allowing `T.format.price(currency, amount)`
 
 ### Zones
 
 Zones are "software zones". Each user don't need the whole dictionary. Some texts for example are only used in administration pages and should not be downloaded by everyone.
-A good way to divide zones for example is with a user's rights. Another way is even to have a zone per page/user-control. If zones are well entered/left, the whole needed dictionary will be loaded for the loaded page and complement added along browsing.
+A good way to divide zones for example is with a user's rights. Another way is even to have a zone per page/user-control. If zones are well entered, the whole needed dictionary will be loaded for the loaded page and complement added along browsing.
 
 A special zone is `server` who will contain texts never downloaded by the client, like registration emails and other texts used server-side only
 
@@ -42,49 +75,128 @@ In case of PoC, only the root zone can be used.
 
 Note: The library is optimized to download only the missing parts through a user's browsing experience
 
-Warning: Zones are not different `namespaces` for text keys
+Warning: Zones are not different name spaces for text keys, each key is unique and has an associated zone
 
 ### `internals`
 
 cf. local documentation. `geni18n` uses the standard JS Intl object. This object is able with a locale to determine some rules. For instance, english has 4 ways to make ordinals (1st, 2nd, 3rd, 4th) while french has 2 (this is already implemented in every browser and node)
 
-These "internals" are used with specific translation features (like to use `{ordinal|$0} try...`) and should be the same for all websites.
+These "internals" are used with specific translation features (like to use `{ordinal|$1} try...`) and should be the same for all websites.
 
 ## Interpolation
 
 A given value like `T.fld.name` will have a javascript value that can be converted in a string _and_ be called.
 
-The function call will return a pure string and can take arguments
+The function call will return a pure string and can take arguments.
 
-### Direct arguments
+The interpolation is done in `Locale::interpolate` and can of course be overridden.
 
-`"This is a {0}"` will have to be called with an argument, `"This is a {0|distraction}"` may be called with an argument.
+### Arguments
+
+Note: while interpolating, the argument nr 0 is the key, the first argument is the argument nr 1.
+
+`"This is a {=1}"` will have to be called with an argument, `"This is a {=1|distraction}"` may be called with an argument.
+
+If the content does not begin with the `=` sign, the content is a list separated by `|` where each element can be :
+
+- A string
+- An flat named list in the shape `key1: value1, key2: value2` where only `,` and `:` are used for the syntax.
+
+The `:` character triggers the list parsing. In order to used a ":" in a string, it has to be doubled ("::")
+
+The parameters (given in the code) can be accessed as such:
+First, the last parameter is the one used for naming. If a named parameter is accessed, the last (or only) parameter should be an object with named properties
+
+- `$0` is the key, `$1` the first argument, `$2`...
+- `$arg` access the argument named `arg`
+- `$` access the last argument
+
+To add a default, `$arg[default value]` can be used, as well as `$[name: John]`
+
+To use the "$" character, it just has to be doubled: "$$"
+
+The first element will determine how the whole `{...}` will be interpolated
+
+### List cases
+
+If the first element is a named list, the second one will be the case to take from the list.
+
+example: `{question: ?, exclamation: ! | $1}`
+
+### Sub translation
+
+To use another translation can be useful, when for example one translation is a number format centralization common to all languages, or when a centralized (all-language) format string needs to use conjunctions or words that are language-specific.
+
+The syntax `{other.intl.key | arg1 | arg2}` can be used to do such.
 
 ### Processors
 
-The syntax also allow some processing specification. The available processors are here and can be extended :
+The syntax also allow some processing specification, when a known processor name is used instead of a first element. The available can be extended :
 
 ```ts
-import { processors } from 'geni18n'
+import { processors, type TContext } from 'geni18n';
+
+Object.assign(processors, {
+	myProc(this: TContext, arg1: any, ...args: any[]) {
+		...
+	}
+});
 ```
 
-The syntax to use them is `{processor | arg1 | arg2}`, any part can use `$0`, `$1[default]`, ... to access a given parameter optionally giving it a default value.
-Some arguments are named list and the only format is a flat one `key1: value1, key2: value2` where only `,` and `:` are used for the syntax.
+:exclamation: For obvious security reasons, never `eval` a string argument.
 
-example: `{upper | $0}` will render the first argument in upper-case
+Where `TContext` contains mostly the `locale` (the object containing all the language specification)
+The arguments will mainly be strings or object when flat named lists are specified
 
-#### List
+The syntax to use them is `{processor | arg1 | arg2}`.
+
+example: `{upper | $1}` will render the first argument in upper-case
+
+Note: `{$2[upper] | $1}` is also possible, in which case the second argument can both specify an intl key, a processor or be defaulted to the `upper` processor.
+
+#### Casing
 
 - `upper(s)`
 - `lower(s)`
 - `title(s)`: uppercase-first
+
+#### Numeric formating
+
 - `number(n, opt?)`: equivalent to `Intl.NumberFormat()` who receive the list `opt` as options
-- `cases(s, cases)`: The cases is a list, and `s` is the key to chose what to display
+- `date(n, opt?)`: equivalent to `Intl.DateTimeFormat()` who receive the list `opt` as options
+
+A list of predefined options can be set in exported variables
+
+```ts
+import { dateTimeFormats, numberFormats } from 'geni18n'
+
+dateTimeFormats.year = { year: 'numeric' }
+
+const locale: Locale = ...;
+locale.interpolate('*', '{date|$0|year}', new Date('2021-11-01T12:34:56.789Z'));	// 2021
+locale.interpolate('*', '{date|$0|month: numeric}', new Date('2021-11-01T12:34:56.789Z'));	// 11
+```
+
+Also, each locate has a property `timeZone`. If set, it will be the default `timeZone` used in the options.
+Its format is the one of `Date.toLocaleString()`
+
+#### Other hard-coded
+
+We of course speak about the ones hard-coded in the Intl javascript core of Node and the browsers.
+
+- `relative(n, opt?)` where `n` is number+unit (ex. `1month` or `-2 seconds`) - just forwards to `Intl.RelativeTimeFormat`
+- `DisplayNames`: relative to `Intl.DisplayNames`
+  - `region(c)` ex: 'HU' -> "Hungary"
+  - `language(c)` ex: 'en-UK' -> "British English"
+  - `script(c)` ex: 'Kana' -> "Katakana"
+  - `currency(c)` ex: 'USD' -> "Us dollars"
 
 #### Plurals and ordinals
 
 These two processors use a specific key, respectively `internals.plurals` and `internal.ordinals`.
 These key contain js-like object who, for english would be:
+
+It can also be done by specifying `internals` as a js-like object or specifying `internals.plurals.one` as a string
 
 ```
 ordinals: {one: '$st', two: '$nd', few: '$rd', other: '$th'}
@@ -96,5 +208,5 @@ The keywords (`one`, `other`, ...) come from `Intl.PluralRules`.
 - `ordinal(n)` To display "1st", "2nd", ...
 - `plural(n, spec)`:
   - If `spec` is a word, the `internals.plurals` rule is used (`{plural|1|cat}`-> "cat", `{plural|2|cat}`-> "cats").
-  - The specification can use the `Intl.PluralRules` (ex: `{plural|$0|one:ox,other:oxen}`)
-  - A specific case is made for languages who use `one/other` (like english) : `{plural|$0|ox|oxen}`
+  - The specification can use the `Intl.PluralRules` (ex: `{plural|$1|one:ox,other:oxen}`)
+  - A specific case is made for languages who use `one/other` (like english) : `{plural|$1|ox|oxen}`

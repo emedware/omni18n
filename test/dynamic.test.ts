@@ -23,8 +23,8 @@ describe('Dynamic functionality', () => {
 				}
 			}
 		)
-		locale = new Locale('en-UK', server.condense.bind(server))
-		T = locale.translation
+		locale = new Locale('en-UK', server.condense)
+		T = locale.enter()
 		await locale.loaded
 	})
 
