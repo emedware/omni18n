@@ -12,7 +12,7 @@ export async function sqlite(dbName: string) {
 		'CREATE TABLE IF NOT EXISTS intl_value (key TEXT, locale TEXT, value TEXT, PRIMARY KEY (key, locale))'
 	)
 	return {
-		async isSpecified(key: string, locales: Geni18n.LocaleName[]) {
+		async isSpecified(key: string, locales: GenI18n.LocaleName[]) {
 			return (
 				(
 					await sqlite.get({
@@ -23,7 +23,7 @@ export async function sqlite(dbName: string) {
 			)
 		},
 		// As this is for test only, we don't check if the texts are actually different than in DB
-		async modify(key: string, locale: Geni18n.LocaleName, value: string) {
+		async modify(key: string, locale: GenI18n.LocaleName, value: string) {
 			if (
 				(await sqlite.get({
 					sql: 'SELECT COUNT(*) FROM intl_key WHERE key = ?',
@@ -76,7 +76,7 @@ export async function sqlite(dbName: string) {
 			])
 			return rv
 		},
-		async list(locale: Geni18n.LocaleName, zones: string[]): Promise<Geni18n.RawDictionary> {
+		async list(locale: GenI18n.LocaleName, zones: string[]): Promise<GenI18n.RawDictionary> {
 			return Object.fromEntries(
 				(
 					await sqlite.all({

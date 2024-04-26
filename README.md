@@ -1,6 +1,6 @@
 # geni18n
 
-Generic i18n library managing the fullstack interaction and the fact the dictionaries are stored in a DB edited by the translators through a(/the same) web application - managing translation errors, missing keys, ... and if you wish, "user suggestions"
+Generic i18n library managing the fullstack interaction in a CI/CD pace. The fact the dictionaries are stored in a DB edited by the translators through a(/the same) web application - managing translation errors, missing keys, ...
 
 It can even manage update of all (concerned) clients when a translation is modified
 
@@ -8,26 +8,26 @@ It can even manage update of all (concerned) clients when a translation is modif
 
 The library is composed of a server part and a client part.
 
-The server takes an object containing a `list` function that will query the DB and expose a `condensed` function that retrieve a condensed (processed) version of the dictionary (completely json-able).
+The server takes an object containing a `list` function that will query the DB and expose a `condensed` function that retrieve a condensed (processed) version of the dictionary for a locale (completely json-able).
 
-The client part is a `Locale` that will remember a locale, but manage the queries to the server and language changes
-This locale will produce `Translators` who are described in typescript by the type `any`, or you can specify yours for your dictionary structure.
+The client part is a `I18nClient` that will remember a locale and manage the queries to the server and language changes
+This client will produce `Translators` who are described in typescript by the type `any`, or you can specify yours for your dictionary structure.
 
 ### Server side
 
 ```ts
-import { I18nServer, Locale } from 'geni18n'
+import { I18nServer, I18nClient } from 'geni18n'
 
 const server = new I18nServer(myDBinterface)
-const locale = new Locale('en-US', server.condensed)
-const T = locale.enter()
+const client = new I18nClient('en-US', server.condensed)
+const T = client.enter()
 
 console.log(T.msg.hello) // Will display the entry `msg.hello` for the `en-US` (or `en`) locale
 ```
 
 ### Full-stack usage
 
-The full-stack case will insert the http protocol between `locale` and `server`. The `condense` function takes few arguments and return a json-able object.
+The full-stack case will insert the http protocol between `client` and `server`. The `condense` function takes few arguments and return a (promise of) json-able object so can go through an http request.
 
 ### Interactive mode
 
@@ -54,6 +54,8 @@ Example:
 
 In this case, _both_ `T.fld.name` _and_ `T.fld.name.short` will retrieve `"Name"`, so that, if the project use shortened notations, it can display `T.fld[field].short` without demanding all the fields to have a `short` version in all languages
 
+Rule of the thumb: No value should be given as root keys. Every meaningful text has a category and should therefore be a sub-key
+
 ### Locales
 
 If we take the examples of `en-GB` and `en-US`, three locales are going to be used: `en-GB` and `en-US` of course, `en` who will take care of all the common english texts and `''` (the empty-named local) who contains technical things common to all languages.
@@ -75,11 +77,11 @@ In case of PoC, only the root zone can be used.
 
 Note: The library is optimized to download only the missing parts through a user's browsing experience
 
-Warning: Zones are not different name spaces for text keys, each key is unique and has an associated zone
+> :warning: Zones are not different name spaces for text keys, each key is unique and has an associated zone
 
 ### `internals`
 
-cf. local documentation. `geni18n` uses the standard JS Intl object. This object is able with a locale to determine some rules. For instance, english has 4 ways to make ordinals (1st, 2nd, 3rd, 4th) while french has 2 (this is already implemented in every browser and node)
+Cf. documentation in code. `geni18n` uses the standard JS Intl object. This object is able with a locale to determine some rules. For instance, english has 4 ways to make ordinals (1st, 2nd, 3rd, 4th) while french has 2 (this is already implemented in every browser and node)
 
 These "internals" are used with specific translation features (like to use `{ordinal|$1} try...`) and should be the same for all websites.
 
@@ -89,7 +91,7 @@ A given value like `T.fld.name` will have a javascript value that can be convert
 
 The function call will return a pure string and can take arguments.
 
-The interpolation is done in `Locale::interpolate` and can of course be overridden.
+The interpolation is done in `I18nClient::interpolate` and can of course be overridden.
 
 ### Arguments
 
@@ -102,7 +104,7 @@ If the content does not begin with the `=` sign, the content is a list separated
 - A string
 - An flat named list in the shape `key1: value1, key2: value2` where only `,` and `:` are used for the syntax.
 
-The `:` character triggers the list parsing. In order to used a ":" in a string, it has to be doubled ("::")
+The `:` character triggers the list parsing. In order to used a ":" in a string, it has to be doubled "::"
 
 The parameters (given in the code) can be accessed as such:
 First, the last parameter is the one used for naming. If a named parameter is accessed, the last (or only) parameter should be an object with named properties
@@ -131,7 +133,7 @@ The syntax `{other.intl.key | arg1 | arg2}` can be used to do such.
 
 ### Processors
 
-The syntax also allow some processing specification, when a known processor name is used instead of a first element. The available can be extended :
+The syntax also allow some processing specification, when a processor name (with no `.` in it) is used instead of a first element. The available processors can be extended :
 
 ```ts
 import { processors, type TContext } from 'geni18n';
@@ -143,9 +145,9 @@ Object.assign(processors, {
 });
 ```
 
-:exclamation: For obvious security reasons, never `eval` a string argument.
+> :warning: For obvious security reasons, never `eval` a string argument
 
-Where `TContext` contains mostly the `locale` (the object containing all the language specification)
+Where `TContext` contains mostly the `client` (the object containing all the language specification)
 The arguments will mainly be strings or object when flat named lists are specified
 
 The syntax to use them is `{processor | arg1 | arg2}`.
@@ -168,13 +170,14 @@ Note: `{$2[upper] | $1}` is also possible, in which case the second argument can
 A list of predefined options can be set in exported variables
 
 ```ts
-import { dateTimeFormats, numberFormats } from 'geni18n'
+import { formats } from 'geni18n'
 
-dateTimeFormats.year = { year: 'numeric' }
+formats.date.year = { year: 'numeric' }
+formats.number.arabic = { numberingSystem: 'arab' }
 
-const locale: Locale = ...;
-locale.interpolate('*', '{date|$0|year}', new Date('2021-11-01T12:34:56.789Z'));	// 2021
-locale.interpolate('*', '{date|$0|month: numeric}', new Date('2021-11-01T12:34:56.789Z'));	// 11
+const client: I18nClient = ...;
+client.interpolate('*', '{date|$0|year}', new Date('2021-11-01T12:34:56.789Z'));	// 2021
+client.interpolate('*', '{date|$0|month: numeric}', new Date('2021-11-01T12:34:56.789Z'));	// 11
 ```
 
 Also, each locate has a property `timeZone`. If set, it will be the default `timeZone` used in the options.
@@ -184,7 +187,7 @@ Its format is the one of `Date.toLocaleString()`
 
 We of course speak about the ones hard-coded in the Intl javascript core of Node and the browsers.
 
-- `relative(n, opt?)` where `n` is number+unit (ex. `1month` or `-2 seconds`) - just forwards to `Intl.RelativeTimeFormat`
+- `relative(n, opt?)` where `n` is number+unit (ex. `1month` or `-2 seconds`) - just forwards to `Intl.RelativeTimeFormat`. Note that there is a `formats.relative` like for dates or number
 - `DisplayNames`: relative to `Intl.DisplayNames`
   - `region(c)` ex: 'HU' -> "Hungary"
   - `language(c)` ex: 'en-UK' -> "British English"
@@ -210,3 +213,28 @@ The keywords (`one`, `other`, ...) come from `Intl.PluralRules`.
   - If `spec` is a word, the `internals.plurals` rule is used (`{plural|1|cat}`-> "cat", `{plural|2|cat}`-> "cats").
   - The specification can use the `Intl.PluralRules` (ex: `{plural|$1|one:ox,other:oxen}`)
   - A specific case is made for languages who use `one/other` (like english) : `{plural|$1|ox|oxen}`
+
+## Error reporting
+
+The library exposes on the client side `reports` as such:
+
+```ts
+import { reports, type TContext } from "geni18n";
+
+/*interface TContext {
+	key: string
+	zones: string[]
+	client: I18nClient
+}*/
+
+reports.missing = ({key, client}: TContext) {
+  return `[${client.locale}:${key}]`;
+}
+reports.error = (error: string, spec: object, context: TContext) {
+  return `[!${error}]`;
+}
+```
+
+`specs` depends on the error. Mostly json-able (there might be some `Error` specification).
+
+The function might do as much logging as they wish, the returned string will be the one used ad a "translation" (so, displayed)

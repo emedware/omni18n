@@ -4,21 +4,23 @@
  * Abstract file used between the http layer and the database
  */
 
-export interface DB {
+export interface DB<KeyInfos extends {} = {}, TextInfos extends {} = {}> {
 	/**
 	 * Retrieves all the values for a certain locale
 	 * @param locale A language and perhaps a country
 	 */
-	list(locale: Geni18n.LocaleName, zones: string[]): Promise<Geni18n.RawDictionary>
+	list(locale: GenI18n.LocaleName, zones: string[]): Promise<GenI18n.RawDictionary>
 }
 
-export interface InteractiveDB extends DB {
+export interface InteractiveDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
+	extends DB<KeyInfos, TextInfos> {
 	/**
 	 * Checks if a key is specified in a certain locale
 	 * @param key The key to search for
 	 * @param locales The locales to search in
 	 */
-	isSpecified(key: string, locales: Geni18n.LocaleName[]): Promise<boolean>
+	isSpecified(key: string, locales: GenI18n.LocaleName[]): Promise<undefined | {} | TextInfos>
+
 	/**
 	 * Modifies/add the value for the key [key, locale]
 	 * Note: checks that the key exists
@@ -27,23 +29,30 @@ export interface InteractiveDB extends DB {
 	 * @param text A text value
 	 * @returns The zone where the key is stored or false if no change were brought
 	 */
-	modify(key: string, locale: Geni18n.LocaleName, text: string): Promise<string | false>
+	modify(
+		key: string,
+		locale: GenI18n.LocaleName,
+		text: string,
+		textInfos?: Partial<TextInfos>
+	): Promise<string | false>
+
 	/**
 	 * Creates or modifies a key
 	 * @param key The key to manipulate
 	 * @param zone The zone to create the key in, or undefined to delete it
 	 * @returns The locales where the key was translated
 	 */
-	key<infos extends any[] = any[]>(key: string, zone: string, ...args: infos): Promise<void>
+	key(key: string, zone: string, keyInfos?: Partial<KeyInfos>): Promise<void>
+
 	/**
 	 * Removes a key (and all its translations)
 	 * @param key The key to remove
 	 * @returns The zone where the key was stored and the locales where it was translated
 	 */
-	remove(key: string): Promise<{ zone: string; locales: Geni18n.LocaleName[] }>
+	remove(key: string): Promise<{ zone: string; locales: GenI18n.LocaleName[] }>
 }
 
-function localeTree(locale: Geni18n.LocaleName) {
+function localeTree(locale: GenI18n.LocaleName) {
 	const parts = locale.split('-')
 	return parts.map((_, i) => parts.slice(0, i + 1).join('-'))
 }
@@ -51,11 +60,14 @@ function localeTree(locale: Geni18n.LocaleName) {
 /**
  * Server class that should be instantiated once and used to interact with the database
  */
-export default class I18nServer {
-	constructor(protected db: DB) {
+export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} = {}> {
+	constructor(protected db: DB<KeyInfos, TextInfos>) {
 		this.condense = this.condense.bind(this)
 	}
 
+	list(locale: GenI18n.LocaleName, zones: string[] = ['']): Promise<GenI18n.RawDictionary> {
+		return this.db.list(locale, zones)
+	}
 	/**
 	 * Used by APIs or page loaders to get the dictionary in a condensed form
 	 * @param locale
@@ -63,15 +75,15 @@ export default class I18nServer {
 	 * @returns
 	 */
 	async condense(
-		locale: Geni18n.LocaleName,
+		locale: GenI18n.LocaleName,
 		zones: string[] = ['']
-	): Promise<Geni18n.CondensedDictionary> {
+	): Promise<GenI18n.CondensedDictionary> {
 		const parts = locale.split('-'),
 			raws = await Promise.all([
-				this.db.list('', zones),
-				...localeTree(locale).map((subLocale) => this.db.list(subLocale, zones))
+				this.list('', zones),
+				...localeTree(locale).map((subLocale) => this.list(subLocale, zones))
 			]),
-			result: Geni18n.CondensedDictionary = {}
+			result: GenI18n.CondensedDictionary = {}
 		for (const raw of raws) {
 			for (const key in raw) {
 				const value = raw[key],
@@ -81,7 +93,7 @@ export default class I18nServer {
 				for (const k of keys) {
 					if (!current[k]) current[k] = {}
 					else if (typeof current[k] === 'string') current[k] = { '': current[k] }
-					current = current[k] as Geni18n.CondensedDictionary
+					current = current[k] as GenI18n.CondensedDictionary
 				}
 				if (current[lastKey] && typeof current[lastKey] !== 'string') current[lastKey][''] = value
 				else current[lastKey] = value
@@ -94,7 +106,7 @@ export default class I18nServer {
 const subscriptions = new Map<
 	InteractiveServer,
 	{
-		locale: Geni18n.LocaleName
+		locale: GenI18n.LocaleName
 		zones: string[]
 	}
 >()
@@ -102,9 +114,12 @@ const subscriptions = new Map<
 /**
  * Instance of a server who raises events when the dictionary is modified
  */
-export class InteractiveServer extends I18nServer {
+export class InteractiveServer<
+	KeyInfos extends {} = {},
+	TextInfos extends {} = {}
+> extends I18nServer<KeyInfos, TextInfos> {
 	modifiedValues: Record<string, string | undefined> = {}
-	modifications: [string, Geni18n.LocaleName, string, string | undefined][] = []
+	modifications: [string, GenI18n.LocaleName, string, string | undefined][] = []
 
 	constructor(
 		protected db: InteractiveDB,
@@ -112,6 +127,10 @@ export class InteractiveServer extends I18nServer {
 	) {
 		super(db)
 		subscriptions.set(this, { locale: '', zones: [] })
+	}
+
+	isSpecified(key: string, locales: GenI18n.LocaleName[]): Promise<undefined | {} | TextInfos> {
+		return this.db.isSpecified(key, locales)
 	}
 
 	async save() {
@@ -155,7 +174,7 @@ export class InteractiveServer extends I18nServer {
 	 * @param zone
 	 * @returns
 	 */
-	condense(locale: string, zones?: string[]): Promise<Geni18n.CondensedDictionary> {
+	condense(locale: string, zones?: string[]): Promise<GenI18n.CondensedDictionary> {
 		const sub = subscriptions.get(this)
 		if (sub) {
 			sub.locale = locale
@@ -171,9 +190,15 @@ export class InteractiveServer extends I18nServer {
 	 * @param locale A language and perhaps a country
 	 * @param text A text value
 	 */
-	async modify(key: string, locale: Geni18n.LocaleName, text: string): Promise<void> {
-		const zone = await this.db.modify(key, locale, text)
+	async modify(
+		key: string,
+		locale: GenI18n.LocaleName,
+		text: string,
+		textInfos?: Partial<TextInfos>
+	): Promise<string | false> {
+		const zone = await this.db.modify(key, locale, text, textInfos)
 		if (zone !== false) this.modifications.push([key, locale, zone, text])
+		return zone
 	}
 	/**
 	 * Modify/creates a key
@@ -183,15 +208,18 @@ export class InteractiveServer extends I18nServer {
 	 * @param translations
 	 * @param args
 	 */
-	async key<infos extends any[] = any[]>(
+	async key(
 		key: string,
 		zone: string,
-		translations: Record<Geni18n.LocaleName, string> = {},
-		...args: infos
+		translations: Record<GenI18n.LocaleName, string> = {},
+		keyInfos?: Partial<KeyInfos>,
+		textInfos?: Partial<TextInfos>
 	): Promise<void> {
-		await this.db.key<infos>(key, zone, ...args)
+		await this.db.key(key, zone, keyInfos)
 		await Promise.all(
-			Object.entries(translations).map(([locale, value]) => this.modify(key, locale, value))
+			Object.entries(translations).map(([locale, value]) =>
+				this.modify(key, locale, value, textInfos)
+			)
 		)
 	}
 	async remove(key: string): Promise<void> {

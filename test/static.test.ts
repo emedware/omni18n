@@ -1,83 +1,81 @@
 import I18nServer from '../src/server'
-import Locale from '../src/locale'
-import { Zone, directMem } from './db'
+import I18nClient from '../src/client'
+import { WaitingJsonDb } from './db'
 
 // This is for test purpose: in general usage, only one locale/T is used
 let server: I18nServer,
 	T: Record<string, any>,
-	locales: Record<string, Locale>,
+	locales: Record<string, I18nClient>,
 	loads: any[] = []
 
 beforeAll(async () => {
 	server = new I18nServer(
-		directMem({
-			'fld.name': { en: 'Name', fr: 'Nom', [Zone]: '' },
-			'fld.bdate': { en: 'Birthday', fr: 'Date de naissance', [Zone]: '' },
-			'fld.bdate.short': { en: 'B-dy', [Zone]: '' },
+		new WaitingJsonDb({
+			'fld.name': { en: 'Name', fr: 'Nom', '.zone': '' },
+			'fld.bdate': { en: 'Birthday', fr: 'Date de naissance', '.zone': '' },
+			'fld.bdate.short': { en: 'B-dy', '.zone': '' },
 			'msg.greet': {
 				en: 'Hello {=1|here}',
 				fr: 'Salut {=1|tout le monde}',
 				'fr-BE': "Salut {=1|m'fi}",
-				[Zone]: ''
+				'.zone': ''
 			},
-			'cmd.ban': { en: 'Ban user', fr: "Bannir l'utilisateur", [Zone]: 'adm' },
+			'cmd.ban': { en: 'Ban user', fr: "Bannir l'utilisateur", '.zone': 'adm' },
 			'specs.animal': {
 				en: '{=1} {plural|$1|ox|oxen}',
-				fr: '{=1} {plural|$1|one:cheval,other:chevaux}',
-				[Zone]: ''
+				fr: '{=1} {plural|$1|one: cheval, other: chevaux}',
+				'.zone': ''
 			},
-			'specs.cat': { en: '{=1} {plural|$1|cat}', fr: '{=1} {plural|$1|chat}', [Zone]: '' },
-			'specs.ordinal': { '': '{ordinal|$1}', [Zone]: '' },
-			'format.number': { '': '{number|$1}', [Zone]: '' },
-			'format.number.engineering': { '': '{number|$1|engineering}', [Zone]: '' },
-			'format.price': { '': '{number|$2|style: currency, currency: $1}', [Zone]: '' },
-			'format.dateTime': { '': '{date|$1}', [Zone]: '' },
-			'format.medium': { '': '{date|$1|dateStyle: medium}', [Zone]: '' },
-			'format.date': { '': '{date|$1|date}', [Zone]: '' },
-			'format.time': { '': '{date|$1|time}', [Zone]: '' },
-			'format.relative': { '': '{relative|$1|short}', [Zone]: '' },
-			'format.region': { '': '{region|$1}', [Zone]: '' },
-			'format.language': { '': '{language|$1}', [Zone]: '' },
-			'format.script': { '': '{script|$1}', [Zone]: '' },
-			'format.currency': { '': '{currency|$1}', [Zone]: '' },
+			'specs.ordinal': { '': '{ordinal|$1}', '.zone': '' },
+			'format.number': { '': '{number|$1}', '.zone': '' },
+			'format.number.engineering': { '': '{number|$1|engineering}', '.zone': '' },
+			'format.price': { '': '{number|$2|style: currency, currency: $1}', '.zone': '' },
+			'format.dateTime': { '': '{date|$1}', '.zone': '' },
+			'format.medium': { '': '{date|$1|dateStyle: medium}', '.zone': '' },
+			'format.date': { '': '{date|$1|date}', '.zone': '' },
+			'format.time': { '': '{date|$1|time}', '.zone': '' },
+			'format.relative': { '': '{relative|$1|short}', '.zone': '' },
+			'format.region': { '': '{region|$1}', '.zone': '' },
+			'format.language': { '': '{language|$1}', '.zone': '' },
+			'format.script': { '': '{script|$1}', '.zone': '' },
+			'format.currency': { '': '{currency|$1}', '.zone': '' },
 			'msg.entries': {
-				// unused example, it's just an example for coders/translators
 				en: 'There are {number|$1} {plural|$1|entry|entries}',
 				fr: 'Il y a {number|$1} {plural|$1|entrée}',
-				[Zone]: ''
+				'.zone': ''
 			},
 			'cnv.naming': {
 				fr: '{=first} {=last}',
 				en: '{=last}, {=first}',
-				[Zone]: ''
+				'.zone': ''
 			},
 			'cnv.subNaming': {
 				// Useful to test parameters management
 				en: '{cnv.naming | first: $first, last: $last}',
 				fr: '{cnv.naming | $}',
-				[Zone]: ''
+				'.zone': ''
 			},
 			'internals.ordinals': {
 				en: "{one: '$st', two: '$nd', few: '$rd', other: '$th'}",
 				fr: "{one: '$er', other: '$ème'}",
-				[Zone]: ''
+				'.zone': ''
 			},
 			'internals.plurals': {
 				en: "{one: '$', other: '$s'}",
 				fr: "{one: '$', other: '$s'}",
-				[Zone]: ''
+				'.zone': ''
 			}
 		})
 	)
 
-	function condense(locale: Geni18n.LocaleName, zones: string[] = ['']) {
+	function condense(locale: GenI18n.LocaleName, zones: string[] = ['']) {
 		loads.push({ locale, zones })
 		return server.condense(locale, zones)
 	}
-	locales = { en: new Locale('en-US', condense), be: new Locale('fr-BE', condense) }
+	locales = { en: new I18nClient('en-US', condense), be: new I18nClient('fr-BE', condense) }
 	locales.en.enter('adm')
 	locales.be.timeZone = 'Europe/Brussels'
-	await Promise.all(Object.values(locales).map((locale) => locale.loaded))
+	await Promise.all(Object.values(locales).map((client) => client.loaded))
 	T = Object.fromEntries(Object.entries(locales).map(([key, value]) => [key, value.enter()]))
 })
 
@@ -114,8 +112,10 @@ describe('numbers', () => {
 		expect(T.be.specs.animal(1)).toBe('1 cheval')
 		expect(T.be.specs.animal(2)).toBe('2 chevaux')
 
-		expect(T.en.specs.cat(1)).toBe('1 cat')
-		expect(T.be.specs.cat(2)).toBe('2 chats')
+		expect(T.en.msg.entries(1)).toBe('There are 1 entry')
+		expect(T.en.msg.entries(2)).toBe('There are 2 entries')
+		expect(T.be.msg.entries(1)).toBe('Il y a 1 entrée')
+		expect(T.be.msg.entries(2)).toBe('Il y a 2 entrées')
 	})
 
 	test('ordinals', () => {
@@ -195,8 +195,8 @@ describe('formatting', () => {
 describe('parameters', () => {
 	test('zones', async () => {
 		expect(loads).toEqual([
-			{ locale: 'en-US', zones: ['', 'adm'] },
-			{ locale: 'fr-BE', zones: [''] }
+			{ locale: 'fr-BE', zones: [''] },
+			{ locale: 'en-US', zones: ['', 'adm'] }
 		])
 		expect(T.en.cmd.ban()).toBe('Ban user')
 		expect(T.be.cmd.ban()).toBe('[cmd.ban]')
@@ -208,11 +208,11 @@ describe('parameters', () => {
 	})
 
 	test('change locale', async () => {
-		const locale = new Locale('en-US', server.condense),
-			T = locale.enter()
-		await locale.loaded
+		const client = new I18nClient('en-US', server.condense),
+			T = client.enter()
+		await client.loaded
 		expect(T.msg.greet()).toBe('Hello here')
-		await locale.setLocale('fr')
+		await client.setLocale('fr')
 		expect(T.msg.greet()).toBe('Salut tout le monde')
 	})
 })

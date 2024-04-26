@@ -1,31 +1,31 @@
 import { InteractiveServer } from '../src/server'
-import Locale from '../src/locale'
-import { Zone, directMem } from './db'
+import I18nClient from '../src/client'
+import { WaitingJsonDb } from './db'
 
 describe('Dynamic functionality', () => {
 	let server: InteractiveServer,
 		T: any,
-		locale: Locale,
+		client: I18nClient,
 		modifications: Record<string, string | undefined>[] = []
 
 	beforeAll(async () => {
 		server = new InteractiveServer(
-			directMem({
-				'fld.name': { en: 'Name', [Zone]: '' },
-				'cmd.customize': { en: 'Customize', 'en-UK': 'Customise', [Zone]: '' },
-				'cmd.save': { en: 'Save', [Zone]: 'adm' }
+			new WaitingJsonDb({
+				'fld.name': { en: 'Name', '.zone': '' },
+				'cmd.customize': { en: 'Customize', 'en-UK': 'Customise', '.zone': '' },
+				'cmd.save': { en: 'Save', '.zone': 'adm' }
 			}),
 			async (entries: Record<string, string | undefined>) => {
-				if (locale) {
+				if (client) {
 					//ignore the initialization
 					modifications.push(entries)
-					locale.modified(entries)
+					client.modified(entries)
 				}
 			}
 		)
-		locale = new Locale('en-UK', server.condense)
-		T = locale.enter()
-		await locale.loaded
+		client = new I18nClient('en-UK', server.condense)
+		T = client.enter()
+		await client.loaded
 	})
 
 	test('regular feedback', async () => {
@@ -60,8 +60,8 @@ describe('Dynamic functionality', () => {
 		await server.save()
 		expect(modifications).toEqual([])
 		expect(T.cmd.save()).toBe('[cmd.save]')
-		locale.enter('adm')
-		await locale.loaded
+		client.enter('adm')
+		await client.loaded
 		expect(T.cmd.save()).toBe('Save it')
 		await server.modify('cmd.save', 'en', 'Save')
 		await server.save()

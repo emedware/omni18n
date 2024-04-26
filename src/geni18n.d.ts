@@ -1,4 +1,4 @@
-declare namespace Geni18n {
+declare namespace GenI18n {
 	interface CondensedDictionary {
 		[key: string]: CondensedDictionary | string
 	}
@@ -7,4 +7,6 @@ declare namespace Geni18n {
 
 	// shortcut
 	type LocaleName = Intl.UnicodeBCP47LocaleIdentifier
+
+	type Zone = string
 }
