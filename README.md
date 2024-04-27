@@ -21,6 +21,7 @@ import { I18nServer, I18nClient } from 'geni18n'
 const server = new I18nServer(myDBinterface)
 const client = new I18nClient('en-US', server.condensed)
 const T = client.enter()
+await client.loaded
 
 console.log(T.msg.hello) // Will display the entry `msg.hello` for the `en-US` (or `en`) locale
 ```

@@ -1,5 +1,3 @@
-import { InteractiveDB } from '../src/server'
-
 interface SystemEntry<KeyInfos extends {}, TextInfos extends {}> {
 	'.zone': GenI18n.Zone
 	'.keyInfos'?: KeyInfos
@@ -12,12 +10,12 @@ export type JsonDictionaryEntry<KeyInfos extends {}, TextInfos extends {}> = Rec
 > &
 	SystemEntry<KeyInfos, TextInfos>
 
-export type JsonDictionary<KeyInfos extends {}, TextInfos extends {}> = {
+export type JsonDictionary<KeyInfos extends {} = {}, TextInfos extends {} = {}> = {
 	[key: string]: JsonDictionaryEntry<KeyInfos, TextInfos>
 }
 
 export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
-	implements InteractiveDB<KeyInfos, TextInfos>
+	implements GenI18n.InteractiveDB<KeyInfos, TextInfos>
 {
 	constructor(public dictionary: JsonDictionary<KeyInfos, TextInfos> = {}) {}
 
@@ -47,7 +45,8 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 	}
 
 	async key(key: string, zone: string, keyInfos?: Partial<KeyInfos>) {
-		const entry = this.dictionary[key] || {}
+		const entry = this.dictionary[key] || {},
+			ez = entry['.zone']
 		this.dictionary[key] = <JsonDictionaryEntry<KeyInfos, TextInfos>>{
 			...entry,
 			...((entry['.keyInfos'] || keyInfos) && {
@@ -61,6 +60,7 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 		const kis = <KeyInfos>this.dictionary[key]['.keyInfos']
 		if (kis)
 			for (const ki in keyInfos) if (keyInfos[ki] === undefined) delete kis[ki as keyof KeyInfos]
+		return zone !== ez
 	}
 
 	async remove(key: string) {
@@ -72,13 +72,25 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 		return rv
 	}
 
-	async list(locale: GenI18n.LocaleName, zones: string[]) {
+	async list(locales: GenI18n.LocaleName[], zone: GenI18n.Zone) {
 		const result: GenI18n.RawDictionary = {}
 		Object.entries(this.dictionary).forEach(([key, value]) => {
-			if (zones.includes(value['.zone']) && locale in value) {
-				result[key] = value[locale as string]
+			if (zone == value['.zone']) {
+				let mLocale: GenI18n.LocaleName | false = false,
+					mText: string
+				for (const locale in value) {
+					if (locales.includes(locale) && (!mLocale || locale.length > mLocale.length))
+						mLocale = locale
+				}
+				if (mLocale !== false) result[key] = value[mLocale]
 			}
 		})
 		return result
+	}
+
+	async get(key: string) {
+		return Object.fromEntries(
+			Object.entries(this.dictionary[key]).filter(([k]) => !k.startsWith('.'))
+		)
 	}
 }
