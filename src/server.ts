@@ -1,5 +1,8 @@
 /// <reference path="./geni18n.d.ts" />
 
+type CDic = GenI18n.CondensedDictionary
+type CDicE = CDic & string
+
 /**
  * Abstract file used between the http layer and the database
  */
@@ -74,16 +77,13 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 	 * @param zone
 	 * @returns
 	 */
-	async condense(
-		locale: GenI18n.LocaleName,
-		zones: string[] = ['']
-	): Promise<GenI18n.CondensedDictionary> {
+	async condense(locale: GenI18n.LocaleName, zones: string[] = ['']): Promise<CDic> {
 		const parts = locale.split('-'),
 			raws = await Promise.all([
 				this.list('', zones),
 				...localeTree(locale).map((subLocale) => this.list(subLocale, zones))
 			]),
-			result: GenI18n.CondensedDictionary = {}
+			result: CDic = {}
 		for (const raw of raws) {
 			for (const key in raw) {
 				const value = raw[key],
@@ -91,12 +91,13 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 					lastKey = keys.pop() as string
 				let current = result
 				for (const k of keys) {
-					if (!current[k]) current[k] = {}
-					else if (typeof current[k] === 'string') current[k] = { '': current[k] }
-					current = current[k] as GenI18n.CondensedDictionary
+					if (!current[k]) current[k] = <CDicE>{}
+					else if (typeof current[k] === 'string') current[k] = <CDicE>{ '': <string>current[k] }
+					current = current[k] as CDic
 				}
-				if (current[lastKey] && typeof current[lastKey] !== 'string') current[lastKey][''] = value
-				else current[lastKey] = value
+				if (current[lastKey] && typeof current[lastKey] !== 'string')
+					(<CDic>current[lastKey])[''] = value
+				else current[lastKey] = <CDicE>value
 			}
 		}
 		return result
@@ -174,7 +175,7 @@ export class InteractiveServer<
 	 * @param zone
 	 * @returns
 	 */
-	condense(locale: string, zones?: string[]): Promise<GenI18n.CondensedDictionary> {
+	condense(locale: string, zones?: string[]): Promise<CDic> {
 		const sub = subscriptions.get(this)
 		if (sub) {
 			sub.locale = locale

@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"target": "es2015",
+		"module": "ESNext",
+		"outDir": "./dist",
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"baseUrl": ".",
+		"paths": {
+			"tslib" : ["./node_modules/tslib/tslib.d.ts"]
+		}
+	}
+}

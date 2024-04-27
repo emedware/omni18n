@@ -1,21 +1,25 @@
 import { InteractiveDB } from '../src/server'
 
-export type JsonDictionaryEntry<KeyInfos extends {} = {}, TextInfos extends {} = {}> =
-	| Record<GenI18n.LocaleName, string>
-	| {
-			'.zone': GenI18n.Zone
-			'.keyInfos'?: KeyInfos
-			'.textInfos'?: Record<GenI18n.LocaleName, TextInfos>
-	  }
+interface SystemEntry<KeyInfos extends {}, TextInfos extends {}> {
+	'.zone': GenI18n.Zone
+	'.keyInfos'?: KeyInfos
+	'.textInfos'?: Record<GenI18n.LocaleName, TextInfos>
+}
 
-export type JsonDictionary<KeyInfos extends {} = {}> = {
-	[key: string]: JsonDictionaryEntry<KeyInfos>
+export type JsonDictionaryEntry<KeyInfos extends {}, TextInfos extends {}> = Record<
+	Exclude<GenI18n.LocaleName, keyof SystemEntry<KeyInfos, TextInfos>>,
+	string
+> &
+	SystemEntry<KeyInfos, TextInfos>
+
+export type JsonDictionary<KeyInfos extends {}, TextInfos extends {}> = {
+	[key: string]: JsonDictionaryEntry<KeyInfos, TextInfos>
 }
 
 export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 	implements InteractiveDB<KeyInfos, TextInfos>
 {
-	constructor(public dictionary: JsonDictionary = {}) {}
+	constructor(public dictionary: JsonDictionary<KeyInfos, TextInfos> = {}) {}
 
 	async isSpecified(key: string, locales: GenI18n.LocaleName[]) {
 		return locales.some((locale) => this.dictionary[key]?.[locale])
@@ -44,7 +48,7 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 
 	async key(key: string, zone: string, keyInfos?: Partial<KeyInfos>) {
 		const entry = this.dictionary[key] || {}
-		this.dictionary[key] = {
+		this.dictionary[key] = <JsonDictionaryEntry<KeyInfos, TextInfos>>{
 			...entry,
 			...((entry['.keyInfos'] || keyInfos) && {
 				'.keyInfos': {
@@ -54,8 +58,9 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 			}),
 			'.zone': zone
 		}
-		for (const ki in keyInfos)
-			if (keyInfos[ki] === undefined) delete entry['.keyInfos']?.[ki as string]
+		const kis = <KeyInfos>this.dictionary[key]['.keyInfos']
+		if (kis)
+			for (const ki in keyInfos) if (keyInfos[ki] === undefined) delete kis[ki as keyof KeyInfos]
 	}
 
 	async remove(key: string) {
@@ -70,8 +75,8 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 	async list(locale: GenI18n.LocaleName, zones: string[]) {
 		const result: GenI18n.RawDictionary = {}
 		Object.entries(this.dictionary).forEach(([key, value]) => {
-			if (zones.includes(value['.zone']) && value[locale]) {
-				result[key] = value[locale]
+			if (zones.includes(value['.zone']) && locale in value) {
+				result[key] = value[locale as string]
 			}
 		})
 		return result

@@ -1,6 +1,6 @@
 export default class Defer {
 	private promise: Promise<void> = Promise.resolve()
-	private reject: (reason?: any) => void
+	private reject?: (reason?: any) => void
 	timeout: any
 	private internalCB?: () => Promise<void>
 
@@ -35,7 +35,7 @@ export default class Defer {
 	cancel() {
 		if (!this.timeout) return
 		clearTimeout(this.timeout)
-		this.reject()
+		this.reject!()
 		this.timeout = undefined
 	}
 }

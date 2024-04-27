@@ -6,6 +6,9 @@ import './polyfill'
 import { parse } from 'hjson'
 import Defer from './defer'
 
+type CDic = GenI18n.CondensedDictionary
+type CDicE = CDic & string
+
 class TranslationError extends Error {
 	constructor(message: string) {
 		super(message)
@@ -43,7 +46,7 @@ function objectArgument(arg: any): string | Record<string, string> {
 	)
 }
 
-export const formats = {
+export const formats: Record<'date' | 'number' | 'relative', Record<string, object>> = {
 	date: {
 		date: {
 			dateStyle: 'short'
@@ -71,7 +74,7 @@ export const formats = {
 	}
 }
 
-export let processors = {
+export let processors: Record<string, (...args: any[]) => string> = {
 	upper(str: string) {
 		return str.toUpperCase()
 	},
@@ -93,7 +96,9 @@ export let processors = {
 			{ client } = this
 		if (isNaN(num)) return reports.error('NaN', { str }, this)
 		const rule = client.cardinalRules.select(num)
-		const rules = plural ? { one: designation, other: plural } : designation
+		const rules: string | Record<string, string> = plural
+			? { one: designation, other: plural }
+			: designation
 
 		if (typeof rules === 'string') {
 			if (!client.internals.plurals) return reports.missing({ ...this, key: 'internals.plurals' })
@@ -158,20 +163,32 @@ export let processors = {
 		)
 	},
 	region(this: TContext, str: string) {
-		return new Intl.DisplayNames([this.client.locale], { type: 'region' }).of(str)
+		return (
+			new Intl.DisplayNames([this.client.locale], { type: 'region' }).of(str) ||
+			reports.error('Invalid region', { str }, this)
+		)
 	},
 	language(this: TContext, str: string) {
-		return new Intl.DisplayNames([this.client.locale], { type: 'language' }).of(str)
+		return (
+			new Intl.DisplayNames([this.client.locale], { type: 'language' }).of(str) ||
+			reports.error('Invalid language', { str }, this)
+		)
 	},
 	script(this: TContext, str: string) {
-		return new Intl.DisplayNames([this.client.locale], { type: 'script' }).of(str)
+		return (
+			new Intl.DisplayNames([this.client.locale], { type: 'script' }).of(str) ||
+			reports.error('Invalid script', { str }, this)
+		)
 	},
 	currency(this: TContext, str: string) {
-		return new Intl.DisplayNames([this.client.locale], { type: 'currency' }).of(str)
+		return (
+			new Intl.DisplayNames([this.client.locale], { type: 'currency' }).of(str) ||
+			reports.error('Invalid currency', { str }, this)
+		)
 	}
 }
 
-function translate(context: TContext, args: any[]) {
+function translate(context: TContext, args: any[]): string {
 	const { client, key } = context,
 		keys = key.split('.')
 	let current = client.condensed,
@@ -181,19 +198,26 @@ function translate(context: TContext, args: any[]) {
 		if (!current[k]) break
 		else if (typeof current[k] === 'string') value = current[k] as string
 		else {
-			if (current[k]['']) value = current[k][''] as string
-			current = current[k] as GenI18n.CondensedDictionary
+			const next = current[k] as CDic
+			if (next['']) value = next[''] as string
+			current = next
 		}
 	}
 	return value ? client.interpolate(context, value, args) : reports.missing(context)
 }
+export type Translator = { [k: string]: Translator } & ((...args: any[]) => string) & string
 
-function translator(context: TContext) {
-	function translation(...args: any[]) {
-		return translate(context, args)
-	}
-	return new Proxy(translation, {
-		get: (target, key) => {
+function translator(context: TContext): Translator {
+	const translation = context.key
+		? function (...args: any[]): string {
+				return translate(context, args)
+			}
+		: function (key?: string, ...args: any[]): string {
+				if (!key) throw new TranslationError('Root translator called without key')
+				return translate({ ...context, key }, args)
+			}
+	return <Translator>new Proxy(translation, {
+		get(target, key) {
 			switch (key) {
 				case 'toString':
 				case Symbol.toStringTag:
@@ -231,7 +255,7 @@ export interface Internals {
 	plurals?: Record<string, string>
 }
 
-function parseInternals(dictionary: GenI18n.CondensedDictionary | string) {
+function parseInternals(dictionary: CDic | string) {
 	if (!dictionary) return {}
 	if (typeof dictionary === 'string') return parse(dictionary)
 	const result = dictionary[''] ? parse(dictionary['']) : {}
@@ -239,14 +263,14 @@ function parseInternals(dictionary: GenI18n.CondensedDictionary | string) {
 	return result
 }
 
-function recurExtend(dst: GenI18n.CondensedDictionary, src: GenI18n.CondensedDictionary) {
+function recurExtend(dst: CDic, src: CDic) {
 	for (const key in src) {
 		if (!dst[key]) dst[key] = src[key]
 		else if (typeof dst[key] === 'object' && typeof src[key] === 'object')
-			recurExtend(dst[key] as GenI18n.CondensedDictionary, src[key] as GenI18n.CondensedDictionary)
-		else if (typeof dst[key] === 'object') dst[key][''] = src[key]
+			recurExtend(dst[key] as CDic, src[key] as CDic)
+		else if (typeof dst[key] === 'object') (<CDic>dst[key])[''] = <string>src[key]
 		else if (typeof src[key] === 'object')
-			dst[key] = { '': dst[key], ...(<GenI18n.CondensedDictionary>src[key]) }
+			dst[key] = <CDicE>{ '': <string>dst[key], ...(<CDic>src[key]) }
 	}
 }
 
@@ -254,7 +278,7 @@ export default class I18nClient {
 	readonly ordinalRules: Intl.PluralRules
 	readonly cardinalRules: Intl.PluralRules
 	internals: Internals = {}
-	condensed: GenI18n.CondensedDictionary = {}
+	condensed: CDic = {}
 	protected loadedZones = new Set<GenI18n.Zone>()
 	private toLoadZones = new Set<GenI18n.Zone>()
 	private loading = new Defer()
@@ -266,10 +290,7 @@ export default class I18nClient {
 	constructor(
 		public locale: GenI18n.LocaleName,
 		// On the server side, this is `server.condensed`. From the client-side this is an http request of some sort
-		public condenser: (
-			locale: GenI18n.LocaleName,
-			zones: string[]
-		) => Promise<GenI18n.CondensedDictionary>
+		public condenser: (locale: GenI18n.LocaleName, zones: string[]) => Promise<CDic>
 	) {
 		this.ordinalRules = new Intl.PluralRules(locale, { type: 'ordinal' })
 		this.cardinalRules = new Intl.PluralRules(locale, { type: 'cardinal' })
@@ -297,7 +318,7 @@ export default class I18nClient {
 		return translator({ client: this, zones, key: '' })
 	}
 
-	protected received(zones: string[], condensed: GenI18n.CondensedDictionary) {
+	protected received(zones: string[], condensed: CDic) {
 		for (const zone of zones) this.loadedZones.add(zone)
 		recurExtend(this.condensed, condensed)
 		if (zones.includes('') && condensed.internals)
@@ -325,22 +346,23 @@ export default class I18nClient {
 				lastKey = keys.pop() as string
 			let browser = this.condensed
 			for (const key of keys) {
-				if (!browser[key]) browser[key] = {}
-				else if (typeof browser[key] === 'string') browser[key] = { '': browser[key] }
-				browser = browser[key] as GenI18n.CondensedDictionary
+				if (!browser[key]) browser[key] = <CDicE>{}
+				else if (typeof browser[key] === 'string')
+					browser[key] = <CDicE>{ '': <string>browser[key] }
+				browser = browser[key] as CDic
 			}
-			if (typeof value === undefined) {
-				if (typeof browser[lastKey] === 'object') delete browser[lastKey]['']
+			if (value === undefined) {
+				if (typeof browser[lastKey] === 'object') delete (<CDic>browser[lastKey])['']
 				else delete browser[lastKey]
 			} else {
-				if (typeof browser[lastKey] === 'object') browser[lastKey][''] = value
-				else browser[lastKey] = <string>value
+				if (typeof browser[lastKey] === 'object') (<CDic>browser[lastKey])[''] = value
+				else browser[lastKey] = <CDicE>value
 			}
 		}
 	}
 
 	// TODO escape {{ and }}
-	interpolate(context: TContext, text: string, args: any[]) {
+	interpolate(context: TContext, text: string, args: any[]): string {
 		const { key, zones } = context
 		function arg(i: string | number, dft?: string) {
 			if (typeof i === 'string' && /^\d+$/.test(i)) i = parseInt(i)

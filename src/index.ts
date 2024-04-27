@@ -1,8 +1,14 @@
-export { default as I18nClient, Internals, TContext, formats, processors, reports } from './client'
+export {
+	default as I18nClient,
+	Internals,
+	TContext,
+	Translator,
+	formats,
+	processors,
+	reports
+} from './client'
 export { default as I18nServer, InteractiveServer, DB, InteractiveDB } from './server'
-
-import I18nClient from './client'
-export default I18nClient
+export { default as JsonDB } from './json-db'
 
 declare global {
 	interface Set<T> {

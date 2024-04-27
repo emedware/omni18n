@@ -1,5 +1,5 @@
 import I18nServer from '../src/server'
-import I18nClient from '../src/client'
+import I18nClient, { Translator } from '../src/client'
 import { WaitingJsonDb } from './db'
 
 // This is for test purpose: in general usage, only one locale/T is used
@@ -209,7 +209,7 @@ describe('parameters', () => {
 
 	test('change locale', async () => {
 		const client = new I18nClient('en-US', server.condense),
-			T = client.enter()
+			T: Translator = client.enter()
 		await client.loaded
 		expect(T.msg.greet()).toBe('Hello here')
 		await client.setLocale('fr')

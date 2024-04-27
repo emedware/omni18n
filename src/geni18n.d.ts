@@ -1,6 +1,7 @@
 declare namespace GenI18n {
 	interface CondensedDictionary {
-		[key: string]: CondensedDictionary | string
+		[key: Exclude<string, ''>]: CondensedDictionary & string
+		''?: string
 	}
 
 	type RawDictionary = Record<string, string>
