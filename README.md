@@ -76,7 +76,7 @@ Root zone that will contain all the common "Yes", "No", `internals`, ....
 
 In case of PoC, only the root zone can be used.
 
-Note: The library is optimized to download only the missing parts through a user's browsing experience
+> :information_source: The library is optimized to download only the missing parts through a user's browsing experience
 
 > :warning: Zones are not different name spaces for text keys, each key is unique and has an associated zone
 
@@ -96,7 +96,7 @@ The interpolation is done in `I18nClient::interpolate` and can of course be over
 
 ### Arguments
 
-Note: while interpolating, the argument nr 0 is the key, the first argument is the argument nr 1.
+> :information_source: while interpolating, the argument nr 0 is the key, the first argument is the argument nr 1.
 
 `"This is a {=1}"` will have to be called with an argument, `"This is a {=1|distraction}"` may be called with an argument.
 
@@ -126,7 +126,7 @@ If the first element is a named list, the second one will be the case to take fr
 
 example: `{question: ?, exclamation: ! | $1}`
 
-Note: The case `default` get the remaining cases, and if not specified, raise an error if an inexistent case is given
+> :information_source: The case `default` get the remaining cases, and if not specified, an error is raised if an inexistent case is given
 
 ### Sub translation
 
@@ -157,7 +157,7 @@ The syntax to use them is `{processor | arg1 | arg2}`.
 
 example: `{upper | $1}` will render the first argument in upper-case
 
-Note: `{$2[upper] | $1}` is also possible, in which case the second argument can both specify an intl key, a processor or be defaulted to the `upper` processor.
+> :information_source: `{$2[upper] | $1}` is also possible, in which case the second argument can both specify an intl key, a processor or be defaulted to the `upper` processor.
 
 #### Casing
 
