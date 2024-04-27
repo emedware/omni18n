@@ -3,7 +3,7 @@ import I18nServer, { localeTree } from './server'
 const subscriptions = new Map<
 	InteractiveServer,
 	{
-		locale: GenI18n.LocaleName
+		locale: GenI18n.Locale
 		zones: string[]
 	}
 >()
@@ -16,7 +16,7 @@ export default class InteractiveServer<
 	TextInfos extends {} = {}
 > extends I18nServer<KeyInfos, TextInfos> {
 	modifiedValues: Record<string, [string, string] | undefined> = {}
-	modifications: [string, GenI18n.LocaleName, string, string | undefined][] = []
+	modifications: [string, GenI18n.Locale, string, string | undefined][] = []
 
 	constructor(
 		protected db: GenI18n.InteractiveDB,
@@ -26,7 +26,7 @@ export default class InteractiveServer<
 		subscriptions.set(this, { locale: '', zones: [] })
 	}
 
-	isSpecified(key: string, locales: GenI18n.LocaleName[]): Promise<undefined | {} | TextInfos> {
+	isSpecified(key: string, locales: GenI18n.Locale[]): Promise<undefined | {} | TextInfos> {
 		return this.db.isSpecified(key, locales)
 	}
 
@@ -90,7 +90,7 @@ export default class InteractiveServer<
 	 */
 	async modify(
 		key: string,
-		locale: GenI18n.LocaleName,
+		locale: GenI18n.Locale,
 		text: string,
 		textInfos?: Partial<TextInfos>
 	): Promise<string | false> {
@@ -109,7 +109,7 @@ export default class InteractiveServer<
 	async key(
 		key: string,
 		zone: string,
-		translations: Record<GenI18n.LocaleName, string> = {},
+		translations: Record<GenI18n.Locale, string> = {},
 		keyInfos?: Partial<KeyInfos>,
 		textInfos?: Partial<TextInfos>
 	): Promise<void> {

@@ -1,10 +1,9 @@
-import InteractiveServer from '../src/server/interactive'
-import I18nClient from '../src/client/client'
 import { WaitingJsonDb } from './db'
+import { Translator, I18nClient, InteractiveServer } from '../src/index'
 
 describe('Dynamic functionality', () => {
 	let server: InteractiveServer,
-		T: any,
+		T: Translator,
 		client: I18nClient,
 		modifications: Record<string, [string, string] | undefined>[] = []
 
@@ -30,13 +29,14 @@ describe('Dynamic functionality', () => {
 	})
 
 	test('regular feedback', async () => {
-		expect(T.fld.name()).toBe('Name')
+		// `T.fld.name()` raises a typescript exception as `T.fld` could be a function, whose `name` is a string
+		expect('' + T.fld.name).toBe('Name')
 		expect(modifications).toEqual([])
 		await server.modify('fld.name', 'en', 'Surname')
 		await server.save()
 		expect(modifications).toEqual([{ 'fld.name': ['Surname', ''] }])
 		modifications = []
-		expect(T.fld.name()).toBe('Surname')
+		expect('' + T.fld.name).toBe('Surname')
 	})
 
 	test('sub-locale', async () => {

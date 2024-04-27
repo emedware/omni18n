@@ -1,11 +1,11 @@
 interface SystemEntry<KeyInfos extends {}, TextInfos extends {}> {
 	'.zone': GenI18n.Zone
 	'.keyInfos'?: KeyInfos
-	'.textInfos'?: Record<GenI18n.LocaleName, TextInfos>
+	'.textInfos'?: Record<GenI18n.Locale, TextInfos>
 }
 
 export type JsonDictionaryEntry<KeyInfos extends {}, TextInfos extends {}> = Record<
-	Exclude<GenI18n.LocaleName, keyof SystemEntry<KeyInfos, TextInfos>>,
+	Exclude<GenI18n.Locale, keyof SystemEntry<KeyInfos, TextInfos>>,
 	string
 > &
 	SystemEntry<KeyInfos, TextInfos>
@@ -19,22 +19,17 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 {
 	constructor(public dictionary: JsonDictionary<KeyInfos, TextInfos> = {}) {}
 
-	async isSpecified(key: string, locales: GenI18n.LocaleName[]) {
+	async isSpecified(key: string, locales: GenI18n.Locale[]) {
 		return locales.some((locale) => this.dictionary[key]?.[locale])
 			? this.dictionary[key]['.keyInfos'] || {}
 			: undefined
 	}
 
-	async modify(
-		key: string,
-		locale: GenI18n.LocaleName,
-		value: string,
-		textInfos?: Partial<TextInfos>
-	) {
+	async modify(key: string, locale: GenI18n.Locale, value: string, textInfos?: Partial<TextInfos>) {
 		if (!this.dictionary[key]) throw new Error(`Key "${key}" not found`)
 		this.dictionary[key][locale] = value
 		if (textInfos) {
-			const tis = <Record<GenI18n.LocaleName, TextInfos>>this.dictionary[key]['.textInfos']
+			const tis = <Record<GenI18n.Locale, TextInfos>>this.dictionary[key]['.textInfos']
 			tis[locale] = {
 				...tis[locale],
 				...textInfos
@@ -72,11 +67,11 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 		return rv
 	}
 
-	async list(locales: GenI18n.LocaleName[], zone: GenI18n.Zone) {
+	async list(locales: GenI18n.Locale[], zone: GenI18n.Zone) {
 		const result: GenI18n.RawDictionary = {}
 		Object.entries(this.dictionary).forEach(([key, value]) => {
 			if (zone == value['.zone']) {
-				let mLocale: GenI18n.LocaleName | false = false,
+				let mLocale: GenI18n.Locale | false = false,
 					mText: string
 				for (const locale in value) {
 					if (locales.includes(locale) && (!mLocale || locale.length > mLocale.length))

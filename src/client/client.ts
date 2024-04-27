@@ -22,7 +22,7 @@ export default class I18nClient implements GenI18nClient {
 	public timeZone?: string
 
 	constructor(
-		public locale: GenI18n.LocaleName,
+		public locale: GenI18n.Locale,
 		// On the server side, this is `server.condensed`. From the client-side this is an http request of some sort
 		public condense: GenI18n.Condense,
 		public onModification?: GenI18n.OnModification
@@ -73,7 +73,7 @@ export default class I18nClient implements GenI18nClient {
 		if (toLoad.length) this.received(toLoad, await this.condense(this.locale, toLoad))
 	}
 
-	async setLocale(locale: GenI18n.LocaleName) {
+	async setLocale(locale: GenI18n.Locale) {
 		if (this.locale === locale) return
 		this.locale = locale
 		const toLoad = Array.from(this.loadedZones)
@@ -107,6 +107,5 @@ export default class I18nClient implements GenI18nClient {
 		this.onModification?.(Object.keys(entries))
 	}
 
-	// TODO escape {{ and }}
 	interpolate = interpolate
 }

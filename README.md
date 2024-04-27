@@ -126,6 +126,8 @@ If the first element is a named list, the second one will be the case to take fr
 
 example: `{question: ?, exclamation: ! | $1}`
 
+Note: The case `default` get the remaining cases, and if not specified, raise an error if an inexistent case is given
+
 ### Sub translation
 
 To use another translation can be useful, when for example one translation is a number format centralization common to all languages, or when a centralized (all-language) format string needs to use conjunctions or words that are language-specific.

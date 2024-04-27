@@ -1,5 +1,4 @@
-import I18nServer from '../src/server/server'
-import { I18nClient, Translator } from '../src/client/index'
+import { I18nClient, Translator, I18nServer } from '../src/index'
 import { WaitingJsonDb } from './db'
 
 // TODO: test errors
@@ -7,7 +6,7 @@ import { WaitingJsonDb } from './db'
 // This is for test purpose: in general usage, only one locale/T is used
 let server: I18nServer,
 	T: Record<string, any>,
-	locales: Record<string, I18nClient>,
+	clients: Record<string, I18nClient>,
 	loads: any[] = []
 
 beforeAll(async () => {
@@ -42,7 +41,7 @@ beforeAll(async () => {
 			'format.script': { '': '{script|$1}', '.zone': '' },
 			'format.currency': { '': '{currency|$1}', '.zone': '' },
 			'msg.entries': {
-				en: 'There are {number|$1} {plural|$1|entry|entries}',
+				en: 'There {plural|$1|is|are} {number|$1} {plural|$1|entry|entries}',
 				fr: 'Il y a {number|$1} {plural|$1|entrée}',
 				'.zone': ''
 			},
@@ -70,15 +69,15 @@ beforeAll(async () => {
 		})
 	)
 
-	function condense(locale: GenI18n.LocaleName, zones: string[] = ['']) {
+	function condense(locale: GenI18n.Locale, zones: string[] = ['']) {
 		loads.push({ locale, zones })
 		return server.condense(locale, zones)
 	}
-	locales = { en: new I18nClient('en-US', condense), be: new I18nClient('fr-BE', condense) }
-	locales.en.enter('adm')
-	locales.be.timeZone = 'Europe/Brussels'
-	T = Object.fromEntries(Object.entries(locales).map(([key, value]) => [key, value.enter()]))
-	await Promise.all(Object.values(locales).map((client) => client.loaded))
+	clients = { en: new I18nClient('en-US', condense), be: new I18nClient('fr-BE', condense) }
+	clients.en.enter('adm')
+	clients.be.timeZone = 'Europe/Brussels'
+	T = Object.fromEntries(Object.entries(clients).map(([key, value]) => [key, value.enter()]))
+	await Promise.all(Object.values(clients).map((client) => client.loaded))
 })
 
 describe('basic functionalities', () => {
@@ -91,6 +90,7 @@ describe('basic functionalities', () => {
 		expect(fields.name()).toBe('Name')
 		expect('' + fields['name']).toBe('Name')
 		expect(T.en['fld.name']()).toBe('Name')
+		expect(T.en('fld.name')).toBe('Name')
 	})
 
 	test('simple arguments', () => {
@@ -114,7 +114,7 @@ describe('numbers', () => {
 		expect(T.be.specs.animal(1)).toBe('1 cheval')
 		expect(T.be.specs.animal(2)).toBe('2 chevaux')
 
-		expect(T.en.msg.entries(1)).toBe('There are 1 entry')
+		expect(T.en.msg.entries(1)).toBe('There is 1 entry')
 		expect(T.en.msg.entries(2)).toBe('There are 2 entries')
 		expect(T.be.msg.entries(1)).toBe('Il y a 1 entrée')
 		expect(T.be.msg.entries(2)).toBe('Il y a 2 entrées')
@@ -189,7 +189,7 @@ describe('formatting', () => {
 		expect(T.en.format.language('en-UK')).toBe('British English')
 		expect(T.be.format.language('fr-CA')).toBe('français canadien')
 		expect(T.en.format.script('Latn')).toBe('Latin')
-		expect(T.be.format.script('Latn')).toBe('latin')
+		expect(T.be.format.script('Arab')).toBe('arabe')
 		expect(T.en.format.currency('RON')).toBe('Romanian Leu')
 		expect(T.be.format.currency('HUF')).toBe('forint hongrois')
 	})
@@ -204,8 +204,8 @@ describe('parameters', () => {
 		expect(T.en.cmd.ban()).toBe('Ban user')
 		expect(T.be.cmd.ban()).toBe('[cmd.ban]')
 		loads = []
-		locales.be.enter('adm')
-		await locales.be.loaded
+		clients.be.enter('adm')
+		await clients.be.loaded
 		expect(loads).toEqual([{ locale: 'fr-BE', zones: ['adm'] }])
 		expect(T.be.cmd.ban()).toBe("Bannir l'utilisateur")
 	})

@@ -4,27 +4,27 @@ declare namespace GenI18n {
 		''?: string
 	}
 
-	type Condense = (locale: GenI18n.LocaleName, zones: Zone[]) => Promise<CondensedDictionary[]>
-	type OnModification = (entries?: GenI18n.LocaleName[]) => void
+	type Condense = (locale: Locale, zones: Zone[]) => Promise<CondensedDictionary[]>
+	type OnModification = (entries?: Locale[]) => void
 	type RawDictionary = Record<string, string>
 
 	// shortcut
-	type LocaleName = Intl.UnicodeBCP47LocaleIdentifier
+	type Locale = Intl.UnicodeBCP47LocaleIdentifier
 
 	type Zone = string
 
 	interface DB<KeyInfos extends {} = {}, TextInfos extends {} = {}> {
 		/**
-		 * Retrieves all the values for a certain locale
-		 * @param locale A language and perhaps a country
+		 * Retrieves all the values for a certain zone
+		 * @param locales A list of locales to search for
 		 */
-		list(locales: GenI18n.LocaleName[], zone: Zone): Promise<GenI18n.RawDictionary>
+		list(locales: Locale[], zone: Zone): Promise<RawDictionary>
 
 		/**
 		 * Retrieves all the locales given for a certain key
 		 * @param key The key to search for
 		 */
-		get(key: string): Promise<Record<GenI18n.LocaleName, string>>
+		get(key: string): Promise<Record<Locale, string>>
 	}
 
 	interface InteractiveDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
@@ -34,7 +34,7 @@ declare namespace GenI18n {
 		 * @param key The key to search for
 		 * @param locales The locales to search in
 		 */
-		isSpecified(key: string, locales: GenI18n.LocaleName[]): Promise<undefined | {} | TextInfos>
+		isSpecified(key: string, locales: Locale[]): Promise<undefined | {} | TextInfos>
 
 		/**
 		 * Modifies/add the value for the key [key, locale]
@@ -46,7 +46,7 @@ declare namespace GenI18n {
 		 */
 		modify(
 			key: string,
-			locale: GenI18n.LocaleName,
+			locale: Locale,
 			text: string,
 			textInfos?: Partial<TextInfos>
 		): Promise<string | false>
@@ -64,6 +64,8 @@ declare namespace GenI18n {
 		 * @param key The key to remove
 		 * @returns The zone where the key was stored and the locales where it was translated
 		 */
-		remove(key: string): Promise<{ zone: string; locales: GenI18n.LocaleName[] }>
+		remove(key: string): Promise<{ zone: string; locales: Locale[] }>
+
+		//TODO reKey(oldKey, newKey)
 	}
 }

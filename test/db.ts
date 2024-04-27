@@ -10,10 +10,10 @@ export class WaitingJsonDb implements GenI18n.InteractiveDB {
 	constructor(dictionary: JsonDictionary) {
 		this.db = new JsonDB(dictionary)
 	}
-	isSpecified(key: string, locales: GenI18n.LocaleName[]) {
+	isSpecified(key: string, locales: GenI18n.Locale[]) {
 		return waiting(() => this.db.isSpecified(key, locales))
 	}
-	modify(key: string, locale: GenI18n.LocaleName, value: string) {
+	modify(key: string, locale: GenI18n.Locale, value: string) {
 		return waiting(() => this.db.modify(key, locale, value))
 	}
 	key(key: string, zone: string) {
@@ -22,7 +22,7 @@ export class WaitingJsonDb implements GenI18n.InteractiveDB {
 	remove(key: string) {
 		return waiting(() => this.db.remove(key))
 	}
-	list(locales: GenI18n.LocaleName[], zone: GenI18n.Zone) {
+	list(locales: GenI18n.Locale[], zone: GenI18n.Zone) {
 		return waiting(() => this.db.list(locales, zone))
 	}
 	get(key: string) {

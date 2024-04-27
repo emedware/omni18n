@@ -158,7 +158,6 @@ function objectArgument(arg: any): string | Record<string, string> {
 	)
 }
 
-// TODO escape {{ and }}
 export function interpolate(context: TContext, text: string, args: any[]): string {
 	const { key, zones } = context
 	function arg(i: string | number, dft?: string) {
@@ -166,15 +165,13 @@ export function interpolate(context: TContext, text: string, args: any[]): strin
 		if (i === 0) return key
 		const lastArg = args[args.length - 1],
 			val =
-				i === '$'
-					? '$'
-					: i === ''
-						? lastArg
-						: typeof i === 'number'
-							? args[i - 1]
-							: typeof lastArg === 'object' && i in lastArg
-								? lastArg[i]
-								: undefined
+				i === ''
+					? lastArg
+					: typeof i === 'number'
+						? args[i - 1]
+						: typeof lastArg === 'object' && i in lastArg
+							? lastArg[i]
+							: undefined
 		if (val instanceof Date) return '' + val.getTime()
 		if (typeof val === 'object')
 			return Object.entries(val)
@@ -187,24 +184,33 @@ export function interpolate(context: TContext, text: string, args: any[]): strin
 				? dft
 				: reports.error(context, 'Missing arg', { arg: i, key })
 	}
-	const placeholders = (
-			text.match(/{(.*?)}/g)?.map((placeholder) => placeholder.slice(1, -1)) || []
-		).map((placeholder) => {
-			// Special {=0}, {=0|default} for "First argument" syntax
+	text = text.replace(/{{/g, '\u0001').replace(/}}/g, '\u0002')
+	const placeholders = (text.match(/{(.*?)}/g) || []).map((placeholder) => {
+			placeholder = placeholder
+				.slice(1, -1)
+				.replace(/\u0001/g, '{')
+				.replace(/\u0002/g, '}')
+			// Special {=1}, {=1|default} for "First argument" syntax
 			const simpleArg = /^=(\w*)(?:\s*\|\s*(.*)\s*)?$/.exec(placeholder)
 			if (simpleArg) return arg(simpleArg[1], simpleArg[2])
 			else {
 				const [proc, ...params] = placeholder
 					.split('|')
-					.map((part) => part.trim())
-					.map((part) => part.replace(/\$(\w*)(?:\[(.*?)\])?/g, (_, num, dft) => arg(num, dft)))
+					.map((part) => part.trim().replace(/\$\$/g, '\u0003'))
+					.map((part) =>
+						part.replace(/\$(\w*)(?:\[(.*?)\])?/g, (_, num, dft) =>
+							arg(num.replace(/\u0003/g, '$'), dft?.replace(/\u0003/g, '$'))
+						)
+					)
 					.map((part) => objectArgument(part))
 				if (typeof proc === 'object')
 					return params.length !== 1 || typeof params[0] !== 'string'
 						? reports.error(context, 'Case needs a string case', { params })
 						: params[0] in proc
 							? proc[params[0]]
-							: reports.error(context, 'Case not found', { case: params[0], cases: proc })
+							: 'default' in proc
+								? proc.default
+								: reports.error(context, 'Case not found', { case: params[0], cases: proc })
 				if (proc.includes('.')) return translate({ ...context, key: proc }, params)
 				if (!(proc in processors)) return reports.error(context, 'Unknown processor', { proc })
 				try {
@@ -214,7 +220,7 @@ export function interpolate(context: TContext, text: string, args: any[]): strin
 				}
 			}
 		}),
-		parts = text.split(/{.*?}/)
+		parts = text.split(/{.*?}/).map((part) => part.replace(/\u0001/g, '{').replace(/\u0002/g, '}'))
 
 	return parts.map((part, i) => `${part}${placeholders[i] || ''}`).join('')
 }

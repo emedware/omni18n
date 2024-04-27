@@ -7,7 +7,7 @@ type CDicE = CDic & string
  * Abstract file used between the http layer and the database
  */
 
-export function localeTree(locale: GenI18n.LocaleName) {
+export function localeTree(locale: GenI18n.Locale) {
 	const parts = locale.split('-')
 	return parts.map((_, i) => parts.slice(0, i + 1).join('-'))
 }
@@ -20,7 +20,7 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 		this.condense = this.condense.bind(this)
 	}
 
-	list(locale: GenI18n.LocaleName, zone: string): Promise<GenI18n.RawDictionary> {
+	list(locale: GenI18n.Locale, zone: string): Promise<GenI18n.RawDictionary> {
 		return this.db.list(['', ...localeTree(locale)], zone)
 	}
 	/**
@@ -30,7 +30,7 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 	 * @returns
 	 */
 	async condense(
-		locale: GenI18n.LocaleName,
+		locale: GenI18n.Locale,
 		zones: GenI18n.Zone[] = ['']
 	): Promise<GenI18n.CondensedDictionary[]> {
 		const raws = await Promise.all(zones.map((zone) => this.list(locale, zone))),

@@ -16,7 +16,7 @@ export interface GenI18nClient {
 	internals: Internals
 	readonly ordinalRules: Intl.PluralRules
 	readonly cardinalRules: Intl.PluralRules
-	locale: GenI18n.LocaleName
+	locale: GenI18n.Locale
 	timeZone?: string
 	interpolate(context: TContext, text: string, args: any[]): string
 }
@@ -34,4 +34,4 @@ export class TranslationError extends Error {
 	}
 }
 
-export type Translator = { [k: string]: Translator } & ((...args: any[]) => string) & string
+export type Translator = ((...args: any[]) => string) & { [k: string]: Translator } & string
