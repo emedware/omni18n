@@ -40,6 +40,8 @@ In interactive mode (using `InteractiveServer`), the DB interface contains modif
 
 Text keys are used as path, mostly beginning with a type (fld, msg, err, cmd, ...) and more sub-specification if needed.
 
+> :information_source: I personally use such shortcuts, but feel free to use "field", "message", ...
+
 - A key path can contain a translation AND sub-keys
 - In such case, the most precise translation is used even if the sub-key does not exist
 
@@ -59,7 +61,7 @@ Rule of the thumb: No value should be given as root keys. Every meaningful text 
 
 ### Locales
 
-If we take the examples of `en-GB` and `en-US`, three locales are going to be used: `en-GB` and `en-US` of course, `en` who will take care of all the common english texts and `''` (the empty-named local) who contains technical things common to all languages.
+If we take the examples of `en-GB` and `en-US`, four locales are going to be used: `en-GB` and `en-US` of course, `en` who will take care of all the common english texts and `''` (the empty-named local) who contains technical things common to all languages.
 So, downloading `en-US` will download `''` overwritten with `en` then overwritten with `en-US`.
 
 Common things are formats for example: `format.price: '{number|$2|style: currency, currency: $1}'` for prices allowing `T.format.price(currency, amount)`
@@ -96,7 +98,7 @@ The interpolation is done in `I18nClient::interpolate` and can of course be over
 
 ### Arguments
 
-> :information_source: while interpolating, the argument nr 0 is the key, the first argument is the argument nr 1.
+> :information_source: While interpolating, the argument nr 0 is the key, the first argument is the argument nr 1. This is meant to be used by translators - literacy peeps - so of course the first argument has the number "1".
 
 `"This is a {=1}"` will have to be called with an argument, `"This is a {=1|distraction}"` may be called with an argument.
 
@@ -234,7 +236,7 @@ reports.missing = ({key, client}: TContext, zone?: OmnI18n.Zone) {
 	// The optional zone is a zone where the translation has been found, by chance
 	return `[${client.locale}:${key}]`;
 }
-reports.error = (error: string, spec: object, context: TContext) {
+reports.error = (context: TContext, error: string, spec: object) {
 	return `[!${error}]`;
 }
 ```
