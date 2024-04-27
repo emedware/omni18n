@@ -74,7 +74,7 @@ export const formats: Record<'date' | 'number' | 'relative', Record<string, obje
 	}
 }
 
-export let processors: Record<string, (...args: any[]) => string> = {
+export const processors: Record<string, (...args: any[]) => string> = {
 	upper(str: string) {
 		return str.toUpperCase()
 	},

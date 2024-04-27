@@ -9,7 +9,9 @@ export default {
 		file: 'dist/index.js',
 		format: 'cjs'
 	},
-	plugins: [resolve(), commonjs(), typescript({
-    	tsconfigOverride: {include: ['./src']}
-	}), json()]
+	external: ['hjson'],
+	plugins: [resolve(), commonjs(), typescript({tsconfigOverride: {
+		include: ['./src'],
+		exclude: ['./node_modules']
+	}}), json()]
 }
