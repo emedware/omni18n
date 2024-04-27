@@ -4,7 +4,7 @@
  */
 import '../polyfill'
 import Defer from '../defer'
-import { ClientDictionary, OmnI18nClient, Internals } from './types'
+import { ClientDictionary, OmnI18nClient, Internals, TContext } from './types'
 import { interpolate } from './interpolation'
 import { longKeyList, parseInternals, recurExtend, translator } from './helpers'
 
@@ -107,5 +107,7 @@ export default class I18nClient implements OmnI18nClient {
 		this.onModification?.(Object.keys(entries))
 	}
 
-	interpolate = interpolate
+	interpolate(context: TContext, text: string, args: any[]): string {
+		return interpolate(context, text, args)
+	}
 }

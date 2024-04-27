@@ -179,8 +179,8 @@ formats.date.year = { year: 'numeric' }
 formats.number.arabic = { numberingSystem: 'arab' }
 
 const client: I18nClient = ...;
-client.interpolate('*', '{date|$0|year}', new Date('2021-11-01T12:34:56.789Z'));	// 2021
-client.interpolate('*', '{date|$0|month: numeric}', new Date('2021-11-01T12:34:56.789Z'));	// 11
+client.interpolate({key: '*', zones: [], client}, '{date|$0|year}', new Date('2021-11-01T12:34:56.789Z'));	// 2021
+client.interpolate({key: '*', zones: [], client}, '{date|$0|month: numeric}', new Date('2021-11-01T12:34:56.789Z'));	// 11
 ```
 
 Also, each locate has a property `timeZone`. If set, it will be the default `timeZone` used in the options.
@@ -230,11 +230,12 @@ import { reports, type TContext } from "omni18n";
 	client: I18nClient
 }*/
 
-reports.missing = ({key, client}: TContext) {
-  return `[${client.locale}:${key}]`;
+reports.missing = ({key, client}: TContext, zone?: OmnI18n.Zone) {
+	// The optional zone is a zone where the translation has been found, by chance
+	return `[${client.locale}:${key}]`;
 }
 reports.error = (error: string, spec: object, context: TContext) {
-  return `[!${error}]`;
+	return `[!${error}]`;
 }
 ```
 

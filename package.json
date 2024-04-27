@@ -1,6 +1,6 @@
 {
 	"name": "omni18n",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "",
 	"main": "dist/index.js",
 	"module": "dist/index.js",
@@ -11,6 +11,17 @@
 		"prettier": "prettier --write .",
 		"build": "rollup -c"
 	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/eddow/omni18n.git"
+	},
+	"keywords": [
+		"omni18n",
+		"internationalization",
+		"localization",
+		"fullstack",
+		"automation"
+	],
 	"author": "fmdm",
 	"license": "ISC",
 	"devDependencies": {
