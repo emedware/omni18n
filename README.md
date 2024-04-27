@@ -1,4 +1,4 @@
-# geni18n
+# omni18n
 
 Generic i18n library managing the fullstack interaction in a CI/CD pace. The fact the dictionaries are stored in a DB edited by the translators through a(/the same) web application - managing translation errors, missing keys, ...
 
@@ -16,7 +16,7 @@ This client will produce `Translators` who are described in typescript by the ty
 ### Server side
 
 ```ts
-import { I18nServer, I18nClient } from 'geni18n'
+import { I18nServer, I18nClient } from 'omni18n'
 
 const server = new I18nServer(myDBinterface)
 const client = new I18nClient('en-US', server.condensed)
@@ -82,7 +82,7 @@ Note: The library is optimized to download only the missing parts through a user
 
 ### `internals`
 
-Cf. documentation in code. `geni18n` uses the standard JS Intl object. This object is able with a locale to determine some rules. For instance, english has 4 ways to make ordinals (1st, 2nd, 3rd, 4th) while french has 2 (this is already implemented in every browser and node)
+Cf. documentation in code. `omni18n` uses the standard JS Intl object. This object is able with a locale to determine some rules. For instance, english has 4 ways to make ordinals (1st, 2nd, 3rd, 4th) while french has 2 (this is already implemented in every browser and node)
 
 These "internals" are used with specific translation features (like to use `{ordinal|$1} try...`) and should be the same for all websites.
 
@@ -139,7 +139,7 @@ The syntax `{other.intl.key | arg1 | arg2}` can be used to do such.
 The syntax also allow some processing specification, when a processor name (with no `.` in it) is used instead of a first element. The available processors can be extended :
 
 ```ts
-import { processors, type TContext } from 'geni18n';
+import { processors, type TContext } from 'omni18n';
 
 Object.assign(processors, {
 	myProc(this: TContext, arg1: any, ...args: any[]) {
@@ -173,7 +173,7 @@ Note: `{$2[upper] | $1}` is also possible, in which case the second argument can
 A list of predefined options can be set in exported variables
 
 ```ts
-import { formats } from 'geni18n'
+import { formats } from 'omni18n'
 
 formats.date.year = { year: 'numeric' }
 formats.number.arabic = { numberingSystem: 'arab' }
@@ -222,7 +222,7 @@ The keywords (`one`, `other`, ...) come from `Intl.PluralRules`.
 The library exposes on the client side `reports` as such:
 
 ```ts
-import { reports, type TContext } from "geni18n";
+import { reports, type TContext } from "omni18n";
 
 /*interface TContext {
 	key: string

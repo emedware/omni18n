@@ -5,18 +5,18 @@ export interface Internals {
 
 interface ClientDictionaryEntry {
 	''?: string
-	'.'?: GenI18n.Zone
+	'.'?: OmnI18n.Zone
 }
 export type ClientDictionary = {
 	[key: Exclude<string, keyof ClientDictionaryEntry>]: ClientDictionary
 } & ClientDictionaryEntry
 
-export interface GenI18nClient {
+export interface OmnI18nClient {
 	dictionary: ClientDictionary
 	internals: Internals
 	readonly ordinalRules: Intl.PluralRules
 	readonly cardinalRules: Intl.PluralRules
-	locale: GenI18n.Locale
+	locale: OmnI18n.Locale
 	timeZone?: string
 	interpolate(context: TContext, text: string, args: any[]): string
 }
@@ -24,7 +24,7 @@ export interface GenI18nClient {
 export interface TContext {
 	key: string
 	zones: string[]
-	client: GenI18nClient
+	client: OmnI18nClient
 }
 
 export class TranslationError extends Error {

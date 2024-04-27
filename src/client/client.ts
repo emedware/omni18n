@@ -1,20 +1,20 @@
-/// <reference path="../geni18n.d.ts" />
+/// <reference path="../omni18n.d.ts" />
 /**
  * i18n consumption/usage, both client and server side.
  */
 import '../polyfill'
 import Defer from '../defer'
-import { ClientDictionary, GenI18nClient, Internals } from './types'
+import { ClientDictionary, OmnI18nClient, Internals } from './types'
 import { interpolate } from './interpolation'
 import { longKeyList, parseInternals, recurExtend, translator } from './helpers'
 
-export default class I18nClient implements GenI18nClient {
+export default class I18nClient implements OmnI18nClient {
 	readonly ordinalRules: Intl.PluralRules
 	readonly cardinalRules: Intl.PluralRules
 	internals: Internals = {}
 	dictionary: ClientDictionary = {}
-	protected loadedZones = new Set<GenI18n.Zone>()
-	private toLoadZones = new Set<GenI18n.Zone>()
+	protected loadedZones = new Set<OmnI18n.Zone>()
+	private toLoadZones = new Set<OmnI18n.Zone>()
 	private loadDefer = new Defer()
 
 	public loaded: Promise<void> = Promise.resolve()
@@ -22,10 +22,10 @@ export default class I18nClient implements GenI18nClient {
 	public timeZone?: string
 
 	constructor(
-		public locale: GenI18n.Locale,
+		public locale: OmnI18n.Locale,
 		// On the server side, this is `server.condensed`. From the client-side this is an http request of some sort
-		public condense: GenI18n.Condense,
-		public onModification?: GenI18n.OnModification
+		public condense: OmnI18n.Condense,
+		public onModification?: OmnI18n.OnModification
 	) {
 		this.ordinalRules = new Intl.PluralRules(locale, { type: 'ordinal' })
 		this.cardinalRules = new Intl.PluralRules(locale, { type: 'cardinal' })
@@ -57,7 +57,7 @@ export default class I18nClient implements GenI18nClient {
 		return translator({ client: this, zones, key: '' })
 	}
 
-	protected received(zones: string[], condensed: GenI18n.CondensedDictionary[]) {
+	protected received(zones: string[], condensed: OmnI18n.CondensedDictionary[]) {
 		for (let i = 0; i < zones.length; i++) {
 			this.loadedZones.add(zones[i])
 			recurExtend(this.dictionary, condensed[i], zones[i])
@@ -73,7 +73,7 @@ export default class I18nClient implements GenI18nClient {
 		if (toLoad.length) this.received(toLoad, await this.condense(this.locale, toLoad))
 	}
 
-	async setLocale(locale: GenI18n.Locale) {
+	async setLocale(locale: OmnI18n.Locale) {
 		if (this.locale === locale) return
 		this.locale = locale
 		const toLoad = Array.from(this.loadedZones)

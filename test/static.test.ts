@@ -69,7 +69,7 @@ beforeAll(async () => {
 		})
 	)
 
-	function condense(locale: GenI18n.Locale, zones: string[] = ['']) {
+	function condense(locale: OmnI18n.Locale, zones: string[] = ['']) {
 		loads.push({ locale, zones })
 		return server.condense(locale, zones)
 	}

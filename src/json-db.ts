@@ -1,11 +1,11 @@
 interface SystemEntry<KeyInfos extends {}, TextInfos extends {}> {
-	'.zone': GenI18n.Zone
+	'.zone': OmnI18n.Zone
 	'.keyInfos'?: KeyInfos
-	'.textInfos'?: Record<GenI18n.Locale, TextInfos>
+	'.textInfos'?: Record<OmnI18n.Locale, TextInfos>
 }
 
 export type JsonDictionaryEntry<KeyInfos extends {}, TextInfos extends {}> = Record<
-	Exclude<GenI18n.Locale, keyof SystemEntry<KeyInfos, TextInfos>>,
+	Exclude<OmnI18n.Locale, keyof SystemEntry<KeyInfos, TextInfos>>,
 	string
 > &
 	SystemEntry<KeyInfos, TextInfos>
@@ -15,21 +15,21 @@ export type JsonDictionary<KeyInfos extends {} = {}, TextInfos extends {} = {}> 
 }
 
 export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
-	implements GenI18n.InteractiveDB<KeyInfos, TextInfos>
+	implements OmnI18n.InteractiveDB<KeyInfos, TextInfos>
 {
 	constructor(public dictionary: JsonDictionary<KeyInfos, TextInfos> = {}) {}
 
-	async isSpecified(key: string, locales: GenI18n.Locale[]) {
+	async isSpecified(key: string, locales: OmnI18n.Locale[]) {
 		return locales.some((locale) => this.dictionary[key]?.[locale])
 			? this.dictionary[key]['.keyInfos'] || {}
 			: undefined
 	}
 
-	async modify(key: string, locale: GenI18n.Locale, value: string, textInfos?: Partial<TextInfos>) {
+	async modify(key: string, locale: OmnI18n.Locale, value: string, textInfos?: Partial<TextInfos>) {
 		if (!this.dictionary[key]) throw new Error(`Key "${key}" not found`)
 		this.dictionary[key][locale] = value
 		if (textInfos) {
-			const tis = <Record<GenI18n.Locale, TextInfos>>this.dictionary[key]['.textInfos']
+			const tis = <Record<OmnI18n.Locale, TextInfos>>this.dictionary[key]['.textInfos']
 			tis[locale] = {
 				...tis[locale],
 				...textInfos
@@ -67,11 +67,11 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 		return rv
 	}
 
-	async list(locales: GenI18n.Locale[], zone: GenI18n.Zone) {
-		const result: GenI18n.RawDictionary = {}
+	async list(locales: OmnI18n.Locale[], zone: OmnI18n.Zone) {
+		const result: OmnI18n.RawDictionary = {}
 		Object.entries(this.dictionary).forEach(([key, value]) => {
 			if (zone == value['.zone']) {
-				let mLocale: GenI18n.Locale | false = false,
+				let mLocale: OmnI18n.Locale | false = false,
 					mText: string
 				for (const locale in value) {
 					if (locales.includes(locale) && (!mLocale || locale.length > mLocale.length))

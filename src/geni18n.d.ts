@@ -1,4 +1,4 @@
-declare namespace GenI18n {
+declare namespace OmnI18n {
 	type CondensedDictionary = {
 		[key: Exclude<string, ''>]: CondensedDictionary | string
 		''?: string

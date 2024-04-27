@@ -5,15 +5,15 @@ function waiting<RV>(func: () => Promise<RV>) {
 	return new Promise<RV>((resolve) => setTimeout(() => resolve(func()), 1))
 }
 
-export class WaitingJsonDb implements GenI18n.InteractiveDB {
+export class WaitingJsonDb implements OmnI18n.InteractiveDB {
 	private db: JsonDB
 	constructor(dictionary: JsonDictionary) {
 		this.db = new JsonDB(dictionary)
 	}
-	isSpecified(key: string, locales: GenI18n.Locale[]) {
+	isSpecified(key: string, locales: OmnI18n.Locale[]) {
 		return waiting(() => this.db.isSpecified(key, locales))
 	}
-	modify(key: string, locale: GenI18n.Locale, value: string) {
+	modify(key: string, locale: OmnI18n.Locale, value: string) {
 		return waiting(() => this.db.modify(key, locale, value))
 	}
 	key(key: string, zone: string) {
@@ -22,7 +22,7 @@ export class WaitingJsonDb implements GenI18n.InteractiveDB {
 	remove(key: string) {
 		return waiting(() => this.db.remove(key))
 	}
-	list(locales: GenI18n.Locale[], zone: GenI18n.Zone) {
+	list(locales: OmnI18n.Locale[], zone: OmnI18n.Zone) {
 		return waiting(() => this.db.list(locales, zone))
 	}
 	get(key: string) {

@@ -2,7 +2,7 @@ import { parse } from 'hjson'
 import { ClientDictionary, TContext, TranslationError, Translator } from './types'
 
 export const reports = {
-	missing({ key }: TContext, zone?: GenI18n.Zone): string {
+	missing({ key }: TContext, zone?: OmnI18n.Zone): string {
 		return `[${key}]`
 	},
 	error(context: TContext, error: string, spec: object): string {
@@ -64,8 +64,8 @@ export function parseInternals(dictionary: ClientDictionary | string) {
 }
 
 function condensed2dictionary(
-	condensed: GenI18n.CondensedDictionary,
-	zone: GenI18n.Zone
+	condensed: OmnI18n.CondensedDictionary,
+	zone: OmnI18n.Zone
 ): ClientDictionary {
 	const dictionary: ClientDictionary =
 		'' in condensed ? <ClientDictionary>{ '': condensed[''], '.': zone } : {}
@@ -80,15 +80,15 @@ function condensed2dictionary(
 
 export function recurExtend(
 	dst: ClientDictionary,
-	src: GenI18n.CondensedDictionary,
-	zone: GenI18n.Zone
+	src: OmnI18n.CondensedDictionary,
+	zone: OmnI18n.Zone
 ) {
 	for (const key in src) {
 		if (!dst[key])
 			dst[key] =
 				typeof src[key] === 'string'
 					? <ClientDictionary>{ '': src[key], '.': zone }
-					: condensed2dictionary(<GenI18n.CondensedDictionary>src[key], zone)
+					: condensed2dictionary(<OmnI18n.CondensedDictionary>src[key], zone)
 		else {
 			if (typeof src[key] === 'string')
 				dst[key] = <ClientDictionary>{
@@ -96,21 +96,21 @@ export function recurExtend(
 					'': src[key],
 					'.': zone
 				}
-			else recurExtend(dst[key], <GenI18n.CondensedDictionary>src[key], zone)
+			else recurExtend(dst[key], <OmnI18n.CondensedDictionary>src[key], zone)
 		}
 	}
 }
 
-export function longKeyList(condensed: GenI18n.CondensedDictionary) {
+export function longKeyList(condensed: OmnI18n.CondensedDictionary) {
 	const keys: string[] = []
-	function recur(current: GenI18n.CondensedDictionary, prefix: string) {
+	function recur(current: OmnI18n.CondensedDictionary, prefix: string) {
 		if (typeof current === 'string') keys.push(prefix)
 		else {
 			if (prefix && '' in current) keys.push(prefix)
 			for (const key in current)
 				if (key) {
 					const newPrefix = prefix ? `${prefix}.${key}` : key
-					recur(current[key] as GenI18n.CondensedDictionary, newPrefix)
+					recur(current[key] as OmnI18n.CondensedDictionary, newPrefix)
 				}
 		}
 	}
