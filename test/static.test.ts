@@ -1,5 +1,5 @@
-import { I18nClient, Translator, I18nServer } from '../src/index'
-import { WaitingJsonDb } from './db'
+import { I18nClient, Translator, I18nServer, JsonDB, JsonDictionary, FileDB } from '../src/index'
+import { WaitingDB } from './db'
 
 // TODO: test errors
 
@@ -11,62 +11,64 @@ let server: I18nServer,
 
 beforeAll(async () => {
 	server = new I18nServer(
-		new WaitingJsonDb({
-			'fld.name': { en: 'Name', fr: 'Nom', '.zone': '' },
-			'fld.bdate': { en: 'Birthday', fr: 'Date de naissance', '.zone': '' },
-			'fld.bdate.short': { en: 'B-dy', '.zone': '' },
-			'msg.greet': {
-				en: 'Hello {=1|here}',
-				fr: 'Salut {=1|tout le monde}',
-				'fr-BE': "Salut {=1|m'fi}",
-				'.zone': ''
-			},
-			'cmd.ban': { en: 'Ban user', fr: "Bannir l'utilisateur", '.zone': 'adm' },
-			'specs.animal': {
-				en: '{=1} {plural|$1|ox|oxen}',
-				fr: '{=1} {plural|$1|one: cheval, other: chevaux}',
-				'.zone': ''
-			},
-			'specs.ordinal': { '': '{ordinal|$1}', '.zone': '' },
-			'format.number': { '': '{number|$1}', '.zone': '' },
-			'format.number.engineering': { '': '{number|$1|engineering}', '.zone': '' },
-			'format.price': { '': '{number|$2|style: currency, currency: $1}', '.zone': '' },
-			'format.dateTime': { '': '{date|$1}', '.zone': '' },
-			'format.medium': { '': '{date|$1|dateStyle: medium}', '.zone': '' },
-			'format.date': { '': '{date|$1|date}', '.zone': '' },
-			'format.time': { '': '{date|$1|time}', '.zone': '' },
-			'format.relative': { '': '{relative|$1|short}', '.zone': '' },
-			'format.region': { '': '{region|$1}', '.zone': '' },
-			'format.language': { '': '{language|$1}', '.zone': '' },
-			'format.script': { '': '{script|$1}', '.zone': '' },
-			'format.currency': { '': '{currency|$1}', '.zone': '' },
-			'msg.entries': {
-				en: 'There {plural|$1|is|are} {number|$1} {plural|$1|entry|entries}',
-				fr: 'Il y a {number|$1} {plural|$1|entrée}',
-				'.zone': ''
-			},
-			'cnv.naming': {
-				fr: '{=first} {=last}',
-				en: '{=last}, {=first}',
-				'.zone': ''
-			},
-			'cnv.subNaming': {
-				// Useful to test parameters management
-				en: '{cnv.naming | first: $first, last: $last}',
-				fr: '{cnv.naming | $}',
-				'.zone': ''
-			},
-			'internals.ordinals': {
-				en: "{one: '$st', two: '$nd', few: '$rd', other: '$th'}",
-				fr: "{one: '$er', other: '$ème'}",
-				'.zone': ''
-			},
-			'internals.plurals': {
-				en: "{one: '$', other: '$s'}",
-				fr: "{one: '$', other: '$s'}",
-				'.zone': ''
-			}
-		})
+		new WaitingDB(
+			new JsonDB({
+				'fld.name': { en: 'Name', fr: 'Nom', '.zone': '' },
+				'fld.bdate': { en: 'Birthday', fr: 'Date de naissance', '.zone': '' },
+				'fld.bdate.short': { en: 'B-dy', '.zone': '' },
+				'msg.greet': {
+					en: 'Hello {=1|here}',
+					fr: 'Salut {=1|tout le monde}',
+					'fr-BE': "Salut {=1|m'fi}",
+					'.zone': ''
+				},
+				'cmd.ban': { en: 'Ban user', fr: "Bannir l'utilisateur", '.zone': 'adm' },
+				'specs.animal': {
+					en: '{=1} {plural|$1|ox|oxen}',
+					fr: '{=1} {plural|$1|one: cheval, other: chevaux}',
+					'.zone': ''
+				},
+				'specs.ordinal': { '': '{ordinal|$1}', '.zone': '' },
+				'format.number': { '': '{number|$1}', '.zone': '' },
+				'format.number.engineering': { '': '{number|$1|engineering}', '.zone': '' },
+				'format.price': { '': '{number|$2|style: currency, currency: $1}', '.zone': '' },
+				'format.dateTime': { '': '{date|$1}', '.zone': '' },
+				'format.medium': { '': '{date|$1|dateStyle: medium}', '.zone': '' },
+				'format.date': { '': '{date|$1|date}', '.zone': '' },
+				'format.time': { '': '{date|$1|time}', '.zone': '' },
+				'format.relative': { '': '{relative|$1|short}', '.zone': '' },
+				'format.region': { '': '{region|$1}', '.zone': '' },
+				'format.language': { '': '{language|$1}', '.zone': '' },
+				'format.script': { '': '{script|$1}', '.zone': '' },
+				'format.currency': { '': '{currency|$1}', '.zone': '' },
+				'msg.entries': {
+					en: 'There {plural|$1|is|are} {number|$1} {plural|$1|entry|entries}',
+					fr: 'Il y a {number|$1} {plural|$1|entrée}',
+					'.zone': ''
+				},
+				'cnv.naming': {
+					fr: '{=first} {=last}',
+					en: '{=last}, {=first}',
+					'.zone': ''
+				},
+				'cnv.subNaming': {
+					// Useful to test parameters management
+					en: '{cnv.naming | first: $first, last: $last}',
+					fr: '{cnv.naming | $}',
+					'.zone': ''
+				},
+				'internals.ordinals': {
+					en: "{one: '$st', two: '$nd', few: '$rd', other: '$th'}",
+					fr: "{one: '$er', other: '$ème'}",
+					'.zone': ''
+				},
+				'internals.plurals': {
+					en: "{one: '$', other: '$s'}",
+					fr: "{one: '$', other: '$s'}",
+					'.zone': ''
+				}
+			})
+		)
 	)
 
 	function condense(locale: OmnI18n.Locale, zones: string[] = ['']) {
@@ -84,7 +86,7 @@ describe('basic functionalities', () => {
 	test('several kind of text access', () => {
 		const fields = T.en.fld
 		expect('' + fields.name).toBe('Name')
-		expect('' + fields.name.short).toBe('Name')
+		expect(fields.name.short + '').toBe('Name')
 		expect('' + fields.bdate).toBe('Birthday')
 		expect('' + fields.bdate.short).toBe('B-dy')
 		expect(fields.name()).toBe('Name')
@@ -217,5 +219,31 @@ describe('parameters', () => {
 		expect(T.msg.greet()).toBe('Hello here')
 		await client.setLocale('fr')
 		expect(T.msg.greet()).toBe('Salut tout le monde')
+	})
+})
+
+describe('errors', () => {
+	// TODO: test errors
+})
+
+describe('serialization', () => {
+	test('serialize', () => {
+		const content: JsonDictionary<any, any> = {
+			'serializations.nl1': {
+				'': 'Line 1\nLine2',
+				'.zone': ''
+			},
+			'fld.name': { en: 'Name', fr: 'Nom', '.zone': 'sls' },
+			'serializations.nl2': {
+				'': 'Line 1\nLine2',
+				'.zone': 'nls'
+			}
+		}
+		Object.assign(content['fld.name'], {
+			['.keyInfos']: { a: 1 },
+			['.textInfos']: { en: { a: '"\'`' }, hu: { a: 3 } }
+		})
+		const serialized = FileDB.serialize<any, any>(content)
+		expect(FileDB.deserialize(serialized)).toEqual(content)
 	})
 })

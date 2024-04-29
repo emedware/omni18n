@@ -1,11 +1,17 @@
 import { parse } from 'hjson'
-import { ClientDictionary, TContext, TranslationError, Translator } from './types'
+import { ClientDictionary, TContext, TranslationError, Translator, text, zone } from './types'
+
+function entry(t: string, z: string): ClientDictionary {
+	return { [text]: t, [zone]: z }
+}
 
 export const reports = {
-	missing({ key }: TContext, zone?: OmnI18n.Zone): string {
+	missing({ key, client }: TContext): string {
+		if (client.loading) return `...` // `onModification` callback has been provided
 		return `[${key}]`
 	},
-	error(context: TContext, error: string, spec: object): string {
+	error({ client }: TContext, error: string, spec: object): string {
+		if (client.loading) return `...` // `onModification` callback has been provided
 		return `[!${error}]`
 	}
 }
@@ -20,11 +26,12 @@ export function translate(context: TContext, args: any[]): string {
 		if (!current[k]) break
 		else {
 			const next = current[k] as ClientDictionary
-			if ('' in next) value = [next['']!, next['.']!]
+			if (text in next) value = [next[text]!, next[zone]!]
 			current = next
 		}
 	}
-	if (value && !context.zones.includes(value[1])) reports.missing(context, value[1])
+	// This case can happen for example in role-zoning, when roles are entered separately
+	//if (value && !context.zones.includes(value[1])) reports.missing(context, value[1])
 	return value ? client.interpolate(context, value[0], args) : reports.missing(context)
 }
 
@@ -58,7 +65,7 @@ export function translator(context: TContext): Translator {
 export function parseInternals(dictionary: ClientDictionary | string) {
 	if (!dictionary) return {}
 	if (typeof dictionary === 'string') return parse(dictionary)
-	const result = '' in dictionary ? parse(dictionary['']!) : {}
+	const result = text in dictionary ? parse(dictionary[text]!) : {}
 	for (const key in dictionary) if (key !== '') result[key] = parseInternals(dictionary[key])
 	return result
 }
@@ -67,12 +74,11 @@ function condensed2dictionary(
 	condensed: OmnI18n.CondensedDictionary,
 	zone: OmnI18n.Zone
 ): ClientDictionary {
-	const dictionary: ClientDictionary =
-		'' in condensed ? <ClientDictionary>{ '': condensed[''], '.': zone } : {}
+	const dictionary: ClientDictionary = '' in condensed ? entry(condensed['']!, zone) : {}
 	for (const key in condensed)
 		if (key) {
 			const value = condensed[key]
-			if (typeof value === 'string') dictionary[key] = <ClientDictionary>{ '': value, '.': zone }
+			if (typeof value === 'string') dictionary[key] = entry(value, zone)
 			else dictionary[key] = condensed2dictionary(value, zone)
 		}
 	return dictionary
@@ -87,14 +93,13 @@ export function recurExtend(
 		if (!dst[key])
 			dst[key] =
 				typeof src[key] === 'string'
-					? <ClientDictionary>{ '': src[key], '.': zone }
+					? entry(<string>src[key], zone)
 					: condensed2dictionary(<OmnI18n.CondensedDictionary>src[key], zone)
 		else {
 			if (typeof src[key] === 'string')
-				dst[key] = <ClientDictionary>{
+				dst[key] = {
 					...dst[key],
-					'': src[key],
-					'.': zone
+					...entry(<string>src[key], zone)
 				}
 			else recurExtend(dst[key], <OmnI18n.CondensedDictionary>src[key], zone)
 		}
@@ -106,7 +111,7 @@ export function longKeyList(condensed: OmnI18n.CondensedDictionary) {
 	function recur(current: OmnI18n.CondensedDictionary, prefix: string) {
 		if (typeof current === 'string') keys.push(prefix)
 		else {
-			if (prefix && '' in current) keys.push(prefix)
+			if (prefix && text in current) keys.push(prefix)
 			for (const key in current)
 				if (key) {
 					const newPrefix = prefix ? `${prefix}.${key}` : key

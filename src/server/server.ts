@@ -1,4 +1,4 @@
-/// <reference path="../omni18n.d.ts" />
+/// <reference path="../types.d.ts" />
 
 type CDic = OmnI18n.CondensedDictionary
 type CDicE = CDic & string

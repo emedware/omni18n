@@ -1,10 +1,10 @@
-/// <reference path="../omni18n.d.ts" />
+/// <reference path="../types.d.ts" />
 /**
  * i18n consumption/usage, both client and server side.
  */
 import '../polyfill'
 import Defer from '../defer'
-import { ClientDictionary, OmnI18nClient, Internals, TContext } from './types'
+import { ClientDictionary, OmnI18nClient, Internals, TContext, text, zone } from './types'
 import { interpolate } from './interpolation'
 import { longKeyList, parseInternals, recurExtend, translator } from './helpers'
 
@@ -95,12 +95,12 @@ export default class I18nClient implements OmnI18nClient {
 			if (value)
 				browser[lastKey] = <ClientDictionary>{
 					...browser[lastKey],
-					'': value[0],
-					'.': value[1]
+					[text]: value[0],
+					[zone]: value[1]
 				}
 			else if (browser[lastKey]) {
-				delete browser[lastKey]['']
-				delete browser[lastKey]['.']
+				delete browser[lastKey][text]
+				delete browser[lastKey][zone]
 				if (!Object.keys(browser[lastKey]).length) delete browser[lastKey]
 			}
 		}

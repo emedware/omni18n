@@ -1,5 +1,5 @@
-import { WaitingJsonDb } from './db'
-import { Translator, I18nClient, InteractiveServer } from '../src/index'
+import { WaitingDB } from './db'
+import { Translator, I18nClient, InteractiveServer, JsonDB } from '../src/index'
 
 describe('Dynamic functionality', () => {
 	let server: InteractiveServer,
@@ -9,12 +9,14 @@ describe('Dynamic functionality', () => {
 
 	beforeAll(async () => {
 		server = new InteractiveServer(
-			new WaitingJsonDb({
-				'fld.name': { en: 'Name', '.zone': '' },
-				'cmd.customize': { en: 'Customize', 'en-UK': 'Customise', '.zone': '' },
-				'cmd.save': { en: 'Save', '.zone': 'adm' },
-				'cmd.modify': { en: 'Modify', '.zone': 'adm' }
-			}),
+			new WaitingDB(
+				new JsonDB({
+					'fld.name': { en: 'Name', '.zone': '' },
+					'cmd.customize': { en: 'Customize', 'en-UK': 'Customise', '.zone': '' },
+					'cmd.save': { en: 'Save', '.zone': 'adm' },
+					'cmd.modify': { en: 'Modify', '.zone': 'adm' }
+				})
+			),
 			async (entries: Record<string, [string, string] | undefined>) => {
 				if (client) {
 					//ignore the initialization

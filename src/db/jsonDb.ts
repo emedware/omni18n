@@ -4,11 +4,9 @@ interface SystemEntry<KeyInfos extends {}, TextInfos extends {}> {
 	'.textInfos'?: Record<OmnI18n.Locale, TextInfos>
 }
 
-export type JsonDictionaryEntry<KeyInfos extends {}, TextInfos extends {}> = Record<
-	Exclude<OmnI18n.Locale, keyof SystemEntry<KeyInfos, TextInfos>>,
-	string
-> &
-	SystemEntry<KeyInfos, TextInfos>
+export type JsonDictionaryEntry<KeyInfos extends {}, TextInfos extends {}> = {
+	[k: Exclude<OmnI18n.Locale, keyof SystemEntry<KeyInfos, TextInfos>>]: string
+} & SystemEntry<KeyInfos, TextInfos>
 
 export type JsonDictionary<KeyInfos extends {} = {}, TextInfos extends {} = {}> = {
 	[key: string]: JsonDictionaryEntry<KeyInfos, TextInfos>
@@ -19,6 +17,45 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 {
 	constructor(public dictionary: JsonDictionary<KeyInfos, TextInfos> = {}) {}
 
+	async list(locales: OmnI18n.Locale[], zone: OmnI18n.Zone) {
+		const result: OmnI18n.RawDictionary = {}
+		Object.entries(this.dictionary).forEach(([key, value]) => {
+			if (zone == value['.zone']) {
+				let mLocale: OmnI18n.Locale | false = false
+				for (const locale in value) {
+					if (locales.includes(locale) && (!mLocale || locale.length > mLocale.length))
+						mLocale = locale
+				}
+				if (mLocale !== false) result[key] = value[mLocale]
+			}
+		})
+		return result
+	}
+
+	async workList(locales: OmnI18n.Locale[]) {
+		const result: OmnI18n.WorkDictionary = {}
+		Object.entries(this.dictionary).forEach(([key, value]) => {
+			const entry = <OmnI18n.WorkDictionaryEntry<KeyInfos, TextInfos>>{
+				zone: value['.zone'],
+				locales: {},
+				...(value['.keyInfos'] && { infos: value['.keyInfos'] })
+			}
+
+			const keys = { ...value, ...value['.textInfos'] }
+
+			for (const locale in keys) {
+				if (locales.some((demanded) => locale.startsWith(demanded))) {
+					entry.locales[locale] = <OmnI18n.WorkDictionaryText<TextInfos>>{
+						...(value[locale] && { text: value[locale] }),
+						...(value['.textInfos']?.[locale] && { infos: value['.textInfos'][locale] })
+					}
+				}
+			}
+			result[key] = entry
+		})
+		return result
+	}
+
 	async isSpecified(key: string, locales: OmnI18n.Locale[]) {
 		return locales.some((locale) => this.dictionary[key]?.[locale])
 			? this.dictionary[key]['.keyInfos'] || {}
@@ -27,6 +64,8 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 
 	async modify(key: string, locale: OmnI18n.Locale, value: string, textInfos?: Partial<TextInfos>) {
 		if (!this.dictionary[key]) throw new Error(`Key "${key}" not found`)
+		if (!/^[\w-]*$/g.test(locale))
+			throw new Error(`Bad locale: ${locale} (only letters, digits, "_" and "-" allowed)`)
 		this.dictionary[key][locale] = value
 		if (textInfos) {
 			const tis = <Record<OmnI18n.Locale, TextInfos>>this.dictionary[key]['.textInfos']
@@ -42,6 +81,8 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 	async key(key: string, zone: string, keyInfos?: Partial<KeyInfos>) {
 		const entry = this.dictionary[key] || {},
 			ez = entry['.zone']
+		if (!/^[\w\-\+\*\.]*$/g.test(key))
+			throw new Error(`Bad key-name: ${key} (only letters, digits, "_+-*." allowed)`)
 		this.dictionary[key] = <JsonDictionaryEntry<KeyInfos, TextInfos>>{
 			...entry,
 			...((entry['.keyInfos'] || keyInfos) && {
@@ -65,22 +106,6 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 		}
 		delete this.dictionary[key]
 		return rv
-	}
-
-	async list(locales: OmnI18n.Locale[], zone: OmnI18n.Zone) {
-		const result: OmnI18n.RawDictionary = {}
-		Object.entries(this.dictionary).forEach(([key, value]) => {
-			if (zone == value['.zone']) {
-				let mLocale: OmnI18n.Locale | false = false,
-					mText: string
-				for (const locale in value) {
-					if (locales.includes(locale) && (!mLocale || locale.length > mLocale.length))
-						mLocale = locale
-				}
-				if (mLocale !== false) result[key] = value[mLocale]
-			}
-		})
-		return result
 	}
 
 	async get(key: string) {

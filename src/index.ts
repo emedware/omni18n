@@ -1,6 +1,6 @@
 export * from './client/index'
 export * from './server/index'
-export { default as JsonDB, JsonDictionary, JsonDictionaryEntry } from './json-db'
+export * from './db/index'
 
 declare global {
 	interface Set<T> {

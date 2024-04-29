@@ -7,6 +7,16 @@ declare namespace OmnI18n {
 	type Condense = (locale: Locale, zones: Zone[]) => Promise<CondensedDictionary[]>
 	type OnModification = (entries?: Locale[]) => void
 	type RawDictionary = Record<string, string>
+	type WorkDictionaryText<TextInfos extends {} = {}> = {
+		text: string
+		infos: TextInfos
+	}
+	type WorkDictionaryEntry<KeyInfos extends {} = {}, TextInfos extends {} = {}> = {
+		locales: { [locale: OmnI18n.Locale]: WorkDictionaryText<TextInfos> }
+		zone: Zone
+		infos: KeyInfos
+	}
+	type WorkDictionary = Record<string, WorkDictionaryEntry>
 
 	// shortcut
 	type Locale = Intl.UnicodeBCP47LocaleIdentifier
@@ -29,6 +39,12 @@ declare namespace OmnI18n {
 
 	interface InteractiveDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 		extends DB<KeyInfos, TextInfos> {
+		/**
+		 * Retrieves all the values for certain locales, in order for translators to work on it
+		 * @param locales
+		 */
+		workList(locales: Locale[]): Promise<WorkDictionary>
+
 		/**
 		 * Checks if a key is specified in a certain locale
 		 * @param key The key to search for

@@ -23,8 +23,12 @@ const client = new I18nClient('en-US', server.condensed)
 const T = client.enter()
 await client.loaded
 
-console.log(T.msg.hello) // Will display the entry `msg.hello` for the `en-US` (or `en`) locale
+// Will both display the entry `msg.hello` for the `en-US` (or `en`) locale
+console.log(T.msg.hello)
+console.log(T('msg.hello'))
 ```
+
+(on the client-side, the `condensed` argument is a function making an HTTP request)
 
 ### Full-stack usage
 
@@ -232,15 +236,20 @@ import { reports, type TContext } from "omni18n";
 	client: I18nClient
 }*/
 
-reports.missing = ({key, client}: TContext, zone?: OmnI18n.Zone) {
-	// The optional zone is a zone where the translation has been found, by chance
-	return `[${client.locale}:${key}]`;
+reports.missing = ({key, client}: TContext) {
+		if (client.loading) return `...` // `onModification` callback has been provided
+		return `[${key}]`
 }
 reports.error = (context: TContext, error: string, spec: object) {
-	return `[!${error}]`;
+		if (client.loading) return `...` // `onModification` callback has been provided
+		return `[!${error}]`
 }
 ```
 
 `specs` depends on the error. Mostly json-able (there might be some `Error` specification).
 
 The function might do as much logging as they wish, the returned string will be the one used ad a "translation" (so, displayed)
+
+## TODOs
+
+- fallback system on missing translations to another language?

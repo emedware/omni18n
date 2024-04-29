@@ -3,13 +3,14 @@ export interface Internals {
 	plurals?: Record<string, string>
 }
 
-interface ClientDictionaryEntry {
-	''?: string
-	'.'?: OmnI18n.Zone
-}
+export const zone = Symbol('Zone'),
+	text = Symbol('Text')
+
 export type ClientDictionary = {
-	[key: Exclude<string, keyof ClientDictionaryEntry>]: ClientDictionary
-} & ClientDictionaryEntry
+	[key: string]: ClientDictionary
+	[zone]?: string
+	[text]?: OmnI18n.Zone
+}
 
 export interface OmnI18nClient {
 	dictionary: ClientDictionary
@@ -19,6 +20,7 @@ export interface OmnI18nClient {
 	locale: OmnI18n.Locale
 	timeZone?: string
 	interpolate(context: TContext, text: string, args: any[]): string
+	readonly loading: boolean
 }
 
 export interface TContext {
@@ -28,10 +30,7 @@ export interface TContext {
 }
 
 export class TranslationError extends Error {
-	constructor(message: string) {
-		super(message)
-		this.name = 'translationError'
-	}
+	name = 'TranslationError'
 }
 
 export type Translator = ((...args: any[]) => string) & { [k: string]: Translator } & string
