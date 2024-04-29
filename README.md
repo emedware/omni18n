@@ -19,7 +19,7 @@ This client will produce `Translators` who are described in typescript by the ty
 import { I18nServer, I18nClient } from 'omni18n'
 
 const server = new I18nServer(myDBinterface)
-const client = new I18nClient('en-US', server.condensed)
+const client = new I18nClient(['en-US'], server.condensed)
 const T = client.enter()
 await client.loaded
 
@@ -37,6 +37,18 @@ The full-stack case will insert the http protocol between `client` and `server`.
 ### Interactive mode
 
 In interactive mode (using `InteractiveServer`), the DB interface contains modification functions and the server exposes modification function, that will modify the DB but also raise events. In this case, an `InteractiveServer` instance has to be created for every client, with an interface toward the DB and a callback for event raising.
+
+### DB-level
+
+Two interfaces allow to implement an interface to any database: `OmnI18n.DB` (who basically just has a `list`) and `OmnI18n.InteractiveDB` who has some modification access
+
+Two are provided: a `MemDB` who is basically an "in-memory database" and its descendant, a `FileDB` who allows:
+- reading from a file
+- maintaining the files when changes are brought
+
+The `FileDB` uses a human-accessible (using [hjson](https://www.npmjs.com/package/hjson) for custom types) and based on `\t` indentation file format only proper for this usage.
+
+Having the translators managing translations in the UI while the devs have to access the file to add/remove keys, change their zone, ... and all this to go through git commits (so, to have local changes that will be integrated in the project after push/merge) can be done with `FileDB` - for this, just interface a `PUT` to a call on `InteractiveServer::modify` (while that server has a `FileDB` as a source) then the new file will be saved soon with the modified values.
 
 ## Concepts
 
@@ -70,6 +82,10 @@ So, downloading `en-US` will download `''` overwritten with `en` then overwritte
 
 Common things are formats for example: `format.price: '{number|$2|style: currency, currency: $1}'` for prices allowing `T.format.price(currency, amount)`
 
+#### Fallbacks
+
+`I18nClient` is constructed with an array of locales. These are the locales "most preferred first". One can easily use the user's settings (often the interface propose "fallbacks") and add hard-coded the language(s) used by the developers.
+
 ### Zones
 
 Zones are "software zones". Each user don't need the whole dictionary. Some texts for example are only used in administration pages and should not be downloaded by everyone.
@@ -86,15 +102,9 @@ In case of PoC, only the root zone can be used.
 
 > :warning: Zones are not different name spaces for text keys, each key is unique and has an associated zone
 
-### `internals`
-
-Cf. documentation in code. `omni18n` uses the standard JS Intl object. This object is able with a locale to determine some rules. For instance, english has 4 ways to make ordinals (1st, 2nd, 3rd, 4th) while french has 2 (this is already implemented in every browser and node)
-
-These "internals" are used with specific translation features (like to use `{ordinal|$1} try...`) and should be the same for all websites.
-
 ## Interpolation
 
-A given value like `T.fld.name` will have a javascript value that can be converted in a string _and_ be called.
+A given value like `T.fld.name` will have a javascript value that can be converted to a string _and_ be called.
 
 The function call will return a pure string and can take arguments.
 
@@ -111,18 +121,18 @@ If the content does not begin with the `=` sign, the content is a list separated
 - A string
 - An flat named list in the shape `key1: value1, key2: value2` where only `,` and `:` are used for the syntax.
 
-The `:` character triggers the list parsing. In order to used a ":" in a string, it has to be doubled "::"
+> The `:` character triggers the list parsing. In order to used a ":" in a string, it has to be doubled "::"
 
 The parameters (given in the code) can be accessed as such:
 First, the last parameter is the one used for naming. If a named parameter is accessed, the last (or only) parameter should be an object with named properties
 
 - `$0` is the key, `$1` the first argument, `$2`...
 - `$arg` access the argument named `arg`
-- `$` access the last argument
+- `$` access the last argument (the names object)
 
 To add a default, `$arg[default value]` can be used, as well as `$[name: John]`
 
-To use the "$" character, it just has to be doubled: "$$"
+To use the `$` character, it just has to be doubled: `$$`
 
 The first element will determine how the whole `{...}` will be interpolated
 
@@ -132,7 +142,7 @@ If the first element is a named list, the second one will be the case to take fr
 
 example: `{question: ?, exclamation: ! | $1}`
 
-> :information_source: The case `default` get the remaining cases, and if not specified, an error is raised if an inexistent case is given
+> :information_source: The case `default` get the remaining cases and, if not specified, an error is raised if an inexistent case is given
 
 ### Sub translation
 
@@ -189,8 +199,8 @@ client.interpolate({key: '*', zones: [], client}, '{date|$0|year}', new Date('20
 client.interpolate({key: '*', zones: [], client}, '{date|$0|month: numeric}', new Date('2021-11-01T12:34:56.789Z'));	// 11
 ```
 
-Also, each locate has a property `timeZone`. If set, it will be the default `timeZone` used in the options.
-Its format is the one of `Date.toLocaleString()`
+Also, each client has a property `timeZone`. If set, it will be the default `timeZone` used in the options.
+Its format is the one taken by `Date.toLocaleString()`
 
 #### Other hard-coded
 
@@ -252,4 +262,5 @@ The function might do as much logging as they wish, the returned string will be 
 
 ## TODOs
 
-- fallback system on missing translations to another language?
+- testing the error system
+- detailed documentation on each part

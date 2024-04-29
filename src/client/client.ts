@@ -22,13 +22,13 @@ export default class I18nClient implements OmnI18nClient {
 	public timeZone?: string
 
 	constructor(
-		public locale: OmnI18n.Locale,
+		public locales: OmnI18n.Locale[],
 		// On the server side, this is `server.condensed`. From the client-side this is an http request of some sort
 		public condense: OmnI18n.Condense,
 		public onModification?: OmnI18n.OnModification
 	) {
-		this.ordinalRules = new Intl.PluralRules(locale, { type: 'ordinal' })
-		this.cardinalRules = new Intl.PluralRules(locale, { type: 'cardinal' })
+		this.ordinalRules = new Intl.PluralRules(locales[0], { type: 'ordinal' })
+		this.cardinalRules = new Intl.PluralRules(locales[0], { type: 'cardinal' })
 	}
 
 	get loading() {
@@ -43,7 +43,7 @@ export default class I18nClient implements OmnI18nClient {
 	 * @returns The translator
 	 */
 	public enter(...zones: string[]) {
-		if (!zones.length) zones.push('')
+		zones.push('')
 		const knownZones = this.loadedZones.union(this.toLoadZones),
 			toAdd = zones.filter((zone) => !knownZones.has(zone))
 		if (toAdd.length) {
@@ -70,12 +70,12 @@ export default class I18nClient implements OmnI18nClient {
 
 	private async download(zones: string[]) {
 		const toLoad = zones.filter((zone) => !this.loadedZones.has(zone))
-		if (toLoad.length) this.received(toLoad, await this.condense(this.locale, toLoad))
+		if (toLoad.length) this.received(toLoad, await this.condense(this.locales, toLoad))
 	}
 
-	async setLocale(locale: OmnI18n.Locale) {
-		if (this.locale === locale) return
-		this.locale = locale
+	async setLocale(locales: OmnI18n.Locale[]) {
+		if (this.locales.every((locale, i) => locale == locales[1])) return
+		this.locales = locales
 		const toLoad = Array.from(this.loadedZones)
 		this.loadedZones = new Set()
 		this.dictionary = {}

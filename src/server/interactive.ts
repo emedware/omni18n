@@ -20,12 +20,15 @@ export default class InteractiveServer<
 
 	constructor(
 		protected db: OmnI18n.InteractiveDB,
-		private modified: (entries: Record<string, [string, string] | undefined>) => Promise<void>
+		private modified = (entries: Record<string, [string, string] | undefined>) => Promise.resolve()
 	) {
 		super(db)
 		subscriptions.set(this, { locale: '', zones: [] })
 	}
 
+	workList(locales: OmnI18n.Locale[]): Promise<OmnI18n.WorkDictionary> {
+		return this.db.workList(locales)
+	}
 	isSpecified(key: string, locales: OmnI18n.Locale[]): Promise<undefined | {} | TextInfos> {
 		return this.db.isSpecified(key, locales)
 	}
@@ -72,13 +75,13 @@ export default class InteractiveServer<
 	 * @param zone
 	 * @returns
 	 */
-	condense(locale: string, zones?: string[]): Promise<OmnI18n.CondensedDictionary[]> {
+	condense(locales: OmnI18n.Locale[], zones?: string[]): Promise<OmnI18n.CondensedDictionary[]> {
 		const sub = subscriptions.get(this)
 		if (sub) {
-			sub.locale = locale
+			sub.locale = locales[0]
 			sub.zones = [...sub.zones, ...(zones || [])]
 		}
-		return super.condense(locale, zones)
+		return super.condense(locales, zones)
 	}
 
 	/**
@@ -128,8 +131,11 @@ export default class InteractiveServer<
 			})
 		)
 	}
-	async remove(key: string): Promise<void> {
-		const { zone, locales } = await this.db.remove(key)
-		for (const locale of locales) this.modifications.push([key, locale, zone, undefined])
+	async reKey(key: string, newKey?: string): Promise<void> {
+		const { zone, locales } = await this.db.reKey(key, newKey)
+		for (const locale of locales) {
+			this.modifications.push([key, locale, zone, undefined])
+			if (newKey) this.modifications.push([newKey, locale, zone, undefined])
+		}
 	}
 }

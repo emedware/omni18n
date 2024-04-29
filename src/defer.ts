@@ -1,6 +1,7 @@
 export default class Defer {
 	private promise: Promise<void> = Promise.resolve()
-	private reject?: (reason?: any) => void
+	private rejecter?: (reason?: any) => void
+	private resolver?: (value?: any) => void
 	timeout: any
 	private internalCB?: () => Promise<void>
 
@@ -13,15 +14,14 @@ export default class Defer {
 		if (cb) this.cb = cb
 		if (this.timeout) clearTimeout(this.timeout)
 		else {
-			let resolver: (value?: any) => void
 			this.promise = new Promise<void>((resolve, reject) => {
-				resolver = resolve
-				this.reject = reject
+				this.resolver = resolve
+				this.rejecter = reject
 			})
 			this.internalCB = async () => {
-				if (this.cb) await this.cb()
 				this.timeout = undefined
-				resolver()
+				if (this.cb) await this.cb()
+				this.resolver!()
 			}
 		}
 		this.timeout = setTimeout(this.internalCB!, this.delay)
@@ -35,7 +35,12 @@ export default class Defer {
 	cancel() {
 		if (!this.timeout) return
 		clearTimeout(this.timeout)
-		this.reject!()
+		this.rejecter!()
 		this.timeout = undefined
+	}
+
+	resolve() {
+		if (this.timeout) this.internalCB?.()
+		return this.promise
 	}
 }

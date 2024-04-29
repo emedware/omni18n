@@ -1,7 +1,5 @@
-import { I18nClient, Translator, I18nServer, JsonDB, JsonDictionary, FileDB } from '../src/index'
+import { I18nClient, Translator, I18nServer, MemDB } from '../src/index'
 import { WaitingDB } from './db'
-
-// TODO: test errors
 
 // This is for test purpose: in general usage, only one locale/T is used
 let server: I18nServer,
@@ -12,7 +10,7 @@ let server: I18nServer,
 beforeAll(async () => {
 	server = new I18nServer(
 		new WaitingDB(
-			new JsonDB({
+			new MemDB({
 				'fld.name': { en: 'Name', fr: 'Nom', '.zone': '' },
 				'fld.bdate': { en: 'Birthday', fr: 'Date de naissance', '.zone': '' },
 				'fld.bdate.short': { en: 'B-dy', '.zone': '' },
@@ -71,11 +69,11 @@ beforeAll(async () => {
 		)
 	)
 
-	function condense(locale: OmnI18n.Locale, zones: string[] = ['']) {
-		loads.push({ locale, zones })
-		return server.condense(locale, zones)
+	function condense(locales: OmnI18n.Locale[], zones: string[] = ['']) {
+		loads.push({ locales, zones })
+		return server.condense(locales, zones)
 	}
-	clients = { en: new I18nClient('en-US', condense), be: new I18nClient('fr-BE', condense) }
+	clients = { en: new I18nClient(['en-US'], condense), be: new I18nClient(['fr-BE'], condense) }
 	clients.en.enter('adm')
 	clients.be.timeZone = 'Europe/Brussels'
 	T = Object.fromEntries(Object.entries(clients).map(([key, value]) => [key, value.enter()]))
@@ -208,42 +206,16 @@ describe('parameters', () => {
 		loads = []
 		clients.be.enter('adm')
 		await clients.be.loaded
-		expect(loads).toEqual([{ locale: 'fr-BE', zones: ['adm'] }])
+		expect(loads).toEqual([{ locales: ['fr-BE'], zones: ['adm'] }])
 		expect(T.be.cmd.ban()).toBe("Bannir l'utilisateur")
 	})
 
 	test('change locale', async () => {
-		const client = new I18nClient('en-US', server.condense),
+		const client = new I18nClient(['en-US'], server.condense),
 			T: Translator = client.enter()
 		await client.loaded
 		expect(T.msg.greet()).toBe('Hello here')
-		await client.setLocale('fr')
+		await client.setLocale(['fr'])
 		expect(T.msg.greet()).toBe('Salut tout le monde')
-	})
-})
-
-describe('errors', () => {
-	// TODO: test errors
-})
-
-describe('serialization', () => {
-	test('serialize', () => {
-		const content: JsonDictionary<any, any> = {
-			'serializations.nl1': {
-				'': 'Line 1\nLine2',
-				'.zone': ''
-			},
-			'fld.name': { en: 'Name', fr: 'Nom', '.zone': 'sls' },
-			'serializations.nl2': {
-				'': 'Line 1\nLine2',
-				'.zone': 'nls'
-			}
-		}
-		Object.assign(content['fld.name'], {
-			['.keyInfos']: { a: 1 },
-			['.textInfos']: { en: { a: '"\'`' }, hu: { a: 3 } }
-		})
-		const serialized = FileDB.serialize<any, any>(content)
-		expect(FileDB.deserialize(serialized)).toEqual(content)
 	})
 })

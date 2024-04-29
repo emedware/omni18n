@@ -4,29 +4,25 @@ interface SystemEntry<KeyInfos extends {}, TextInfos extends {}> {
 	'.textInfos'?: Record<OmnI18n.Locale, TextInfos>
 }
 
-export type JsonDictionaryEntry<KeyInfos extends {}, TextInfos extends {}> = {
+export type MemDictionaryEntry<KeyInfos extends {}, TextInfos extends {}> = {
 	[k: Exclude<OmnI18n.Locale, keyof SystemEntry<KeyInfos, TextInfos>>]: string
 } & SystemEntry<KeyInfos, TextInfos>
 
-export type JsonDictionary<KeyInfos extends {} = {}, TextInfos extends {} = {}> = {
-	[key: string]: JsonDictionaryEntry<KeyInfos, TextInfos>
+export type MemDictionary<KeyInfos extends {} = {}, TextInfos extends {} = {}> = {
+	[key: string]: MemDictionaryEntry<KeyInfos, TextInfos>
 }
 
-export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
+export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 	implements OmnI18n.InteractiveDB<KeyInfos, TextInfos>
 {
-	constructor(public dictionary: JsonDictionary<KeyInfos, TextInfos> = {}) {}
+	constructor(public dictionary: MemDictionary<KeyInfos, TextInfos> = {}) {}
 
 	async list(locales: OmnI18n.Locale[], zone: OmnI18n.Zone) {
 		const result: OmnI18n.RawDictionary = {}
 		Object.entries(this.dictionary).forEach(([key, value]) => {
 			if (zone == value['.zone']) {
-				let mLocale: OmnI18n.Locale | false = false
-				for (const locale in value) {
-					if (locales.includes(locale) && (!mLocale || locale.length > mLocale.length))
-						mLocale = locale
-				}
-				if (mLocale !== false) result[key] = value[mLocale]
+				const locale = locales.find((locale) => locale in value)
+				if (locale !== undefined) result[key] = [locale, value[locale]]
 			}
 		})
 		return result
@@ -83,7 +79,7 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 			ez = entry['.zone']
 		if (!/^[\w\-\+\*\.]*$/g.test(key))
 			throw new Error(`Bad key-name: ${key} (only letters, digits, "_+-*." allowed)`)
-		this.dictionary[key] = <JsonDictionaryEntry<KeyInfos, TextInfos>>{
+		this.dictionary[key] = <MemDictionaryEntry<KeyInfos, TextInfos>>{
 			...entry,
 			...((entry['.keyInfos'] || keyInfos) && {
 				'.keyInfos': {
@@ -99,11 +95,12 @@ export default class JsonDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 		return zone !== ez
 	}
 
-	async remove(key: string) {
+	async reKey(key: string, newKey?: string) {
 		const rv = {
 			locales: Object.keys(this.dictionary[key] || {}),
 			zone: this.dictionary[key]['.zone']
 		}
+		if (newKey) this.dictionary[newKey] = this.dictionary[key]
 		delete this.dictionary[key]
 		return rv
 	}

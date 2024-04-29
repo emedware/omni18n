@@ -1,4 +1,4 @@
-import JsonDB, { JsonDictionary } from '../src/db/jsonDb'
+import MemDB, { MemDictionary } from '../src/db/memDb'
 
 // As this is for test purpose, actually wait even for direct-memory operations
 function waiting<RV>(func: () => Promise<RV>) {
@@ -16,9 +16,6 @@ export class WaitingDB implements OmnI18n.InteractiveDB {
 	key(key: string, zone: string) {
 		return waiting(() => this.db.key(key, zone))
 	}
-	remove(key: string) {
-		return waiting(() => this.db.remove(key))
-	}
 	list(locales: OmnI18n.Locale[], zone: OmnI18n.Zone) {
 		return waiting(() => this.db.list(locales, zone))
 	}
@@ -27,5 +24,8 @@ export class WaitingDB implements OmnI18n.InteractiveDB {
 	}
 	workList(locales: string[]): Promise<OmnI18n.WorkDictionary> {
 		return waiting(() => this.db.workList(locales))
+	}
+	reKey(key: string, newKey?: string): Promise<{ zone: string; locales: OmnI18n.Locale[] }> {
+		return waiting(() => this.db.reKey(key, newKey))
 	}
 }

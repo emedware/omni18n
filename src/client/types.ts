@@ -17,7 +17,7 @@ export interface OmnI18nClient {
 	internals: Internals
 	readonly ordinalRules: Intl.PluralRules
 	readonly cardinalRules: Intl.PluralRules
-	locale: OmnI18n.Locale
+	locales: OmnI18n.Locale[]
 	timeZone?: string
 	interpolate(context: TContext, text: string, args: any[]): string
 	readonly loading: boolean

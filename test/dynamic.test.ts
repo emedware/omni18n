@@ -1,5 +1,5 @@
 import { WaitingDB } from './db'
-import { Translator, I18nClient, InteractiveServer, JsonDB } from '../src/index'
+import { Translator, I18nClient, InteractiveServer, MemDB } from '../src/index'
 
 describe('Dynamic functionality', () => {
 	let server: InteractiveServer,
@@ -10,7 +10,7 @@ describe('Dynamic functionality', () => {
 	beforeAll(async () => {
 		server = new InteractiveServer(
 			new WaitingDB(
-				new JsonDB({
+				new MemDB({
 					'fld.name': { en: 'Name', '.zone': '' },
 					'cmd.customize': { en: 'Customize', 'en-UK': 'Customise', '.zone': '' },
 					'cmd.save': { en: 'Save', '.zone': 'adm' },
@@ -25,7 +25,7 @@ describe('Dynamic functionality', () => {
 				}
 			}
 		)
-		client = new I18nClient('en-UK', server.condense)
+		client = new I18nClient(['en-UK'], server.condense)
 		T = client.enter()
 		await client.loaded
 	})
@@ -81,7 +81,7 @@ describe('Dynamic functionality', () => {
 		expect(modifications).toEqual([{ 'cmd.delete': ['Remove', ''] }])
 		modifications = []
 		expect(T.cmd.delete()).toBe('Remove')
-		await server.remove('cmd.delete')
+		await server.reKey('cmd.delete')
 		await server.save()
 		expect(modifications).toEqual([{ 'cmd.delete': undefined }])
 		modifications = []

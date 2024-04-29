@@ -80,7 +80,7 @@ export const processors: Record<string, (...args: any[]) => string> = {
 			currency: globals.currency,
 			...options
 		}
-		return num.toLocaleString(client.locale, options)
+		return num.toLocaleString(client.locales, options)
 	},
 	date(this: TContext, str: string, options?: any) {
 		const nbr = parseInt(str),
@@ -96,7 +96,7 @@ export const processors: Record<string, (...args: any[]) => string> = {
 			timeZone: client.timeZone,
 			...options
 		}
-		return date.toLocaleString(client.locale, options)
+		return date.toLocaleString(client.locales, options)
 	},
 	relative(this: TContext, str: string, options?: any) {
 		const content = /(-?\d+)\s*(\w+)/.exec(str),
@@ -114,32 +114,32 @@ export const processors: Record<string, (...args: any[]) => string> = {
 				return reports.error(this, 'Invalid date options', { options })
 			options = formats.date[options]
 		}
-		return new Intl.RelativeTimeFormat(client.locale, options).format(
+		return new Intl.RelativeTimeFormat(client.locales, options).format(
 			nbr,
 			<Intl.RelativeTimeFormatUnit>unit
 		)
 	},
 	region(this: TContext, str: string) {
 		return (
-			new Intl.DisplayNames([this.client.locale], { type: 'region' }).of(str) ||
+			new Intl.DisplayNames(this.client.locales[0], { type: 'region' }).of(str) ||
 			reports.error(this, 'Invalid region', { str })
 		)
 	},
 	language(this: TContext, str: string) {
 		return (
-			new Intl.DisplayNames([this.client.locale], { type: 'language' }).of(str) ||
+			new Intl.DisplayNames(this.client.locales[0], { type: 'language' }).of(str) ||
 			reports.error(this, 'Invalid language', { str })
 		)
 	},
 	script(this: TContext, str: string) {
 		return (
-			new Intl.DisplayNames([this.client.locale], { type: 'script' }).of(str) ||
+			new Intl.DisplayNames(this.client.locales[0], { type: 'script' }).of(str) ||
 			reports.error(this, 'Invalid script', { str })
 		)
 	},
 	currency(this: TContext, str: string) {
 		return (
-			new Intl.DisplayNames([this.client.locale], { type: 'currency' }).of(str) ||
+			new Intl.DisplayNames(this.client.locales[0], { type: 'currency' }).of(str) ||
 			reports.error(this, 'Invalid currency', { str })
 		)
 	}

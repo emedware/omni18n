@@ -1,4 +1,4 @@
-import JsonDB, { JsonDictionary, JsonDictionaryEntry } from './jsonDb'
+import MemDB, { MemDictionary, MemDictionaryEntry } from './memDb'
 import { readFile, writeFile, stat } from 'node:fs/promises'
 import { parse, stringify } from 'hjson'
 import Defer from '../defer'
@@ -11,32 +11,38 @@ function rexCount(str: string, position: number, rex: RegExp = /\u0000/g) {
 	return count
 }
 
-export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends JsonDB<
+export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends MemDB<
 	KeyInfos,
 	TextInfos
 > {
-	private save: Defer
+	private saving: Defer
 	public readonly loaded: Promise<void>
 	constructor(
 		private path: string,
-		saveDelay = 1e4 // 10 seconds
+		saveDelay = 1e3 // 1 second
 	) {
 		super()
 		this.loaded = this.reload()
-		this.save = new Defer(
+		this.saving = new Defer(
 			async () => await writeFile(this.path, FileDB.serialize(this.dictionary), 'utf16le'),
 			saveDelay
 		)
 	}
 
 	async reload() {
-		// In case of too much time, write the "modified" call
+		// In case of too much time, write a "modified" call
 		const fStat = await stat(this.path)
 		if (fStat.isFile() && fStat.size > 0) {
 			const data = await readFile(this.path, 'utf16le')
-			this.dictionary = JSON.parse(data)
+			this.dictionary = FileDB.deserialize<KeyInfos, TextInfos>(data)
 		}
 	}
+
+	async save() {
+		return this.saving.resolve()
+	}
+
+	//#region Forwards
 
 	async list(locales: OmnI18n.Locale[], zone: OmnI18n.Zone) {
 		await this.loaded
@@ -52,28 +58,29 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends J
 	}
 	async modify(key: string, locale: OmnI18n.Locale, value: string) {
 		await this.loaded
-		this.save.defer()
+		this.saving.defer()
 		return super.modify(key, locale, value)
 	}
 	async key(key: string, zone: string) {
 		await this.loaded
-		this.save.defer()
+		this.saving.defer()
 		return super.key(key, zone)
-	}
-	async remove(key: string) {
-		await this.loaded
-		this.save.defer()
-		return super.remove(key)
 	}
 	async get(key: string) {
 		await this.loaded
 		return super.get(key)
 	}
+	async reKey(key: string, newKey?: string) {
+		await this.loaded
+		this.saving.defer()
+		return super.reKey(key, newKey)
+	}
 
+	//#endregion
 	//#region serialization
 
 	static serialize<KeyInfos extends {} = {}, TextInfos extends {} = {}>(
-		dictionary: JsonDictionary<KeyInfos, TextInfos>
+		dictionary: MemDictionary<KeyInfos, TextInfos>
 	) {
 		function optioned(obj: any, preTabs = 0) {
 			const stringified = stringify(obj, {
@@ -81,11 +88,10 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends J
 				multiline: 'std',
 				space: '\t'
 			})
-			return stringified.length < 80
+			/*stringified.length < 80
 				? stringified.replace(/[\n\t]/g, '')
-				: preTabs
-					? stringified.replace(/\n/g, '\n' + '\t'.repeat(preTabs))
-					: stringified
+				:*/
+			return preTabs ? stringified.replace(/\n/g, '\n' + '\t'.repeat(preTabs)) : stringified
 		}
 		let rv = ''
 		for (const [key, value] of Object.entries(dictionary)) {
@@ -118,8 +124,9 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends J
 	}
 
 	static deserialize<KeyInfos extends {} = {}, TextInfos extends {} = {}>(data: string) {
-		const dictionary: JsonDictionary<KeyInfos, TextInfos> = {}
-		data = data.replace(/\n/gm, '\u0000')
+		if (!data.endsWith('\n')) data += '\n'
+		const dictionary: MemDictionary<KeyInfos, TextInfos> = {}
+		data = data.replace(/\n/g, '\u0000') // Only way to make regexp treat '\n' as a regular character
 		const rex = {
 			key: /([^\t\{:]+)(\{.*?\})?:([^\u0000]*)\u0000/g,
 			locale: /\t([^\t\{:]*)(\{.*?\})?(?::((?:[^\u0000]|\u0000\t\t)*))?\u0000/g
@@ -136,7 +143,7 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends J
 			let keyInfos: any,
 				textInfos: Record<OmnI18n.Locale, any> = {}
 			if (keyFetch[2]) keyInfos = parse(keyFetch[2].replace(/\u0000/g, '\n'))
-			const entry: JsonDictionaryEntry<KeyInfos, TextInfos> = {
+			const entry: MemDictionaryEntry<KeyInfos, TextInfos> = {
 				'.zone': zone,
 				...(keyInfos && { '.keyInfos': keyInfos })
 			}
