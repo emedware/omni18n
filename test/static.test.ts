@@ -77,8 +77,12 @@ beforeAll(async () => {
 	clients.en.enter('adm')
 	clients.be.timeZone = 'Europe/Brussels'
 	clients.en.timeZone = 'Greenwich'
-	T = Object.fromEntries(Object.entries(clients).map(([key, value]) => [key, value.enter()]))
-	await Promise.all(Object.values(clients).map((client) => client.loaded))
+	T = Object.fromEntries(
+		await Promise.all(
+			Object.entries(clients).map(async ([key, value]) => [key, await value.enter()])
+		)
+	)
+	debugger
 })
 
 describe('basic functionalities', () => {
@@ -205,16 +209,14 @@ describe('parameters', () => {
 		expect(T.en.cmd.ban()).toBe('Ban user')
 		expect(T.be.cmd.ban()).toBe('[cmd.ban]')
 		loads = []
-		clients.be.enter('adm')
-		await clients.be.loaded
+		await clients.be.enter('adm')
 		expect(loads).toEqual([{ locales: ['fr-BE'], zones: ['adm'] }])
 		expect(T.be.cmd.ban()).toBe("Bannir l'utilisateur")
 	})
 
 	test('change locale', async () => {
 		const client = new I18nClient(['en-US'], server.condense),
-			T: Translator = client.enter()
-		await client.loaded
+			T: Translator = await client.enter()
 		expect(T.msg.greet()).toBe('Hello here')
 		await client.setLocale(['fr'])
 		expect(T.msg.greet()).toBe('Salut tout le monde')

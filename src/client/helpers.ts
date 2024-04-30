@@ -130,6 +130,8 @@ export function translator(context: TContext): Translator {
 					return target
 				case 'constructor':
 					return String
+				case 'then': // Must be unthenable in order to be awaited
+					return 'Translators must be unthenable. `then` cannot be used as a text key.'
 				case bulk:
 					return translateBulk(context)
 			}

@@ -27,7 +27,6 @@ export default class I18nClient implements OmnI18nClient {
 	private toLoadZones = new Set<OmnI18n.Zone>()
 	private loadDefer = new Defer()
 
-	public loaded: Promise<void> = Promise.resolve()
 	public checkOnLoad = new Set<string>()
 
 	public timeZone?: string
@@ -61,13 +60,13 @@ export default class I18nClient implements OmnI18nClient {
 	 * @param zones Zones entered
 	 * @returns The translator
 	 */
-	public enter(...zones: string[]) {
-		zones.push('')
+	public async enter(...zones: string[]) {
+		if (!zones.includes('')) zones.push('')
 		const knownZones = this.loadedZones.union(this.toLoadZones),
 			toAdd = zones.filter((zone) => !knownZones.has(zone))
 		if (toAdd.length) {
 			for (const t of toAdd) this.toLoadZones.add(t)
-			this.loaded = this.loadDefer.defer(async () => {
+			await this.loadDefer.defer(async () => {
 				const toLoad = this.toLoadZones
 				this.toLoadZones = new Set()
 				await this.download(Array.from(toLoad))

@@ -11,8 +11,8 @@ describe('Dynamic functionality', () => {
 		server = new InteractiveServer(
 			new WaitingDB(
 				new MemDB({
-					'fld.name': { en: 'Name', '.zone': '' },
-					'cmd.customize': { en: 'Customize', 'en-UK': 'Customise', '.zone': '' },
+					'fld.name': { en: 'Name' },
+					'cmd.customize': { en: 'Customize', 'en-UK': 'Customise' },
 					'cmd.save': { en: 'Save', '.zone': 'adm' },
 					'cmd.modify': { en: 'Modify', '.zone': 'adm' }
 				})
@@ -26,8 +26,7 @@ describe('Dynamic functionality', () => {
 			}
 		)
 		client = new I18nClient(['en-UK'], server.condense)
-		T = client.enter()
-		await client.loaded
+		T = await client.enter()
 	})
 
 	test('regular feedback', async () => {
@@ -63,8 +62,7 @@ describe('Dynamic functionality', () => {
 		await server.save()
 		expect(modifications).toEqual([])
 		expect(T.cmd.save()).toBe('[cmd.save]')
-		client.enter('adm')
-		await client.loaded
+		await client.enter('adm')
 		expect(T.cmd.save()).toBe('Save it')
 		await server.modify('cmd.save', 'en', 'Save')
 		await server.save()

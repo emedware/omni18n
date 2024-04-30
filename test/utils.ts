@@ -8,6 +8,6 @@ export function localStack<KeyInfos extends {} = {}, TextInfos extends {} = {}>(
 ) {
 	const server = new I18nServer(new WaitingDB(new MemDB(dictionary))),
 		client = new I18nClient(locales, server.condense),
-		T = client.enter(...zones)
-	return { server, client, T }
+		Tp = client.enter(...zones)
+	return { server, client, Tp }
 }

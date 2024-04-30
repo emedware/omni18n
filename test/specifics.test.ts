@@ -25,7 +25,7 @@ describe('bulk', () => {
 	}
 
 	beforeAll(async () => {
-		const { T: lclT, client } = localStack({
+		const { Tp } = localStack({
 			'sub.obj.v1': { fr: 'fr-v1' },
 			'sub.obj.v2': { en: 'en-v2' },
 			'sub.obj.v3': { fr: 'fr-v3' },
@@ -34,8 +34,7 @@ describe('bulk', () => {
 			'struct.obj.sub.v3': { fr: 'fr-v3' },
 			'struct.obj.sub': { fr: 'toString' }
 		})
-		T = lclT
-		await client.loaded
+		T = await Tp
 	})
 
 	test('from object', async () => {
@@ -65,15 +64,12 @@ describe('specifics', () => {
 	})
 	test('fallbacks', async () => {
 		misses.mockClear()
-		const { client, T } = localStack({
+		const { Tp } = localStack({
 			'fld.name': { en: 'Name' },
 			'fld.bday': { en: 'Birthday', fr: 'Anniversaire' },
 			'fld.bday.short': { en: 'Bday' }
 		})
-		expect('' + T.fld.name).toBe('...')
-		expect('' + T.fld.inexistent).toBe('...')
-		await client.loaded
-		expect(misses).toHaveBeenCalledWith('fld.inexistent')
+		const T = await Tp
 		misses.mockClear()
 		expect('' + T.fld.name).toBe('Name')
 		expect(misses).toHaveBeenCalledWith('fld.name')
