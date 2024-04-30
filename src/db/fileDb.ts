@@ -3,12 +3,12 @@ import { readFile, writeFile, stat } from 'node:fs/promises'
 import { parse, stringify } from 'hjson'
 import Defer from '../defer'
 
-function rexCount(str: string, position: number, rex: RegExp = /\u0000/g) {
+function parseError(str: string, position: number, end: number = position + 100) {
 	let count = 0,
 		fetch: RegExpExecArray | null
 
-	while ((fetch = rex.exec(str)) && fetch.index < position) count++
-	return count
+	while ((fetch = /\u0000/g.exec(str)) && fetch.index < position) count++
+	return new Error(`Unparsable data at line ${count}: ${str.slice(position, end)}`)
 }
 
 export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends MemDB<
@@ -88,9 +88,6 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 				multiline: 'std',
 				space: '\t'
 			})
-			/*stringified.length < 80
-				? stringified.replace(/[\n\t]/g, '')
-				:*/
 			return preTabs ? stringified.replace(/\n/g, '\n' + '\t'.repeat(preTabs)) : stringified
 		}
 		let rv = ''
@@ -134,10 +131,7 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 		let keyFetch: RegExpExecArray | null
 		let lastIndex = 0
 		while ((keyFetch = rex.key.exec(data))) {
-			if (keyFetch.index > lastIndex)
-				throw new Error(
-					`Unparsable data at line ${rexCount(data, rex.key.lastIndex)}: ${data.slice(lastIndex, keyFetch.index)}`
-				)
+			if (keyFetch.index > lastIndex) throw parseError(data, lastIndex, keyFetch.index)
 			const key = keyFetch[1],
 				zone = keyFetch[3] as OmnI18n.Zone
 			let keyInfos: any,
@@ -163,10 +157,7 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 			if (Object.keys(textInfos).length) entry['.textInfos'] = textInfos
 			dictionary[key] = entry
 		}
-		if (rex.key.lastIndex > 0 || !rex.key.test(data))
-			throw new Error(
-				`Unparsable data at line ${rexCount(data, rex.key.lastIndex)}: ${data.slice(rex.key.lastIndex, 100)}`
-			)
+		if (rex.key.lastIndex > 0 || !rex.key.test(data)) throw parseError(data, rex.key.lastIndex)
 		return dictionary
 	}
 

@@ -3,6 +3,7 @@
 [![Gihub repo dependents](https://badgen.net/github/dependents-repo/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=REPOSITORY)
 [![Gihub package dependents](https://badgen.net/github/dependents-pkg/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=PACKAGE)
 [![Node.js CI](https://github.com/emedware/omni18n/actions/workflows/node.js.yml/badge.svg)](https://github.com/emedware/omni18n/actions/workflows/node.js.yml)
+
 <!-- [![Coverage Status](https://coveralls.io/repos/github/emedware/omni18n/badge.svg)](https://coveralls.io/github/emedware/omni18n) -->
 
 # omni18n
@@ -52,6 +53,7 @@ In interactive mode (using `InteractiveServer`), the DB interface contains modif
 Two interfaces allow to implement an interface to any database: `OmnI18n.DB` (who basically just has a `list`) and `OmnI18n.InteractiveDB` who has some modification access
 
 Two are provided: a `MemDB` who is basically an "in-memory database" and its descendant, a `FileDB` who allows:
+
 - reading from a file
 - maintaining the files when changes are brought
 

@@ -10,8 +10,15 @@ export default {
 		format: 'cjs'
 	},
 	external: ['hjson'],
-	plugins: [resolve(), commonjs(), typescript({tsconfigOverride: {
-		include: ['./src'],
-		exclude: ['./node_modules']
-	}}), json()]
+	plugins: [
+		resolve(),
+		commonjs(),
+		typescript({
+			tsconfigOverride: {
+				include: ['./src'],
+				exclude: ['./node_modules']
+			}
+		}),
+		json()
+	]
 }
