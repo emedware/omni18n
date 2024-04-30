@@ -1,8 +1,17 @@
+[![view on npm](https://badgen.net/npm/v/omni18n)](https://www.npmjs.org/package/omni18n)
+[![npm module downloads](https://badgen.net/npm/dt/omni18n)](https://www.npmjs.org/package/omni18n)
+[![Gihub repo dependents](https://badgen.net/github/dependents-repo/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=REPOSITORY)
+[![Gihub package dependents](https://badgen.net/github/dependents-pkg/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=PACKAGE)
+[![Node.js CI](https://github.com/emedware/omni18n/actions/workflows/node.js.yml/badge.svg)](https://github.com/emedware/omni18n/actions/workflows/node.js.yml)
+<!-- [![Coverage Status](https://coveralls.io/repos/github/emedware/omni18n/badge.svg)](https://coveralls.io/github/emedware/omni18n) -->
+
 # omni18n
 
 Generic i18n library managing the fullstack interaction in a CI/CD pace. The fact the dictionaries are stored in a DB edited by the translators through a(/the same) web application - managing translation errors, missing keys, ...
 
 It can even manage update of all (concerned) clients when a translation is modified
+
+The main documentation on [GitHub pages](https://emedware.github.io/omni18n/) or in [the repository](./docs/README.md)
 
 ## General structure
 
