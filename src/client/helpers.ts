@@ -8,12 +8,27 @@ import {
 	zone,
 	fallback,
 	contextKey,
-	Translatable
+	Translatable,
+	ReportingClient
 } from './types'
 import { interpolate } from './interpolation'
 
 function entry(t: string, z: string, isFallback?: boolean): ClientDictionary {
 	return { [text]: t, [zone]: z, ...(isFallback ? { [fallback]: true } : {}) }
+}
+
+export function reportMissing(context: TContext, fallback?: string) {
+	const { client, key } = context
+	return 'missing' in client
+		? (<ReportingClient>client).missing(key, fallback, context.zones)
+		: reports.missing(context, fallback)
+}
+
+export function reportError(context: TContext, error: string, spec: object) {
+	const { client, key } = context
+	return 'error' in client
+		? (<ReportingClient>client).error(key, error, spec, context.zones)
+		: reports.error(context, error, spec)
 }
 
 export const reports = {
@@ -54,13 +69,14 @@ export function translate(context: TContext, args: any[]): string {
 	}
 
 	return value?.[2]
-		? client.interpolate(context, reports.missing(context, value[0]), args)
+		? client.interpolate(context, reportMissing(context, value[0]), args)
 		: value
 			? client.interpolate(context, value[0], args)
-			: reports.missing(context)
+			: reportMissing(context)
 }
 
 export function translator(context: TContext): Translator {
+	Object.freeze(context)
 	const translation = context.key
 		? function (...args: any[]): string {
 				return translate(context, args)
@@ -82,9 +98,18 @@ export function translator(context: TContext): Translator {
 				case 'constructor':
 					return String
 				case 'then': // Must be unthenable in order to be awaited
-					return 'Translators must be unthenable. `then` cannot be used as a text key.'
+					return new Proxy(
+						{},
+						{
+							get(target, p, receiver) {
+								const msg = 'Translators must be unthenable. `then` cannot be used as a text key.'
+								if (p === 'toString') return msg
+								throw new TranslationError(msg)
+							}
+						}
+					)
 				case contextKey:
-					return Object.freeze(context)
+					return context
 			}
 			if (typeof key !== 'string') throw new TranslationError(`Invalid key type: ${typeof key}`)
 			return translator({ ...context, key: context.key ? `${context.key}.${key}` : key })
@@ -172,7 +197,7 @@ export function bulkObject<T extends Translatable = Translatable>(
 	}
 	return recursivelyTranslate(source)
 }
-export function objectFromDictionary<T extends Translatable = Translatable>(
+export function bulkDictionary<T extends Translatable = Translatable>(
 	t: Translator,
 	...args: any[]
 ): T | string {
@@ -184,12 +209,12 @@ export function objectFromDictionary<T extends Translatable = Translatable>(
 		current = current[k] as ClientDictionary
 		if (!current) break
 	}
-	if (!current) return reports.missing({ ...context, key })
+	if (!current) return reportMissing({ ...context, key })
 	function dictionaryToTranslation(obj: ClientDictionary, key: string): T | string {
 		const rv: any = {}
 		const subCtx = { ...context, key }
 		const value = () =>
-			interpolate(subCtx, obj[fallback] ? reports.missing(subCtx, obj[text]) : obj[text]!, args)
+			interpolate(subCtx, obj[fallback] ? reportMissing(subCtx, obj[text]) : obj[text]!, args)
 		if (Object.keys(obj).every((k) => typeof k === 'symbol')) return value()
 		for (const [k, v] of Object.entries(obj))
 			rv[k] = dictionaryToTranslation(v, key ? `${key}.${k}` : k)

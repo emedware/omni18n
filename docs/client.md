@@ -6,6 +6,8 @@ For instance, in the browser for an SPA is is instantiated once for the whole we
 
 ## Interactions and configurations
 
+In order to acquire translations, the client just has to `enter` a zone to retrieve a [Translator](./translator.md)
+
 ### With the server
 
 ```ts
@@ -20,16 +22,15 @@ I18nClient(locales: OmnI18n.Locale[], condense: OmnI18n.Condense, onModification
 const client = new I18nClient(['fr', 'en'], server.condense, frontend.refreshTexts)
 ```
 
-### Global settings
+### Reports
 
-These are variables you can import and modify:
+There are two ways to manage reports. There are also two report types : missing and error. The first one is for when a key is missing, the second one only happens when interpolating.
 
-```ts
-import { reports, formats, processors } from 'omni18n'
-```
+Both return a string to display instead of the translated value.
 
-#### `reports`
+#### Global reporting
 
+`reports` is a variable imported from `omni18n` who can (and should) be edited. It is called by the engine
 Reporting mechanism in case of problem. They both take an argument of type `TContext` describing mainly the client and the key where the problem occurred
 
 ```ts
@@ -70,6 +71,16 @@ reports.error = ({ key, client }: TContext, error: string, spec: object) => {
 }
 ```
 
-#### `formats`
+#### OO reporting
 
-#### `processors`
+The interface `ReportingClient` exposes the methods :
+```ts
+export interface ReportingClient extends OmnI18nClient {
+	missing(key: string, fallback: string | undefined, zones: OmnI18n.Zone[]): string
+	error(key: string, error: string, spec: object, zones: OmnI18n.Zone[]): string
+}
+```
+
+Applications implementing this interface will have it called instead of the global `reports` value.
+
+> Of course, there will be no `super`

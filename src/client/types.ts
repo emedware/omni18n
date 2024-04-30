@@ -27,6 +27,11 @@ export interface OmnI18nClient {
 	onModification?: OmnI18n.OnModification
 }
 
+export interface ReportingClient extends OmnI18nClient {
+	missing(key: string, fallback: string | undefined, zones: OmnI18n.Zone[]): string
+	error(key: string, error: string, spec: object, zones: OmnI18n.Zone[]): string
+}
+
 export interface TContext<Client extends OmnI18nClient = OmnI18nClient> {
 	key: string
 	zones: string[]

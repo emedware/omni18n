@@ -1,4 +1,4 @@
-import { reports, translate } from './helpers'
+import { reportMissing, reportError, translate } from './helpers'
 import { TContext, TranslationError } from './types'
 
 export const formats: Record<'date' | 'number' | 'relative', Record<string, object>> = {
@@ -41,37 +41,35 @@ export const processors: Record<string, (...args: any[]) => string> = {
 	},
 	ordinal(this: TContext, str: string) {
 		const { client } = this
-		if (!client.internals.ordinals) return reports.missing({ ...this, key: 'internals.ordinals' })
+		if (!client.internals.ordinals) return reportMissing({ ...this, key: 'internals.ordinals' })
 		const num = parseInt(str)
-		if (isNaN(num)) return reports.error(this, 'NaN', { str })
+		if (isNaN(num)) return reportError(this, 'NaN', { str })
 		return client.internals.ordinals[client.ordinalRules.select(num)].replace('$', str)
 	},
 	plural(this: TContext, str: string, designation: string, plural?: string) {
 		const num = parseInt(str),
 			{ client } = this
-		if (isNaN(num)) return reports.error(this, 'NaN', { str })
+		if (isNaN(num)) return reportError(this, 'NaN', { str })
 		const rule = client.cardinalRules.select(num)
 		const rules: string | Record<string, string> = plural
 			? { one: designation, other: plural }
 			: designation
 
 		if (typeof rules === 'string') {
-			if (!client.internals.plurals) return reports.missing({ ...this, key: 'internals.plurals' })
+			if (!client.internals.plurals) return reportMissing({ ...this, key: 'internals.plurals' })
 			if (!client.internals.plurals[rule])
-				return reports.error(this, 'Missing rule in plurals', { rule })
+				return reportError(this, 'Missing rule in plurals', { rule })
 			return client.internals.plurals[rule].replace('$', designation)
 		}
-		return rule in rules
-			? rules[rule]
-			: reports.error(this, 'Rule not found', { rule, designation })
+		return rule in rules ? rules[rule] : reportError(this, 'Rule not found', { rule, designation })
 	},
 	number(this: TContext, str: string, options?: any) {
 		const num = parseFloat(str),
 			{ client } = this
-		if (isNaN(num)) return reports.error(this, 'NaN', { str })
+		if (isNaN(num)) return reportError(this, 'NaN', { str })
 		if (typeof options === 'string') {
 			if (!(options in formats.number))
-				return reports.error(this, 'Invalid number options', { options })
+				return reportError(this, 'Invalid number options', { options })
 			options = formats.number[options]
 		}
 		if (this.client.currency)
@@ -85,10 +83,9 @@ export const processors: Record<string, (...args: any[]) => string> = {
 		const nbr = parseInt(str),
 			date = new Date(nbr),
 			{ client } = this
-		if (isNaN(nbr)) return reports.error(this, 'Invalid date', { str })
+		if (isNaN(nbr)) return reportError(this, 'Invalid date', { str })
 		if (typeof options === 'string') {
-			if (!(options in formats.date))
-				return reports.error(this, 'Invalid date options', { options })
+			if (!(options in formats.date)) return reportError(this, 'Invalid date options', { options })
 			options = formats.date[options]
 		}
 		if (client.timeZone)
@@ -101,17 +98,17 @@ export const processors: Record<string, (...args: any[]) => string> = {
 	relative(this: TContext, str: string, options?: any) {
 		const content = /(-?\d+)\s*(\w+)/.exec(str),
 			{ client } = this
-		if (!content) return reports.error(this, 'Invalid relative format', { str })
+		if (!content) return reportError(this, 'Invalid relative format', { str })
 		const nbr = parseInt(content[1]),
 			unit = content[2]
 		const units = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year']
 		units.push(...units.map((unit) => unit + 's'))
 
-		if (isNaN(nbr)) return reports.error(this, 'Invalid number', { str })
-		if (!units.includes(unit)) return reports.error(this, 'Invalid unit', { unit })
+		if (isNaN(nbr)) return reportError(this, 'Invalid number', { str })
+		if (!units.includes(unit)) return reportError(this, 'Invalid unit', { unit })
 		if (typeof options === 'string') {
 			if (!(options in formats.relative))
-				return reports.error(this, 'Invalid date options', { options })
+				return reportError(this, 'Invalid date options', { options })
 			options = formats.date[options]
 		}
 		return new Intl.RelativeTimeFormat(client.locales, options).format(
@@ -122,25 +119,25 @@ export const processors: Record<string, (...args: any[]) => string> = {
 	region(this: TContext, str: string) {
 		return (
 			new Intl.DisplayNames(this.client.locales[0], { type: 'region' }).of(str) ||
-			reports.error(this, 'Invalid region', { str })
+			reportError(this, 'Invalid region', { str })
 		)
 	},
 	language(this: TContext, str: string) {
 		return (
 			new Intl.DisplayNames(this.client.locales[0], { type: 'language' }).of(str) ||
-			reports.error(this, 'Invalid language', { str })
+			reportError(this, 'Invalid language', { str })
 		)
 	},
 	script(this: TContext, str: string) {
 		return (
 			new Intl.DisplayNames(this.client.locales[0], { type: 'script' }).of(str) ||
-			reports.error(this, 'Invalid script', { str })
+			reportError(this, 'Invalid script', { str })
 		)
 	},
 	currency(this: TContext, str: string) {
 		return (
 			new Intl.DisplayNames(this.client.locales[0], { type: 'currency' }).of(str) ||
-			reports.error(this, 'Invalid currency', { str })
+			reportError(this, 'Invalid currency', { str })
 		)
 	}
 }
@@ -190,7 +187,7 @@ export function interpolate(context: TContext, text: string, args: any[]): strin
 			? val
 			: dft !== undefined
 				? dft
-				: reports.error(context, 'Missing arg', { arg: i, key })
+				: reportError(context, 'Missing arg', { arg: i, key })
 	}
 	text = text.replace(/{{/g, '\u0001').replace(/}}/g, '\u0002')
 	const placeholders = (text.match(/{(.*?)}/g) || []).map((placeholder) => {
@@ -213,18 +210,18 @@ export function interpolate(context: TContext, text: string, args: any[]): strin
 					.map((part) => objectArgument(part))
 				if (typeof proc === 'object')
 					return params.length !== 1 || typeof params[0] !== 'string'
-						? reports.error(context, 'Case needs a string case', { params })
+						? reportError(context, 'Case needs a string case', { params })
 						: params[0] in proc
 							? proc[params[0]]
 							: 'default' in proc
 								? proc.default
-								: reports.error(context, 'Case not found', { case: params[0], cases: proc })
+								: reportError(context, 'Case not found', { case: params[0], cases: proc })
 				if (proc.includes('.')) return translate({ ...context, key: proc }, params)
-				if (!(proc in processors)) return reports.error(context, 'Unknown processor', { proc })
+				if (!(proc in processors)) return reportError(context, 'Unknown processor', { proc })
 				try {
 					return processors[proc].call(context, ...params)
 				} catch (error) {
-					return reports.error(context, 'Error in processor', { proc, error })
+					return reportError(context, 'Error in processor', { proc, error })
 				}
 			}
 		}),

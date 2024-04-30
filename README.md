@@ -258,10 +258,6 @@ import { reports, type TContext } from "omni18n";
 	client: I18nClient
 }*/
 
-reports.loading = ({ key, client }: TContext): string {
-	// report if not expected
-	return '...'
-}
 reports.missing = ({ key, client }: TContext, fallback?: string): string {
 	// report
 	return fallback ?? `[${key}]`
