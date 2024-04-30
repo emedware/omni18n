@@ -76,6 +76,7 @@ beforeAll(async () => {
 	clients = { en: new I18nClient(['en-US'], condense), be: new I18nClient(['fr-BE'], condense) }
 	clients.en.enter('adm')
 	clients.be.timeZone = 'Europe/Brussels'
+	clients.en.timeZone = 'Greenwich'
 	T = Object.fromEntries(Object.entries(clients).map(([key, value]) => [key, value.enter()]))
 	await Promise.all(Object.values(clients).map((client) => client.loaded))
 })
@@ -172,11 +173,11 @@ describe('formatting', () => {
 		const date = new Date('2021-05-01T12:34:56.789Z')
 		expect(T.en.format.date(date)).toBe('5/1/21')
 		expect(T.be.format.date(date)).toBe('1/05/21')
-		expect(T.en.format.dateTime(date)).toBe('5/1/2021, 3:34:56 PM')
+		expect(T.en.format.dateTime(date)).toBe('5/1/2021, 12:34:56 PM')
 		expect(T.be.format.dateTime(date)).toBe('01/05/2021 14:34:56')
 		expect(T.en.format.medium(date)).toBe('May 1, 2021')
 		expect(T.be.format.medium(date)).toBe('1 mai 2021')
-		expect(T.en.format.time(date)).toBe('3:34 PM')
+		expect(T.en.format.time(date)).toBe('12:34 PM')
 		expect(T.be.format.time(date)).toBe('14:34')
 	})
 	test('relative', () => {
