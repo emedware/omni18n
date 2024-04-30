@@ -31,6 +31,7 @@ import { reports, formats, processors } from 'omni18n'
 #### `reports`
 
 Reporting mechanism in case of problem. They both take an argument of type `TContext` describing mainly the client and the key where the problem occurred
+
 ```ts
 export interface TContext {
 	key: string
@@ -42,31 +43,35 @@ export interface TContext {
 > If texts might be displayed before loading is complete, make sure `onModification` has been specified as it will be called when the translations will be provided
 
 These reports will:
+
 - have any side effect, like logging or making a request that will log
 - return a string that will be used instead of the expected translation
 
 `reports` contain:
 
 - A missing key report
+
 ```ts
-reports.missing = ({ key, client }: TContext, fallback?: string)=> {
+reports.missing = ({ key, client }: TContext, fallback?: string) => {
 	// report
 	return fallback ?? `[${key}]`
 }
 ```
 
 - A "missing key while loading" report
-This one is called only when the client is in a loading state. If `onModification` was specified, it will be called once loaded. If not, the client will automatically check all the keys that went through this error to check them again.
+  This one is called only when the client is in a loading state. If `onModification` was specified, it will be called once loaded. If not, the client will automatically check all the keys that went through this error to check them again.
+
 ```ts
-reports.loading = ({ client }: TContext)=> '...'
+reports.loading = ({ client }: TContext) => '...'
 ```
 
 - An interpolation error
-When interpolating, an error calls this report with a textual description and some specifications depending on the error.
+  When interpolating, an error calls this report with a textual description and some specifications depending on the error.
 
-> The specification is json-able *except* in the case of `error: "Error in processor"`, in which case `spec.error` is whatever had been thrown and might be an `Error` or `Exception`
+> The specification is json-able _except_ in the case of `error: "Error in processor"`, in which case `spec.error` is whatever had been thrown and might be an `Error` or `Exception`
+
 ```ts
-reports.error = ({ key, client }: TContext, error: string, spec: object)=> {
+reports.error = ({ key, client }: TContext, error: string, spec: object) => {
 	// report
 	return '[!error!]'
 }
