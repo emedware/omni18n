@@ -52,9 +52,16 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 					else if (typeof current[k] === 'string') current[k] = <CDicE>{ '': <string>current[k] }
 					current = current[k] as CDic
 				}
-				if (!hasValue || locales[0].startsWith(value[0])) {
-					if (current[lastKey] && typeof current[lastKey] !== 'string')
-						(<CDic>current[lastKey])[''] = value[1]
+				const fallback = !locales[0].startsWith(value[0]),
+					clk = current[lastKey]
+				if (!hasValue || !fallback) {
+					if (fallback)
+						current[lastKey] = <CDicE>{
+							...(typeof clk === 'object' ? clk : {}),
+							'': value[1],
+							'.': '.'
+						}
+					else if (clk && typeof clk !== 'string') (<CDic>current[lastKey])[''] = value[1]
 					else current[lastKey] = <CDicE>value[1]
 					hasValue = true
 				}

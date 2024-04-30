@@ -4,12 +4,14 @@ export interface Internals {
 }
 
 export const zone = Symbol('Zone'),
-	text = Symbol('Text')
+	text = Symbol('Text'),
+	fallback = Symbol('Fallback')
 
 export type ClientDictionary = {
 	[key: string]: ClientDictionary
 	[zone]?: string
 	[text]?: OmnI18n.Zone
+	[fallback]?: true
 }
 
 export interface OmnI18nClient {
@@ -19,14 +21,17 @@ export interface OmnI18nClient {
 	readonly cardinalRules: Intl.PluralRules
 	locales: OmnI18n.Locale[]
 	timeZone?: string
+	currency?: string
 	interpolate(context: TContext, text: string, args: any[]): string
 	readonly loading: boolean
+	readonly checkOnLoad: Set<string>
+	onModification?: OmnI18n.OnModification
 }
 
-export interface TContext {
+export interface TContext<Client extends OmnI18nClient = OmnI18nClient> {
 	key: string
 	zones: string[]
-	client: OmnI18nClient
+	client: Client
 }
 
 export class TranslationError extends Error {

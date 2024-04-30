@@ -4,16 +4,24 @@ import {
 	I18nServer,
 	InteractiveServer,
 	MemDB,
-	MemDictionary
+	MemDictionary,
+	TContext,
+	reports
 } from '../src/index'
 import { WaitingDB } from './db'
 import { readFile, writeFile, unlink, cp } from 'node:fs/promises'
 
-describe('fallback', () => {
+describe('specifics', () => {
 	test('errors', async () => {
 		// TODO test errors
 	})
 	test('fallbacks', async () => {
+		const misses = jest.fn()
+		reports.missing = ({ key }: TContext, fallback?: string) => {
+			misses(key)
+			return fallback ?? '[no]'
+		}
+
 		const server = new I18nServer(
 				new WaitingDB(
 					new MemDB({
@@ -25,9 +33,18 @@ describe('fallback', () => {
 			),
 			client = new I18nClient(['fr', 'en'], server.condense),
 			T = client.enter()
+		expect('' + T.fld.name).toBe('...')
+		expect('' + T.fld.inexistent).toBe('...')
 		await client.loaded
+		expect(misses).toHaveBeenCalledWith('fld.inexistent')
+		misses.mockClear()
 		expect('' + T.fld.name).toBe('Name')
+		expect(misses).toHaveBeenCalledWith('fld.name')
+		misses.mockClear()
 		expect('' + T.fld.bday.short).toBe('Anniversaire')
+		expect(misses).not.toHaveBeenCalled()
+		expect('' + T.fld.inexistent).toBe('[no]')
+		expect(misses).toHaveBeenCalledWith('fld.inexistent')
 	})
 	test('serialize', () => {
 		const content: MemDictionary<any, any> = {

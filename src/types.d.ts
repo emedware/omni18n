@@ -4,8 +4,9 @@ declare namespace OmnI18n {
 	type Zone = string
 
 	type CondensedDictionary = {
-		[key: Exclude<string, ''>]: CondensedDictionary | string
+		[key: Exclude<string, '' | '.'>]: CondensedDictionary | string
 		''?: string
+		'.'?: '.' // fallback marker
 	}
 
 	type Condense = (locales: Locale[], zones: Zone[]) => Promise<CondensedDictionary[]>

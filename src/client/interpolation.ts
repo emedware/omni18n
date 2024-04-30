@@ -1,7 +1,5 @@
-import { reports, translate } from './helpers'
+import { reportMissing, reports, translate } from './helpers'
 import { TContext, TranslationError } from './types'
-
-export const globals: { currency?: string } = {}
 
 export const formats: Record<'date' | 'number' | 'relative', Record<string, object>> = {
 	date: {
@@ -43,7 +41,7 @@ export const processors: Record<string, (...args: any[]) => string> = {
 	},
 	ordinal(this: TContext, str: string) {
 		const { client } = this
-		if (!client.internals.ordinals) return reports.missing({ ...this, key: 'internals.ordinals' })
+		if (!client.internals.ordinals) return reportMissing({ ...this, key: 'internals.ordinals' })
 		const num = parseInt(str)
 		if (isNaN(num)) return reports.error(this, 'NaN', { str })
 		return client.internals.ordinals[client.ordinalRules.select(num)].replace('$', str)
@@ -58,7 +56,7 @@ export const processors: Record<string, (...args: any[]) => string> = {
 			: designation
 
 		if (typeof rules === 'string') {
-			if (!client.internals.plurals) return reports.missing({ ...this, key: 'internals.plurals' })
+			if (!client.internals.plurals) return reportMissing({ ...this, key: 'internals.plurals' })
 			if (!client.internals.plurals[rule])
 				return reports.error(this, 'Missing rule in plurals', { rule })
 			return client.internals.plurals[rule].replace('$', designation)
@@ -76,10 +74,11 @@ export const processors: Record<string, (...args: any[]) => string> = {
 				return reports.error(this, 'Invalid number options', { options })
 			options = formats.number[options]
 		}
-		options = {
-			currency: globals.currency,
-			...options
-		}
+		if (this.client.currency)
+			options = {
+				currency: this.client.currency,
+				...options
+			}
 		return num.toLocaleString(client.locales, options)
 	},
 	date(this: TContext, str: string, options?: any) {
@@ -92,10 +91,11 @@ export const processors: Record<string, (...args: any[]) => string> = {
 				return reports.error(this, 'Invalid date options', { options })
 			options = formats.date[options]
 		}
-		options = {
-			timeZone: client.timeZone,
-			...options
-		}
+		if (client.timeZone)
+			options = {
+				timeZone: client.timeZone,
+				...options
+			}
 		return date.toLocaleString(client.locales, options)
 	},
 	relative(this: TContext, str: string, options?: any) {

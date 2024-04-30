@@ -4,6 +4,5 @@
 	},
 	"testEnvironment": "node",
 	"moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
-	"collectCoverage": true,
 	"coverageReporters": ["lcov"]
 }

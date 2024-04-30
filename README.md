@@ -44,6 +44,8 @@ console.log(T('msg.hello'))
 
 The full-stack case will insert the http protocol between `client` and `server`. The `condense` function takes few arguments and return a (promise of) json-able object so can go through an http request.
 
+The "Omni" part is that it can be integrated for various asynchronous scenarios and in many frameworks.
+
 ### Interactive mode
 
 In interactive mode (using `InteractiveServer`), the DB interface contains modification functions and the server exposes modification function, that will modify the DB but also raise events. In this case, an `InteractiveServer` instance has to be created for every client, with an interface toward the DB and a callback for event raising.
@@ -257,13 +259,17 @@ import { reports, type TContext } from "omni18n";
 	client: I18nClient
 }*/
 
-reports.missing = ({key, client}: TContext) {
-		if (client.loading) return `...` // `onModification` callback has been provided
-		return `[${key}]`
+reports.loading = ({ key, client }: TContext): string {
+	// report if not expected
+	return '...'
+}
+reports.missing = ({ key, client }: TContext, fallback?: string): string {
+	// report
+	return fallback ?? `[${key}]`
 }
 reports.error = (context: TContext, error: string, spec: object) {
-		if (client.loading) return `...` // `onModification` callback has been provided
-		return `[!${error}]`
+	// report
+	return `[!${error}]`
 }
 ```
 

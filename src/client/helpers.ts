@@ -1,17 +1,46 @@
 import { parse } from 'hjson'
-import { ClientDictionary, TContext, TranslationError, Translator, text, zone } from './types'
+import {
+	ClientDictionary,
+	TContext,
+	TranslationError,
+	Translator,
+	text,
+	zone,
+	fallback
+} from './types'
 
-function entry(t: string, z: string): ClientDictionary {
-	return { [text]: t, [zone]: z }
+function entry(t: string, z: string, isFallback?: boolean): ClientDictionary {
+	return { [text]: t, [zone]: z, ...(isFallback ? { [fallback]: true } : {}) }
+}
+
+export function reportMissing(context: TContext, fallback?: string): string {
+	if (!context.client.loading) return reports.missing(context, fallback)
+	if (!context.client.onModification) context.client.checkOnLoad.add(context.key)
+	return reports.loading(context)
 }
 
 export const reports = {
-	missing({ key, client }: TContext): string {
-		if (client.loading) return `...` // `onModification` callback has been provided
-		return `[${key}]`
+	loading({ client }: TContext): string {
+		return '...' // `onModification` callback has been provided
 	},
-	error({ client }: TContext, error: string, spec: object): string {
-		if (client.loading) return `...` // `onModification` callback has been provided
+	/**
+	 * Report a missing translation
+	 * @param key The key that is missing
+	 * @param client The client that is missing the translation. The expected locale is in `client.locales[0]`
+	 * @param fallback A fallback from another language if any
+	 * @returns The string to display instead of the expected translation
+	 */
+	missing({ key, client }: TContext, fallback?: string): string {
+		return fallback ?? `[${key}]`
+	},
+	/**
+	 * Report a missing translation
+	 * @param key The key that is missing
+	 * @param client The client that is missing the translation. The expected locale is in `client.locales[0]`
+	 * @param fallback A fallback from another language if any
+	 * @returns The string to display instead of the expected translation
+	 */
+	error({ key, client }: TContext, error: string, spec: object): string {
 		return `[!${error}]`
 	}
 }
@@ -20,19 +49,22 @@ export function translate(context: TContext, args: any[]): string {
 	const { client, key } = context,
 		keys = key.split('.')
 	let current = client.dictionary,
-		value: [string, string] | undefined
+		value: [string, string, true | undefined] | undefined
 
 	for (const k of keys) {
 		if (!current[k]) break
 		else {
 			const next = current[k] as ClientDictionary
-			if (text in next) value = [next[text]!, next[zone]!]
+			if (text in next) value = [next[text]!, next[zone]!, next[fallback]]
 			current = next
 		}
 	}
-	// This case can happen for example in role-zoning, when roles are entered separately
-	//if (value && !context.zones.includes(value[1])) reports.missing(context, value[1])
-	return value ? client.interpolate(context, value[0], args) : reports.missing(context)
+
+	return value?.[2]
+		? client.interpolate(context, reportMissing(context, value[0]), args)
+		: value
+			? client.interpolate(context, value[0], args)
+			: reportMissing(context)
 }
 
 export function translator(context: TContext): Translator {
@@ -74,9 +106,10 @@ function condensed2dictionary(
 	condensed: OmnI18n.CondensedDictionary,
 	zone: OmnI18n.Zone
 ): ClientDictionary {
-	const dictionary: ClientDictionary = '' in condensed ? entry(condensed['']!, zone) : {}
+	const dictionary: ClientDictionary =
+		'' in condensed ? entry(condensed['']!, zone, !!condensed['.']) : {}
 	for (const key in condensed)
-		if (key) {
+		if (!['', '.'].includes(key)) {
 			const value = condensed[key]
 			if (typeof value === 'string') dictionary[key] = entry(value, zone)
 			else dictionary[key] = condensed2dictionary(value, zone)
@@ -89,21 +122,23 @@ export function recurExtend(
 	src: OmnI18n.CondensedDictionary,
 	zone: OmnI18n.Zone
 ) {
-	for (const key in src) {
-		if (!dst[key])
-			dst[key] =
-				typeof src[key] === 'string'
-					? entry(<string>src[key], zone)
-					: condensed2dictionary(<OmnI18n.CondensedDictionary>src[key], zone)
-		else {
-			if (typeof src[key] === 'string')
-				dst[key] = {
-					...dst[key],
-					...entry(<string>src[key], zone)
-				}
-			else recurExtend(dst[key], <OmnI18n.CondensedDictionary>src[key], zone)
+	for (const key in src)
+		if (key === '') Object.assign(dst, entry(src[key]!, zone, !!src['.']))
+		else if (key !== '.') {
+			if (!dst[key])
+				dst[key] =
+					typeof src[key] === 'string'
+						? entry(<string>src[key], zone)
+						: condensed2dictionary(<OmnI18n.CondensedDictionary>src[key], zone)
+			else {
+				if (typeof src[key] === 'string')
+					dst[key] = {
+						...dst[key],
+						...entry(<string>src[key], zone)
+					}
+				else recurExtend(dst[key], <OmnI18n.CondensedDictionary>src[key], zone)
+			}
 		}
-	}
 }
 
 export function longKeyList(condensed: OmnI18n.CondensedDictionary) {
