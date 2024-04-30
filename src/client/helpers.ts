@@ -7,9 +7,8 @@ import {
 	text,
 	zone,
 	fallback,
-	Translatable,
-	bulk,
-	BulkTranslator
+	contextKey,
+	Translatable
 } from './types'
 import { interpolate } from './interpolation'
 
@@ -17,16 +16,7 @@ function entry(t: string, z: string, isFallback?: boolean): ClientDictionary {
 	return { [text]: t, [zone]: z, ...(isFallback ? { [fallback]: true } : {}) }
 }
 
-export function reportMissing(context: TContext, fallback?: string): string {
-	if (!context.client.loading) return reports.missing(context, fallback)
-	if (!context.client.onModification) context.client.checkOnLoad.add(context.key)
-	return reports.loading(context)
-}
-
 export const reports = {
-	loading({ client }: TContext): string {
-		return '...' // `onModification` callback has been provided
-	},
 	/**
 	 * Report a missing translation
 	 * @param key The key that is missing
@@ -64,49 +54,10 @@ export function translate(context: TContext, args: any[]): string {
 	}
 
 	return value?.[2]
-		? client.interpolate(context, reportMissing(context, value[0]), args)
+		? client.interpolate(context, reports.missing(context, value[0]), args)
 		: value
 			? client.interpolate(context, value[0], args)
-			: reportMissing(context)
-}
-
-function translateBulk<T extends Translatable = Translatable>(
-	context: TContext
-): BulkTranslator<T> {
-	return function (source: T | string = '', ...args: any[]): T | string {
-		const { key, client } = context,
-			keyPfx = key ? key + '.' : ''
-		function recursivelyTranslate<T extends Translatable>(obj: T): T {
-			return Object.fromEntries(
-				Object.entries(obj).map(([k, v]) => [
-					k,
-					typeof v === 'string'
-						? translate({ ...context, key: keyPfx + v }, args)
-						: recursivelyTranslate(v)
-				])
-			) as T
-		}
-		if (typeof source === 'object') return recursivelyTranslate(source)
-		let current = client.dictionary
-		const finalKey = !key ? source : !source ? key : `${key}.${source}`
-		for (const k of finalKey.split('.')) {
-			current = current[k] as ClientDictionary
-			if (!current) break
-		}
-		if (!current) return reportMissing(context)
-		function dictionaryToTranslation(obj: ClientDictionary, key: string): T | string {
-			const rv: any = {}
-			const subCtx = { ...context, key }
-			const value = () =>
-				interpolate(subCtx, obj[fallback] ? reportMissing(subCtx, obj[text]) : obj[text]!, args)
-			if (Object.keys(obj).every((k) => typeof k === 'symbol')) return value()
-			for (const [k, v] of Object.entries(obj))
-				rv[k] = dictionaryToTranslation(v, key ? `${key}.${k}` : k)
-			if (obj[text]) Object.defineProperty(rv, 'toString', { value })
-			return <T>rv
-		}
-		return dictionaryToTranslation(current, finalKey)
-	}
+			: reports.missing(context)
 }
 
 export function translator(context: TContext): Translator {
@@ -132,8 +83,8 @@ export function translator(context: TContext): Translator {
 					return String
 				case 'then': // Must be unthenable in order to be awaited
 					return 'Translators must be unthenable. `then` cannot be used as a text key.'
-				case bulk:
-					return translateBulk(context)
+				case contextKey:
+					return Object.freeze(context)
 			}
 			if (typeof key !== 'string') throw new TranslationError(`Invalid key type: ${typeof key}`)
 			return translator({ ...context, key: context.key ? `${context.key}.${key}` : key })
@@ -203,4 +154,47 @@ export function longKeyList(condensed: OmnI18n.CondensedDictionary) {
 	}
 	recur(condensed, '')
 	return keys
+}
+
+export function bulkObject<T extends Translatable = Translatable>(
+	t: Translator,
+	source: T,
+	...args: any[]
+): T {
+	const context = t[contextKey]
+	function recursivelyTranslate<T extends Translatable>(obj: T): T {
+		return Object.fromEntries(
+			Object.entries(obj).map(([k, v]) => [
+				k,
+				typeof v === 'string' ? translate({ ...context, key: v }, args) : recursivelyTranslate(v)
+			])
+		) as T
+	}
+	return recursivelyTranslate(source)
+}
+export function objectFromDictionary<T extends Translatable = Translatable>(
+	t: Translator,
+	...args: any[]
+): T | string {
+	const context = t[contextKey],
+		{ client, key } = context
+
+	let current = client.dictionary
+	for (const k of key.split('.')) {
+		current = current[k] as ClientDictionary
+		if (!current) break
+	}
+	if (!current) return reports.missing({ ...context, key })
+	function dictionaryToTranslation(obj: ClientDictionary, key: string): T | string {
+		const rv: any = {}
+		const subCtx = { ...context, key }
+		const value = () =>
+			interpolate(subCtx, obj[fallback] ? reports.missing(subCtx, obj[text]) : obj[text]!, args)
+		if (Object.keys(obj).every((k) => typeof k === 'symbol')) return value()
+		for (const [k, v] of Object.entries(obj))
+			rv[k] = dictionaryToTranslation(v, key ? `${key}.${k}` : k)
+		if (obj[text]) Object.defineProperty(rv, 'toString', { value })
+		return <T>rv
+	}
+	return dictionaryToTranslation(current, key)
 }

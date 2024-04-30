@@ -1,10 +1,12 @@
 import {
 	FileDB,
+	I18nClient,
 	InteractiveServer,
 	MemDictionary,
 	TContext,
 	Translator,
-	bulk,
+	bulkObject,
+	objectFromDictionary,
 	reports
 } from '../src/index'
 import { readFile, writeFile, unlink } from 'node:fs/promises'
@@ -17,43 +19,48 @@ reports.missing = ({ key }: TContext, fallback?: string) => {
 }
 
 describe('bulk', () => {
-	let T: Translator
+	let T: Translator, client: I18nClient
 	const expected = {
-		ok: 'fr-v1',
+		ok: 'fr-v1.42',
 		missing: 'en-v2',
 		sub: { v3: 'fr-v3' }
 	}
 
 	beforeAll(async () => {
-		const { Tp } = localStack({
-			'sub.obj.v1': { fr: 'fr-v1' },
-			'sub.obj.v2': { en: 'en-v2' },
-			'sub.obj.v3': { fr: 'fr-v3' },
-			'struct.obj.ok': { fr: 'fr-v1' },
-			'struct.obj.missing': { en: 'en-v2' },
-			'struct.obj.sub.v3': { fr: 'fr-v3' },
-			'struct.obj.sub': { fr: 'toString' }
+		const { Tp, client: lclClient } = localStack({
+			'obj.v1': { fr: 'fr-v1.{=parm}' },
+			'obj.v2': { en: 'en-v2' },
+			'obj.v3': { fr: 'fr-v3' },
+			'struct.ok': { fr: 'fr-v1.{=parm}' },
+			'struct.missing': { en: 'en-v2' },
+			'struct.sub.v3': { fr: 'fr-v3' },
+			'struct.sub': { fr: 'toString' }
 		})
 		T = await Tp
+		client = lclClient
 	})
 
 	test('from object', async () => {
 		misses.mockClear()
 		expect(
-			T.sub[bulk]({
-				ok: 'obj.v1',
-				missing: 'obj.v2',
-				sub: { v3: 'obj.v3' }
-			})
+			bulkObject(
+				T,
+				{
+					ok: 'obj.v1',
+					missing: 'obj.v2',
+					sub: { v3: 'obj.v3' }
+				},
+				{ parm: 42 }
+			)
 		).toEqual(expected)
-		expect(misses).toHaveBeenCalledWith('sub.obj.v2')
+		expect(misses).toHaveBeenCalledWith('obj.v2')
 	})
 
 	test('from dictionary', async () => {
 		misses.mockClear()
-		const built = T.struct[bulk]('obj')
+		const built = objectFromDictionary(T.struct, { parm: 42 })
 		expect(built).toEqual(expected)
-		expect(misses).toHaveBeenCalledWith('struct.obj.missing')
+		expect(misses).toHaveBeenCalledWith('struct.missing')
 		expect('' + built.sub).toBe('toString')
 	})
 })

@@ -1,4 +1,5 @@
 /// <reference path="../types.d.ts" />
+
 /**
  * i18n consumption/usage, both client and server side.
  */
@@ -6,15 +7,18 @@ import '../polyfill'
 import Defer from '../defer'
 import {
 	ClientDictionary,
+	contextKey,
 	OmnI18nClient,
 	Internals,
 	TContext as RootContext,
 	text,
 	zone,
-	fallback
+	fallback,
+	Translatable,
+	Translator
 } from './types'
 import { interpolate } from './interpolation'
-import { longKeyList, parseInternals, recurExtend, reports, translator } from './helpers'
+import { longKeyList, parseInternals, recurExtend, reports, translate, translator } from './helpers'
 
 export type TContext = RootContext<I18nClient>
 
@@ -26,8 +30,6 @@ export default class I18nClient implements OmnI18nClient {
 	protected loadedZones = new Set<OmnI18n.Zone>()
 	private toLoadZones = new Set<OmnI18n.Zone>()
 	private loadDefer = new Defer()
-
-	public checkOnLoad = new Set<string>()
 
 	public timeZone?: string
 	public currency?: string
@@ -47,10 +49,6 @@ export default class I18nClient implements OmnI18nClient {
 	) {
 		this.ordinalRules = new Intl.PluralRules(locales[0], { type: 'ordinal' })
 		this.cardinalRules = new Intl.PluralRules(locales[0], { type: 'cardinal' })
-	}
-
-	get loading() {
-		return this.loadDefer.deferring
 	}
 
 	/**
@@ -84,25 +82,6 @@ export default class I18nClient implements OmnI18nClient {
 			this.internals = parseInternals(this.dictionary.internals)
 
 		this.onModification?.(condensed.map(longKeyList).flat())
-		for (const key of this.checkOnLoad) {
-			const keys = key.split('.')
-			let current = this.dictionary
-			let value = false,
-				fallenBack: string | undefined
-			for (const key of keys) {
-				if (!current[key]) break
-				if (current[key][text]) {
-					if (current[key][fallback]) fallenBack = current[key][text]
-					else {
-						value = true
-						break
-					}
-				}
-				current = current[key]
-			}
-			if (!value) reports.missing({ key, client: this, zones }, fallenBack)
-		}
-		this.checkOnLoad = new Set()
 	}
 
 	private async download(zones: string[]) {
@@ -144,7 +123,9 @@ export default class I18nClient implements OmnI18nClient {
 		this.onModification?.(Object.keys(entries))
 	}
 
-	interpolate(context: TContext, text: string, args: any[]): string {
-		return interpolate(context, text, args)
-	}
+	interpolate: (context: TContext, text: string, args: any[]) => string = interpolate
+}
+
+export function getContext(translator: Translator): TContext {
+	return translator[contextKey] as TContext
 }

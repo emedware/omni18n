@@ -58,13 +58,6 @@ reports.missing = ({ key, client }: TContext, fallback?: string) => {
 }
 ```
 
-- A "missing key while loading" report
-  This one is called only when the client is in a loading state. If `onModification` was specified, it will be called once loaded. If not, the client will automatically check all the keys that went through this error to check them again.
-
-```ts
-reports.loading = ({ client }: TContext) => '...'
-```
-
 - An interpolation error
   When interpolating, an error calls this report with a textual description and some specifications depending on the error.
 
