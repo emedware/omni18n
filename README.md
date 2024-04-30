@@ -1,8 +1,18 @@
+[![view on npm](https://badgen.net/npm/v/omni18n)](https://www.npmjs.org/package/omni18n)
+[![npm module downloads](https://badgen.net/npm/dt/omni18n)](https://www.npmjs.org/package/omni18n)
+[![Gihub repo dependents](https://badgen.net/github/dependents-repo/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=REPOSITORY)
+[![Gihub package dependents](https://badgen.net/github/dependents-pkg/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=PACKAGE)
+[![Node.js CI](https://github.com/emedware/omni18n/actions/workflows/node.js.yml/badge.svg)](https://github.com/emedware/omni18n/actions/workflows/node.js.yml)
+
+<!-- [![Coverage Status](https://coveralls.io/repos/github/emedware/omni18n/badge.svg)](https://coveralls.io/github/emedware/omni18n) -->
+
 # omni18n
 
 Generic i18n library managing the fullstack interaction in a CI/CD pace. The fact the dictionaries are stored in a DB edited by the translators through a(/the same) web application - managing translation errors, missing keys, ...
 
 It can even manage update of all (concerned) clients when a translation is modified
+
+The main documentation on [GitHub pages](https://emedware.github.io/omni18n/) or in [the repository](./docs/README.md)
 
 ## General structure
 
@@ -34,6 +44,8 @@ console.log(T('msg.hello'))
 
 The full-stack case will insert the http protocol between `client` and `server`. The `condense` function takes few arguments and return a (promise of) json-able object so can go through an http request.
 
+The "Omni" part is that it can be integrated for various asynchronous scenarios and in many frameworks.
+
 ### Interactive mode
 
 In interactive mode (using `InteractiveServer`), the DB interface contains modification functions and the server exposes modification function, that will modify the DB but also raise events. In this case, an `InteractiveServer` instance has to be created for every client, with an interface toward the DB and a callback for event raising.
@@ -43,6 +55,7 @@ In interactive mode (using `InteractiveServer`), the DB interface contains modif
 Two interfaces allow to implement an interface to any database: `OmnI18n.DB` (who basically just has a `list`) and `OmnI18n.InteractiveDB` who has some modification access
 
 Two are provided: a `MemDB` who is basically an "in-memory database" and its descendant, a `FileDB` who allows:
+
 - reading from a file
 - maintaining the files when changes are brought
 
@@ -246,13 +259,17 @@ import { reports, type TContext } from "omni18n";
 	client: I18nClient
 }*/
 
-reports.missing = ({key, client}: TContext) {
-		if (client.loading) return `...` // `onModification` callback has been provided
-		return `[${key}]`
+reports.loading = ({ key, client }: TContext): string {
+	// report if not expected
+	return '...'
+}
+reports.missing = ({ key, client }: TContext, fallback?: string): string {
+	// report
+	return fallback ?? `[${key}]`
 }
 reports.error = (context: TContext, error: string, spec: object) {
-		if (client.loading) return `...` // `onModification` callback has been provided
-		return `[!${error}]`
+	// report
+	return `[!${error}]`
 }
 ```
 

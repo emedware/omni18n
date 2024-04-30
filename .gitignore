@@ -2,7 +2,6 @@
 node_modules
 /dist
 /.svelte-kit
-/semantic
 .env.*
 !.env.example
 .vercel
@@ -12,5 +11,6 @@ node_modules
 /static/modules
 /raw
 /temp
+/coverage
 .vercel
 .vscode/settings.json

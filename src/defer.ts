@@ -35,7 +35,7 @@ export default class Defer {
 	cancel() {
 		if (!this.timeout) return
 		clearTimeout(this.timeout)
-		this.rejecter!()
+		this.rejecter!('`Defer`red action canceled')
 		this.timeout = undefined
 	}
 

@@ -4,9 +4,19 @@
  */
 import '../polyfill'
 import Defer from '../defer'
-import { ClientDictionary, OmnI18nClient, Internals, TContext, text, zone } from './types'
+import {
+	ClientDictionary,
+	OmnI18nClient,
+	Internals,
+	TContext as RootContext,
+	text,
+	zone,
+	fallback
+} from './types'
 import { interpolate } from './interpolation'
-import { longKeyList, parseInternals, recurExtend, translator } from './helpers'
+import { longKeyList, parseInternals, recurExtend, reports, translator } from './helpers'
+
+export type TContext = RootContext<I18nClient>
 
 export default class I18nClient implements OmnI18nClient {
 	readonly ordinalRules: Intl.PluralRules
@@ -18,9 +28,18 @@ export default class I18nClient implements OmnI18nClient {
 	private loadDefer = new Defer()
 
 	public loaded: Promise<void> = Promise.resolve()
+	public checkOnLoad = new Set<string>()
 
 	public timeZone?: string
+	public currency?: string
 
+	/**
+	 *
+	 * @param locales A list of locales: from preferred to fallback
+	 * @param condense A function that will query the server for the condensed dictionary
+	 * @param onModification A function that will be called when the dictionary is modified
+	 * @example new I18nClient(['fr', 'en'], server.condense, frontend.refreshTexts)
+	 */
 	constructor(
 		public locales: OmnI18n.Locale[],
 		// On the server side, this is `server.condensed`. From the client-side this is an http request of some sort
@@ -66,6 +85,25 @@ export default class I18nClient implements OmnI18nClient {
 			this.internals = parseInternals(this.dictionary.internals)
 
 		this.onModification?.(condensed.map(longKeyList).flat())
+		for (const key of this.checkOnLoad) {
+			const keys = key.split('.')
+			let current = this.dictionary
+			let value = false,
+				fallenBack: string | undefined
+			for (const key of keys) {
+				if (!current[key]) break
+				if (current[key][text]) {
+					if (current[key][fallback]) fallenBack = current[key][text]
+					else {
+						value = true
+						break
+					}
+				}
+				current = current[key]
+			}
+			if (!value) reports.missing({ key, client: this, zones }, fallenBack)
+		}
+		this.checkOnLoad = new Set()
 	}
 
 	private async download(zones: string[]) {
