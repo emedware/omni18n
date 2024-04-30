@@ -1,5 +1,5 @@
 interface SystemEntry<KeyInfos extends {}, TextInfos extends {}> {
-	'.zone': OmnI18n.Zone
+	'.zone'?: OmnI18n.Zone
 	'.keyInfos'?: KeyInfos
 	'.textInfos'?: Record<OmnI18n.Locale, TextInfos>
 }
@@ -20,7 +20,7 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 	async list(locales: OmnI18n.Locale[], zone: OmnI18n.Zone) {
 		const result: OmnI18n.RawDictionary = {}
 		Object.entries(this.dictionary).forEach(([key, value]) => {
-			if (zone == value['.zone']) {
+			if (zone == value['.zone'] || (!zone && !value['.zone'])) {
 				const locale = locales.find((locale) => locale in value)
 				if (locale !== undefined) result[key] = [locale, value[locale]]
 			}
@@ -71,7 +71,7 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 			}
 			for (const ti in textInfos) if (textInfos[ti] === undefined) delete tis[locale][ti]
 		}
-		return this.dictionary[key]['.zone']
+		return this.dictionary[key]['.zone'] || ''
 	}
 
 	async key(key: string, zone: string, keyInfos?: Partial<KeyInfos>) {
@@ -98,7 +98,7 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 	async reKey(key: string, newKey?: string) {
 		const rv = {
 			locales: Object.keys(this.dictionary[key] || {}),
-			zone: this.dictionary[key]['.zone']
+			zone: this.dictionary[key]['.zone'] || ''
 		}
 		if (newKey) this.dictionary[newKey] = this.dictionary[key]
 		delete this.dictionary[key]

@@ -1,6 +1,6 @@
 # OmnI18n
 
-[Overview](../README.md)
+[Overview](https://github.com/emedware/omni18n/blob/main/README.md)
 
 > :warning: **Work in progress!**
 

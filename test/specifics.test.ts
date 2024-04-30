@@ -1,38 +1,75 @@
 import {
 	FileDB,
-	I18nClient,
-	I18nServer,
 	InteractiveServer,
-	MemDB,
 	MemDictionary,
 	TContext,
+	Translator,
+	bulk,
 	reports
 } from '../src/index'
-import { WaitingDB } from './db'
-import { readFile, writeFile, unlink, cp } from 'node:fs/promises'
+import { readFile, writeFile, unlink } from 'node:fs/promises'
+import { localStack } from './utils'
+
+const misses = jest.fn()
+reports.missing = ({ key }: TContext, fallback?: string) => {
+	misses(key)
+	return fallback ?? '[no]'
+}
+
+describe('bulk', () => {
+	let T: Translator
+	const expected = {
+		ok: 'fr-v1',
+		missing: 'en-v2',
+		sub: { v3: 'fr-v3' }
+	}
+
+	beforeAll(async () => {
+		const { T: lclT, client } = localStack({
+			'sub.obj.v1': { fr: 'fr-v1' },
+			'sub.obj.v2': { en: 'en-v2' },
+			'sub.obj.v3': { fr: 'fr-v3' },
+			'struct.obj.ok': { fr: 'fr-v1' },
+			'struct.obj.missing': { en: 'en-v2' },
+			'struct.obj.sub.v3': { fr: 'fr-v3' },
+			'struct.obj.sub': { fr: 'toString' }
+		})
+		T = lclT
+		await client.loaded
+	})
+
+	test('from object', async () => {
+		misses.mockClear()
+		expect(
+			T.sub[bulk]({
+				ok: 'obj.v1',
+				missing: 'obj.v2',
+				sub: { v3: 'obj.v3' }
+			})
+		).toEqual(expected)
+		expect(misses).toHaveBeenCalledWith('sub.obj.v2')
+	})
+
+	test('from dictionary', async () => {
+		misses.mockClear()
+		const built = T.struct[bulk]('obj')
+		expect(built).toEqual(expected)
+		expect(misses).toHaveBeenCalledWith('struct.obj.missing')
+		expect('' + built.sub).toBe('toString')
+	})
+})
 
 describe('specifics', () => {
 	test('errors', async () => {
 		// TODO test errors
 	})
 	test('fallbacks', async () => {
-		const misses = jest.fn()
-		reports.missing = ({ key }: TContext, fallback?: string) => {
-			misses(key)
-			return fallback ?? '[no]'
-		}
-
-		const server = new I18nServer(
-				new WaitingDB(
-					new MemDB({
-						'fld.name': { en: 'Name', '.zone': '' },
-						'fld.bday': { en: 'Birthday', fr: 'Anniversaire', '.zone': '' },
-						'fld.bday.short': { en: 'Bday', '.zone': '' }
-					})
-				)
-			),
-			client = new I18nClient(['fr', 'en'], server.condense),
-			T = client.enter()
+		misses.mockClear()
+		const { client, T } = localStack({
+			'fld.name': { en: 'Name' },
+			'fld.bday': { en: 'Birthday', fr: 'Anniversaire' },
+			'fld.bday.short': { en: 'Bday' }
+		})
 		expect('' + T.fld.name).toBe('...')
 		expect('' + T.fld.inexistent).toBe('...')
 		await client.loaded

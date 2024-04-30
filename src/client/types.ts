@@ -5,7 +5,8 @@ export interface Internals {
 
 export const zone = Symbol('Zone'),
 	text = Symbol('Text'),
-	fallback = Symbol('Fallback')
+	fallback = Symbol('Fallback'),
+	bulk = Symbol('Bulk')
 
 export type ClientDictionary = {
 	[key: string]: ClientDictionary
@@ -38,4 +39,13 @@ export class TranslationError extends Error {
 	name = 'TranslationError'
 }
 
-export type Translator = ((...args: any[]) => string) & { [k: string]: Translator } & string
+export type BulkTranslator<T extends Translatable = Translatable> =
+	| ((source?: string, ...args: any[]) => T | string)
+	| ((source: T, ...args: any[]) => T)
+
+export type Translator = ((...args: any[]) => string) & {
+	[k: string]: Translator
+	[bulk]<T extends Translatable = Translatable>(source: T | string, ...args: any[]): T | string
+}
+
+export type Translatable = { [key: string]: Translatable | string }

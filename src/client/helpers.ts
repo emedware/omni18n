@@ -6,8 +6,12 @@ import {
 	Translator,
 	text,
 	zone,
-	fallback
+	fallback,
+	Translatable,
+	bulk,
+	BulkTranslator
 } from './types'
+import { interpolate } from './interpolation'
 
 function entry(t: string, z: string, isFallback?: boolean): ClientDictionary {
 	return { [text]: t, [zone]: z, ...(isFallback ? { [fallback]: true } : {}) }
@@ -46,12 +50,11 @@ export const reports = {
 }
 
 export function translate(context: TContext, args: any[]): string {
-	const { client, key } = context,
-		keys = key.split('.')
+	const { client, key } = context
 	let current = client.dictionary,
 		value: [string, string, true | undefined] | undefined
 
-	for (const k of keys) {
+	for (const k of key.split('.')) {
 		if (!current[k]) break
 		else {
 			const next = current[k] as ClientDictionary
@@ -67,6 +70,45 @@ export function translate(context: TContext, args: any[]): string {
 			: reportMissing(context)
 }
 
+function translateBulk<T extends Translatable = Translatable>(
+	context: TContext
+): BulkTranslator<T> {
+	return function (source: T | string = '', ...args: any[]): T | string {
+		const { key, client } = context,
+			keyPfx = key ? key + '.' : ''
+		function recursivelyTranslate<T extends Translatable>(obj: T): T {
+			return Object.fromEntries(
+				Object.entries(obj).map(([k, v]) => [
+					k,
+					typeof v === 'string'
+						? translate({ ...context, key: keyPfx + v }, args)
+						: recursivelyTranslate(v)
+				])
+			) as T
+		}
+		if (typeof source === 'object') return recursivelyTranslate(source)
+		let current = client.dictionary
+		const finalKey = !key ? source : !source ? key : `${key}.${source}`
+		for (const k of finalKey.split('.')) {
+			current = current[k] as ClientDictionary
+			if (!current) break
+		}
+		if (!current) return reportMissing(context)
+		function dictionaryToTranslation(obj: ClientDictionary, key: string): T | string {
+			const rv: any = {}
+			const subCtx = { ...context, key }
+			const value = () =>
+				interpolate(subCtx, obj[fallback] ? reportMissing(subCtx, obj[text]) : obj[text]!, args)
+			if (Object.keys(obj).every((k) => typeof k === 'symbol')) return value()
+			for (const [k, v] of Object.entries(obj))
+				rv[k] = dictionaryToTranslation(v, key ? `${key}.${k}` : k)
+			if (obj[text]) Object.defineProperty(rv, 'toString', { value })
+			return <T>rv
+		}
+		return dictionaryToTranslation(current, finalKey)
+	}
+}
+
 export function translator(context: TContext): Translator {
 	const translation = context.key
 		? function (...args: any[]): string {
@@ -74,6 +116,7 @@ export function translator(context: TContext): Translator {
 			}
 		: function (key?: string, ...args: any[]): string {
 				if (!key) throw new TranslationError('Root translator called without key')
+				if (typeof key === 'string') return translate({ ...context, key }, args)
 				return translate({ ...context, key }, args)
 			}
 	return <Translator>new Proxy(translation, {
@@ -87,6 +130,8 @@ export function translator(context: TContext): Translator {
 					return target
 				case 'constructor':
 					return String
+				case bulk:
+					return translateBulk(context)
 			}
 			if (typeof key !== 'string') throw new TranslationError(`Invalid key type: ${typeof key}`)
 			return translator({ ...context, key: context.key ? `${context.key}.${key}` : key })

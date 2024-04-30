@@ -153,8 +153,16 @@ function objectArgument(arg: any): string | Record<string, string> {
 	return Object.fromEntries(
 		arg
 			.replace(/::/g, '\u0000')
+			.replace(/,,/g, '\u0004')
 			.split(',')
-			.map((part) => part.split(':', 2).map((part) => part.replace(/\u0000/g, ':').trim()))
+			.map((part) =>
+				part.split(':', 2).map((part) =>
+					part
+						.replace(/\u0000/g, ':')
+						.replace(/\u0004/g, ',')
+						.trim()
+				)
+			)
 	)
 }
 

@@ -1,7 +1,7 @@
 [![view on npm](https://badgen.net/npm/v/omni18n)](https://www.npmjs.org/package/omni18n)
 [![npm module downloads](https://badgen.net/npm/dt/omni18n)](https://www.npmjs.org/package/omni18n)
-[![Gihub repo dependents](https://badgen.net/github/dependents-repo/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=REPOSITORY)
-[![Gihub package dependents](https://badgen.net/github/dependents-pkg/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=PACKAGE)
+[![Github repo dependents](https://badgen.net/github/dependents-repo/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=REPOSITORY)
+[![NpmJs package dependents](https://badgen.net/github/dependents-pkg/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=PACKAGE)
 [![Node.js CI](https://github.com/emedware/omni18n/actions/workflows/node.js.yml/badge.svg)](https://github.com/emedware/omni18n/actions/workflows/node.js.yml)
 
 <!-- [![Coverage Status](https://coveralls.io/repos/github/emedware/omni18n/badge.svg)](https://coveralls.io/github/emedware/omni18n) -->
@@ -30,8 +30,7 @@ import { I18nServer, I18nClient } from 'omni18n'
 
 const server = new I18nServer(myDBinterface)
 const client = new I18nClient(['en-US'], server.condensed)
-const T = client.enter()
-await client.loaded
+const T = await client.enter()
 
 // Will both display the entry `msg.hello` for the `en-US` (or `en`) locale
 console.log(T.msg.hello)
@@ -134,7 +133,7 @@ If the content does not begin with the `=` sign, the content is a list separated
 - A string
 - An flat named list in the shape `key1: value1, key2: value2` where only `,` and `:` are used for the syntax.
 
-> The `:` character triggers the list parsing. In order to used a ":" in a string, it has to be doubled "::"
+> The `:` character triggers the list parsing. In order to used a ":" in a string, it has to be doubled "::" - The coma is escaped the same way: ",,"
 
 The parameters (given in the code) can be accessed as such:
 First, the last parameter is the one used for naming. If a named parameter is accessed, the last (or only) parameter should be an object with named properties
@@ -153,7 +152,7 @@ The first element will determine how the whole `{...}` will be interpolated
 
 If the first element is a named list, the second one will be the case to take from the list.
 
-example: `{question: ?, exclamation: ! | $1}`
+example: `{question: ?, exclamation: !, default: ... | $1}`
 
 > :information_source: The case `default` get the remaining cases and, if not specified, an error is raised if an inexistent case is given
 
@@ -194,7 +193,7 @@ example: `{upper | $1}` will render the first argument in upper-case
 - `lower(s)`
 - `title(s)`: uppercase-first
 
-#### Numeric formating
+#### Numeric formatting
 
 - `number(n, opt?)`: equivalent to `Intl.NumberFormat()` who receive the list `opt` as options
 - `date(n, opt?)`: equivalent to `Intl.DateTimeFormat()` who receive the list `opt` as options

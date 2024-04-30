@@ -14,6 +14,12 @@ export function localeTree(locale: OmnI18n.Locale) {
 	return rv
 }
 
+// Remove duplicates while keeping the order
+function removeDup(arr: string[]) {
+	const done = new Set<string>()
+	return arr.filter((k) => !done.has(k) && done.add(k))
+}
+
 /**
  * Server class that should be instantiated once and used to interact with the database
  */
@@ -24,7 +30,10 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 
 	list(locales: OmnI18n.Locale[], zone: string): Promise<OmnI18n.RawDictionary> {
 		const [primary, ...fallbacks] = locales
-		return this.db.list([...localeTree(primary), '', ...fallbacks.map(localeTree).flat()], zone)
+		return this.db.list(
+			removeDup([...localeTree(primary), '', ...fallbacks.map(localeTree).flat()]),
+			zone
+		)
 	}
 	/**
 	 * Used by APIs or page loaders to get the dictionary in a condensed form
@@ -40,18 +49,21 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 			results: OmnI18n.CondensedDictionary[] = []
 		for (const raw of raws) {
 			const result: OmnI18n.CondensedDictionary = {}
-			let hasValue = false
 			results.push(result)
 			for (const key in raw) {
 				const value = raw[key],
 					keys = key.split('.'),
 					lastKey = keys.pop() as string
-				let current = result
+				let current = result,
+					hasValue = false // Do we have a value who is not a fall back with a shorter key?
 				for (const k of keys) {
 					if (!(k in current)) current[k] = <CDicE>{}
 					else if (typeof current[k] === 'string') current[k] = <CDicE>{ '': <string>current[k] }
-					current = current[k] as CDic
+					const next = current[k] as CDic
+					if ('' in next && !('.' in next)) hasValue = true
+					current = next
 				}
+				//'fr-CA' begins with 'fr-CA', 'fr' and '' but not 'en'
 				const fallback = !locales[0].startsWith(value[0]),
 					clk = current[lastKey]
 				if (!hasValue || !fallback) {
@@ -63,36 +75,9 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 						}
 					else if (clk && typeof clk !== 'string') (<CDic>current[lastKey])[''] = value[1]
 					else current[lastKey] = <CDicE>value[1]
-					hasValue = true
 				}
 			}
-		} /*
-		for (const fallback of fallbacks) {
-			const raws = await Promise.all(zones.map((zone) => this.list(fallback, zone)))
-			for (let i = 0; i < raws.length; i++) {
-				const raw = raws[i],
-					result = results[i]
-				for (const key in raw) {
-					const value = raw[key],
-						keys = key.split('.'),
-						lastKey = keys.pop() as string
-					let current: OmnI18n.CondensedDictionary | null = result
-					for (const k of keys) {
-						if (!(k in current)) current![k] = <CDicE>{}
-						else if (
-							typeof current[k] === 'string' ||
-							(<OmnI18n.CondensedDictionary>current[k])['']
-						) {
-							current = null
-							break
-						}
-						current = current[k] as CDic
-					}
-					if (current && (!current[lastKey] || typeof current[lastKey] === 'string'))
-						current[lastKey] = <CDicE>value
-				}
-			}
-		}*/
+		}
 		return results
 	}
 }
