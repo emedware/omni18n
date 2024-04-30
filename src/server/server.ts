@@ -18,7 +18,7 @@ export function localeTree(locale: OmnI18n.Locale) {
  * Server class that should be instantiated once and used to interact with the database
  */
 export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} = {}> {
-	constructor(protected db: OmnI18n.DB<KeyInfos, TextInfos>) {
+	constructor(protected db: OmnI18n.DB) {
 		this.condense = this.condense.bind(this)
 	}
 

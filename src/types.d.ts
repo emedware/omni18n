@@ -25,7 +25,7 @@ declare namespace OmnI18n {
 		infos: KeyInfos
 	}
 	/**
-	 * Used for translator-related operations
+	 * Dictionary used for translator-related operations
 	 */
 	type WorkDictionary = Record<string, WorkDictionaryEntry>
 
