@@ -15,13 +15,13 @@ declare namespace OmnI18n {
 	 * Dictionary used between the server and the DB
 	 * key => [locale, text]
 	 */
-	type RawDictionary = Record<string, [string, string]>
+	type RawDictionary = Record<string, [Locale, string]>
 	type WorkDictionaryText<TextInfos extends {} = {}> = {
 		text: string
 		infos: TextInfos
 	}
 	type WorkDictionaryEntry<KeyInfos extends {} = {}, TextInfos extends {} = {}> = {
-		locales: { [locale: OmnI18n.Locale]: WorkDictionaryText<TextInfos> }
+		locales: { [locale: Locale]: WorkDictionaryText<TextInfos> }
 		zone: Zone
 		infos: KeyInfos
 	}

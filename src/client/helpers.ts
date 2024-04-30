@@ -97,7 +97,7 @@ export function translator(context: TContext): Translator {
 					return target
 				case 'constructor':
 					return String
-				case 'then': // Must be unthenable in order to be awaited
+				case 'then': // Must be un-then-able in order to be awaited
 					return new Proxy(
 						{},
 						{

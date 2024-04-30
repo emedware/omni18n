@@ -1,6 +1,6 @@
 {
 	"name": "omni18n",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"description": "",
 	"main": "dist/index.js",
 	"module": "dist/index.js",
@@ -31,6 +31,7 @@
 		"@rollup/plugin-commonjs": "^25.0.7",
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^15.2.3",
+		"@rollup/plugin-terser": "^0.4.4",
 		"@types/hjson": "^2.4.6",
 		"@types/jest": "^29.5.12",
 		"eslint": "^9.1.1",

@@ -12,7 +12,7 @@ Generic i18n library managing the fullstack interaction in a CI/CD pace. The fac
 
 It can even manage update of all (concerned) clients when a translation is modified
 
-The main documentation on [GitHub pages](https://emedware.github.io/omni18n/) or in [the repository](./docs/README.md)
+The main documentation in [the repository](./docs/README.md)
 
 ## General structure
 
@@ -83,9 +83,9 @@ Example:
 }
 ```
 
-In this case, _both_ `T.fld.name` _and_ `T.fld.name.short` will retrieve `"Name"`, so that, if the project use shortened notations, it can display `T.fld[field].short` without demanding all the fields to have a `short` version in all languages
+In this case, _both_ `T.fld.name` _and_ `T.fld.name.short` will retrieve `"Name"` so that, if the project use shortened notations, it can display `T.fld[field].short` without demanding all the fields to have a `short` version in all languages
 
-Rule of the thumb: No value should be given as root keys. Every meaningful text has a category and should therefore be a sub-key
+Rule of the thumb: No value should be given as root keys. Every meaningful text has a category and should therefore be a sub-key. Also, some helpers function detect if there is a dot to identify keys vs. other kind of designations.
 
 ### Locales
 

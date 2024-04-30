@@ -29,9 +29,6 @@ export default class InteractiveServer<
 	workList(locales: OmnI18n.Locale[]): Promise<OmnI18n.WorkDictionary> {
 		return this.db.workList(locales)
 	}
-	isSpecified(key: string, locales: OmnI18n.Locale[]): Promise<undefined | {} | TextInfos> {
-		return this.db.isSpecified(key, locales)
-	}
 
 	async save() {
 		const servers = new Set<InteractiveServer>()

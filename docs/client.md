@@ -22,6 +22,12 @@ I18nClient(locales: OmnI18n.Locale[], condense: OmnI18n.Condense, onModification
 const client = new I18nClient(['fr', 'en'], server.condense, frontend.refreshTexts)
 ```
 
+#### Locales
+
+Locales default to the more generic ones. Here, we can give several for fall-back purpose. In the case `['fr', 'en']`, if a french translation is not found while an english one is, the english version will be displayed while triggering the [`missing` report](./client.md#reports)
+
+If the locales `['fr-CA', 'en-UK', 'de-DE']` are given, the actual list of locales that will be used is `['fr-CA', 'fr', '', 'en-UK', 'en', 'de-DE', 'de']`. The `missing` report will be called when the used locale is english or german.
+
 ### Reports
 
 There are two ways to manage reports. There are also two report types : missing and error. The first one is for when a key is missing, the second one only happens when interpolating.
@@ -74,6 +80,7 @@ reports.error = ({ key, client }: TContext, error: string, spec: object) => {
 #### OO reporting
 
 The interface `ReportingClient` exposes the methods :
+
 ```ts
 export interface ReportingClient extends OmnI18nClient {
 	missing(key: string, fallback: string | undefined, zones: OmnI18n.Zone[]): string
@@ -81,6 +88,6 @@ export interface ReportingClient extends OmnI18nClient {
 }
 ```
 
-Applications implementing this interface will have it called instead of the global `reports` value.
+Clients implementing this interface will have it called instead of the global `reports` value.
 
 > Of course, there will be no `super`
