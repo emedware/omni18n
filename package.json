@@ -1,17 +1,16 @@
 {
 	"name": "omni18n",
-	"version": "1.0.7",
+	"version": "1.0.8",
 	"description": "",
 	"main": "dist/index.js",
 	"module": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"types": "dist/typings.d.ts",
 	"type": "module",
 	"scripts": {
 		"test": "jest",
 		"test:coverage": "jest --coverage",
 		"prettier": "prettier --write .",
 		"build": "rollup -c",
-		"jsdoc": "jsdoc",
 		"prepare": "npm run prettier && npm run build"
 	},
 	"repository": {
@@ -29,7 +28,6 @@
 	"license": "ISC",
 	"devDependencies": {
 		"@rollup/plugin-commonjs": "^25.0.7",
-		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^15.2.3",
 		"@rollup/plugin-terser": "^0.4.4",
 		"@types/hjson": "^2.4.6",

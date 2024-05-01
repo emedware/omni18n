@@ -6,6 +6,7 @@ export type Translation = string
 
 export type CondensedDictionary = {
 	[key: TextKey]: CondensedDictionary | Translation
+} & {
 	''?: Translation
 	'.'?: '.' // fallback marker
 }
