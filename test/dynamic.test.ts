@@ -34,7 +34,7 @@ describe('Dynamic functionality', () => {
 		expect('' + T.fld.name).toBe('Name')
 		expect(modifications).toEqual([])
 		await server.modify('fld.name', 'en', 'Surname')
-		await server.save()
+		await server.propagate()
 		expect(modifications).toEqual([{ 'fld.name': ['Surname', ''] }])
 		modifications = []
 		expect('' + T.fld.name).toBe('Surname')
@@ -44,12 +44,12 @@ describe('Dynamic functionality', () => {
 		expect(T.cmd.customize()).toBe('Customise')
 		expect(modifications).toEqual([])
 		await server.modify('cmd.customize', 'en', 'Customize it')
-		await server.save()
+		await server.propagate()
 		// The generic english entry has been modified, but we use the 'en-UK' one, not just 'en'
 		expect(modifications).toEqual([])
 		expect(T.cmd.customize()).toBe('Customise')
 		await server.modify('cmd.customize', 'en-UK', 'Customise it')
-		await server.save()
+		await server.propagate()
 		expect(modifications).toEqual([{ 'cmd.customize': ['Customise it', ''] }])
 		modifications = []
 		expect(T.cmd.customize()).toBe('Customise it')
@@ -59,13 +59,13 @@ describe('Dynamic functionality', () => {
 		expect(T.cmd.save()).toBe('[cmd.save]')
 		expect(modifications).toEqual([])
 		await server.modify('cmd.save', 'en', 'Save it')
-		await server.save()
+		await server.propagate()
 		expect(modifications).toEqual([])
 		expect(T.cmd.save()).toBe('[cmd.save]')
 		await client.enter('adm')
 		expect(T.cmd.save()).toBe('Save it')
 		await server.modify('cmd.save', 'en', 'Save')
-		await server.save()
+		await server.propagate()
 		expect(modifications).toEqual([{ 'cmd.save': ['Save', 'adm'] }])
 		modifications = []
 		expect(T.cmd.save()).toBe('Save')
@@ -75,12 +75,12 @@ describe('Dynamic functionality', () => {
 		expect(T.cmd.delete()).toBe('[cmd.delete]')
 		expect(modifications).toEqual([])
 		await server.key('cmd.delete', '', { en: 'Delete', 'en-UK': 'Remove' })
-		await server.save()
+		await server.propagate()
 		expect(modifications).toEqual([{ 'cmd.delete': ['Remove', ''] }])
 		modifications = []
 		expect(T.cmd.delete()).toBe('Remove')
 		await server.reKey('cmd.delete')
-		await server.save()
+		await server.propagate()
 		expect(modifications).toEqual([{ 'cmd.delete': undefined }])
 		modifications = []
 		expect(T.cmd.delete()).toBe('[cmd.delete]')
@@ -89,12 +89,12 @@ describe('Dynamic functionality', () => {
 	test('zone modification', async () => {
 		expect(modifications).toEqual([])
 		await server.key('cmd.modify', '', { fr: 'Modifie' })
-		await server.save()
+		await server.propagate()
 		// The text has not changed but the zone did
 		expect(modifications).toEqual([{ 'cmd.modify': ['Modify', ''] }])
 		modifications = []
 		await server.key('cmd.modify', '', { fr: 'Modifier' })
-		await server.save()
+		await server.propagate()
 		expect(modifications).toEqual([])
 	})
 })

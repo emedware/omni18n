@@ -1,4 +1,4 @@
-import MemDB, { MemDictionary, MemDictionaryEntry } from './memDb'
+import MemDB, { MemDBDictionary, MemDBDictionaryEntry } from './memDb'
 import { readFile, writeFile, stat } from 'node:fs/promises'
 import { parse, stringify } from 'hjson'
 import Defer from '../defer'
@@ -48,29 +48,29 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 		await this.loaded
 		return super.list(locales, zone)
 	}
-	async workList(locales: string[]): Promise<OmnI18n.WorkDictionary> {
+	async workList(locales: OmnI18n.Locale[]): Promise<OmnI18n.WorkDictionary> {
 		await this.loaded
 		return super.workList(locales)
 	}
-	async isSpecified(key: string, locales: OmnI18n.Locale[]) {
+	async getZone(key: OmnI18n.TextKey, locales?: OmnI18n.Locale[]) {
 		await this.loaded
-		return super.isSpecified(key, locales)
+		return super.getZone(key, locales)
 	}
-	async modify(key: string, locale: OmnI18n.Locale, value: string) {
+	async modify(key: OmnI18n.TextKey, locale: OmnI18n.Locale, value: OmnI18n.Translation) {
 		await this.loaded
 		this.saving.defer()
 		return super.modify(key, locale, value)
 	}
-	async key(key: string, zone: string) {
+	async key(key: OmnI18n.TextKey, zone: OmnI18n.Zone) {
 		await this.loaded
 		this.saving.defer()
 		return super.key(key, zone)
 	}
-	async get(key: string) {
+	async get(key: OmnI18n.TextKey) {
 		await this.loaded
 		return super.get(key)
 	}
-	async reKey(key: string, newKey?: string) {
+	async reKey(key: OmnI18n.TextKey, newKey?: OmnI18n.TextKey) {
 		await this.loaded
 		this.saving.defer()
 		return super.reKey(key, newKey)
@@ -80,7 +80,7 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 	//#region serialization
 
 	static serialize<KeyInfos extends {} = {}, TextInfos extends {} = {}>(
-		dictionary: MemDictionary<KeyInfos, TextInfos>
+		dictionary: MemDBDictionary<KeyInfos, TextInfos>
 	) {
 		function optioned(obj: any, preTabs = 0) {
 			const stringified = stringify(obj, {
@@ -107,7 +107,7 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 							k +
 							(ti?.[k] ? optioned(ti[k], 1) : '') +
 							':' +
-							v.replace(/\n/g, '\n\t\t') +
+							v!.replace(/\n/g, '\n\t\t') +
 							'\n'
 					)
 					.join('')
@@ -122,7 +122,7 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 
 	static deserialize<KeyInfos extends {} = {}, TextInfos extends {} = {}>(data: string) {
 		if (!data.endsWith('\n')) data += '\n'
-		const dictionary: MemDictionary<KeyInfos, TextInfos> = {}
+		const dictionary: MemDBDictionary<KeyInfos, TextInfos> = {}
 		data = data.replace(/\n/g, '\u0000') // Only way to make regexp treat '\n' as a regular character
 		const rex = {
 			key: /([^\t\{:]+)(\{.*?\})?:([^\u0000]*)\u0000/g,
@@ -137,7 +137,7 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 			let keyInfos: any,
 				textInfos: Record<OmnI18n.Locale, any> = {}
 			if (keyFetch[2]) keyInfos = parse(keyFetch[2].replace(/\u0000/g, '\n'))
-			const entry: MemDictionaryEntry<KeyInfos, TextInfos> = {
+			const entry: MemDBDictionaryEntry<KeyInfos, TextInfos> = {
 				'.zone': zone,
 				...(keyInfos && { '.keyInfos': keyInfos })
 			}

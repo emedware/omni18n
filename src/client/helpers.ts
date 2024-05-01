@@ -13,11 +13,11 @@ import {
 } from './types'
 import { interpolate } from './interpolation'
 
-function entry(t: string, z: string, isFallback?: boolean): ClientDictionary {
+function entry(t: OmnI18n.Translation, z: OmnI18n.Zone, isFallback?: boolean): ClientDictionary {
 	return { [text]: t, [zone]: z, ...(isFallback ? { [fallback]: true } : {}) }
 }
 
-export function reportMissing(context: TContext, fallback?: string) {
+export function reportMissing(context: TContext, fallback?: OmnI18n.Translation) {
 	const { client, key } = context
 	return 'missing' in client
 		? (<ReportingClient>client).missing(key, fallback, context.zones)
@@ -39,7 +39,7 @@ export const reports = {
 	 * @param fallback A fallback from another language if any
 	 * @returns The string to display instead of the expected translation
 	 */
-	missing({ key, client }: TContext, fallback?: string): string {
+	missing({ key, client }: TContext, fallback?: OmnI18n.Translation): string {
 		return fallback ?? `[${key}]`
 	},
 	/**
@@ -57,7 +57,7 @@ export const reports = {
 export function translate(context: TContext, args: any[]): string {
 	const { client, key } = context
 	let current = client.dictionary,
-		value: [string, string, true | undefined] | undefined
+		value: [OmnI18n.Translation, OmnI18n.Zone, true | undefined] | undefined
 
 	for (const k of key.split('.')) {
 		if (!current[k]) break
@@ -81,7 +81,7 @@ export function translator(context: TContext): Translator {
 		? function (...args: any[]): string {
 				return translate(context, args)
 			}
-		: function (key?: string, ...args: any[]): string {
+		: function (key?: OmnI18n.TextKey, ...args: any[]): string {
 				if (!key) throw new TranslationError('Root translator called without key')
 				if (typeof key === 'string') return translate({ ...context, key }, args)
 				return translate({ ...context, key }, args)
@@ -151,13 +151,13 @@ export function recurExtend(
 			if (!dst[key])
 				dst[key] =
 					typeof src[key] === 'string'
-						? entry(<string>src[key], zone)
+						? entry(<OmnI18n.TextKey>src[key], zone)
 						: condensed2dictionary(<OmnI18n.CondensedDictionary>src[key], zone)
 			else {
 				if (typeof src[key] === 'string')
 					dst[key] = {
 						...dst[key],
-						...entry(<string>src[key], zone)
+						...entry(<OmnI18n.TextKey>src[key], zone)
 					}
 				else recurExtend(dst[key], <OmnI18n.CondensedDictionary>src[key], zone)
 			}
@@ -165,7 +165,7 @@ export function recurExtend(
 }
 
 export function longKeyList(condensed: OmnI18n.CondensedDictionary) {
-	const keys: string[] = []
+	const keys: OmnI18n.TextKey[] = []
 	function recur(current: OmnI18n.CondensedDictionary, prefix: string) {
 		if (typeof current === 'string') keys.push(prefix)
 		else {
@@ -210,7 +210,7 @@ export function bulkDictionary<T extends Translatable = Translatable>(
 		if (!current) break
 	}
 	if (!current) return reportMissing({ ...context, key })
-	function dictionaryToTranslation(obj: ClientDictionary, key: string): T | string {
+	function dictionaryToTranslation(obj: ClientDictionary, key: OmnI18n.TextKey): T | string {
 		const rv: any = {}
 		const subCtx = { ...context, key }
 		const value = () =>

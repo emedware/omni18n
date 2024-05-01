@@ -2,7 +2,7 @@ import {
 	FileDB,
 	I18nClient,
 	InteractiveServer,
-	MemDictionary,
+	MemDBDictionary,
 	TContext,
 	Translator,
 	bulkObject,
@@ -87,7 +87,7 @@ describe('specifics', () => {
 		expect(misses).toHaveBeenCalledWith('fld.inexistent')
 	})
 	test('serialize', () => {
-		const content: MemDictionary<any, any> = {
+		const content: MemDBDictionary<any, any> = {
 			'serializations.nl1': {
 				'': 'Line 1\nLine2',
 				'.zone': ''

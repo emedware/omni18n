@@ -1,34 +1,36 @@
 declare namespace OmnI18n {
-	// shortcuts, it's just a string at the end of the day, it helps copilot
+	// shortcuts, it's just strings at the end of the day, it helps copilot/codeium
 	type Locale = Intl.UnicodeBCP47LocaleIdentifier
 	type Zone = string
+	type TextKey = Exclude<string, '' | '.' | 'then' | '.zone' | '.textInfos' | '.keyInfos'>
+	type Translation = string
 
 	type CondensedDictionary = {
-		[key: Exclude<string, '' | '.'>]: CondensedDictionary | string
-		''?: string
+		[key: TextKey]: CondensedDictionary | Translation
+		''?: Translation
 		'.'?: '.' // fallback marker
 	}
 
 	type Condense = (locales: Locale[], zones: Zone[]) => Promise<CondensedDictionary[]>
-	type OnModification = (keys?: string[]) => void
+	type OnModification = (keys?: TextKey[]) => void
 	/**
 	 * Dictionary used between the server and the DB
 	 * key => [locale, text]
 	 */
-	type RawDictionary = Record<string, [Locale, string]>
+	type RawDictionary = Record<TextKey, [Locale, Translation]>
 	type WorkDictionaryText<TextInfos extends {} = {}> = {
-		text: string
+		text: Translation
 		infos: TextInfos
 	}
 	type WorkDictionaryEntry<KeyInfos extends {} = {}, TextInfos extends {} = {}> = {
 		locales: { [locale: Locale]: WorkDictionaryText<TextInfos> }
 		zone: Zone
-		infos: KeyInfos
+		infos?: KeyInfos
 	}
 	/**
 	 * Dictionary used for translator-related operations
 	 */
-	type WorkDictionary = Record<string, WorkDictionaryEntry>
+	type WorkDictionary = Record<TextKey, WorkDictionaryEntry>
 
 	interface DB {
 		/**
@@ -51,29 +53,29 @@ declare namespace OmnI18n {
 		 * Retrieves all the locales given for a certain key
 		 * @param key The key to search for
 		 */
-		get(key: string): Promise<Record<Locale, string>>
+		get(key: TextKey): Promise<Record<Locale, Translation>>
 
 		/**
 		 * Checks if a key is specified in a certain locale
 		 * @param key The key to search for
 		 * @param locales The locales to search in
 		 */
-		isSpecified(key: string, locales: Locale[]): Promise<undefined | {} | TextInfos>
+		getZone(key: TextKey, locales?: Locale[]): Promise<Zone | false>
 
 		/**
 		 * Modifies/add the value for the key [key, locale]
 		 * Note: checks that the key exists
-		 * @param key string key
+		 * @param key text key
 		 * @param locale A language and perhaps a country
 		 * @param text A text value
 		 * @returns The zone where the key is stored or false if no change were brought
 		 */
 		modify(
-			key: string,
+			key: TextKey,
 			locale: Locale,
-			text: string,
+			text: Translation,
 			textInfos?: Partial<TextInfos>
-		): Promise<string | false>
+		): Promise<Zone | false>
 
 		/**
 		 * Creates or modifies a key
@@ -81,7 +83,7 @@ declare namespace OmnI18n {
 		 * @param zone The zone to create the key in, or undefined to delete it
 		 * @returns Wether there was a change
 		 */
-		key(key: string, zone: string, keyInfos?: Partial<KeyInfos>): Promise<boolean>
+		key(key: TextKey, zone: Zone, keyInfos?: Partial<KeyInfos>): Promise<boolean>
 
 		/**
 		 * Renames a key - or removes it (and its translation) if newKey is undefined
@@ -89,6 +91,6 @@ declare namespace OmnI18n {
 		 * @param newKey
 		 * @returns The zone where the key was stored and the locales where it was translated
 		 */
-		reKey(key: string, newKey?: string): Promise<{ zone: string; locales: Locale[] }>
+		reKey(key: TextKey, newKey?: TextKey): Promise<{ zone: Zone; locales: Locale[] }>
 	}
 }

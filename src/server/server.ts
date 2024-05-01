@@ -1,7 +1,7 @@
 /// <reference path="../types.d.ts" />
 
 type CDic = OmnI18n.CondensedDictionary
-type CDicE = CDic & string
+type CDicE = CDic & OmnI18n.Translation
 
 /**
  * Abstract file used between the http layer and the database
@@ -28,7 +28,7 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 		this.condense = this.condense.bind(this)
 	}
 
-	list(locales: OmnI18n.Locale[], zone: string): Promise<OmnI18n.RawDictionary> {
+	private list(locales: OmnI18n.Locale[], zone: OmnI18n.Zone): Promise<OmnI18n.RawDictionary> {
 		const [primary, ...fallbacks] = locales
 		return this.db.list(
 			removeDup([...localeTree(primary), '', ...fallbacks.map(localeTree).flat()]),
@@ -53,12 +53,13 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 			for (const key in raw) {
 				const value = raw[key],
 					keys = key.split('.'),
-					lastKey = keys.pop() as string
+					lastKey = keys.pop() as OmnI18n.TextKey
 				let current = result,
 					hasValue = false // Do we have a value who is not a fall back with a shorter key?
 				for (const k of keys) {
 					if (!(k in current)) current[k] = <CDicE>{}
-					else if (typeof current[k] === 'string') current[k] = <CDicE>{ '': <string>current[k] }
+					else if (typeof current[k] === 'string')
+						current[k] = <CDicE>{ '': <OmnI18n.Translation>current[k] }
 					const next = current[k] as CDic
 					if ('' in next && !('.' in next)) hasValue = true
 					current = next
@@ -80,4 +81,13 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 		}
 		return results
 	}
+
+	static specs2url = (locales: OmnI18n.Locale[], zones: OmnI18n.Zone[]) => ({
+		locales: `${encodeURIComponent(locales.join('€'))}`,
+		zones: `${encodeURIComponent(zones.join('€'))}`
+	})
+	static url2specs = (locales: string, zones: string) => ({
+		locales: locales.split('€'),
+		zones: zones.split('€')
+	})
 }

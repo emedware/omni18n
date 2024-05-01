@@ -58,7 +58,7 @@ export default class I18nClient implements OmnI18nClient {
 	 * @param zones Zones entered
 	 * @returns The translator
 	 */
-	public async enter(...zones: string[]) {
+	public async enter(...zones: OmnI18n.Zone[]) {
 		if (!zones.includes('')) zones.push('')
 		const knownZones = this.loadedZones.union(this.toLoadZones),
 			toAdd = zones.filter((zone) => !knownZones.has(zone))
@@ -73,7 +73,7 @@ export default class I18nClient implements OmnI18nClient {
 		return translator({ client: this, zones, key: '' })
 	}
 
-	protected received(zones: string[], condensed: OmnI18n.CondensedDictionary[]) {
+	protected received(zones: OmnI18n.Zone[], condensed: OmnI18n.CondensedDictionary[]) {
 		for (let i = 0; i < zones.length; i++) {
 			this.loadedZones.add(zones[i])
 			recurExtend(this.dictionary, condensed[i], zones[i])
@@ -84,7 +84,7 @@ export default class I18nClient implements OmnI18nClient {
 		this.onModification?.(condensed.map(longKeyList).flat())
 	}
 
-	private async download(zones: string[]) {
+	private async download(zones: OmnI18n.Zone[]) {
 		const toLoad = zones.filter((zone) => !this.loadedZones.has(zone))
 		if (toLoad.length) this.received(toLoad, await this.condense(this.locales, toLoad))
 	}
@@ -99,10 +99,10 @@ export default class I18nClient implements OmnI18nClient {
 		await this.download(toLoad)
 	}
 
-	modified(entries: Record<string, [string, string] | undefined>) {
+	modified(entries: Record<OmnI18n.TextKey, [OmnI18n.Translation, OmnI18n.Zone] | undefined>) {
 		for (const [key, value] of Object.entries(entries)) {
 			const keys = key.split('.'),
-				lastKey = keys.pop() as string
+				lastKey = keys.pop() as OmnI18n.TextKey
 			let browser = this.dictionary
 			for (const key of keys) {
 				if (!browser[key]) browser[key] = {}
@@ -123,7 +123,7 @@ export default class I18nClient implements OmnI18nClient {
 		this.onModification?.(Object.keys(entries))
 	}
 
-	interpolate: (context: TContext, text: string, args: any[]) => string = interpolate
+	interpolate: (context: TContext, text: OmnI18n.Translation, args: any[]) => string = interpolate
 }
 
 export function getContext(translator: Translator): TContext {
