@@ -1,15 +1,11 @@
 import {
+	DB,
 	type CondensedDictionary,
-	type Condense,
-	type InteractiveDB,
 	type Locale,
-	type OnModification,
 	type RawDictionary,
 	type TextKey,
 	type Translation,
-	type Zone,
-	WorkDictionary,
-	DB
+	type Zone
 } from '../types'
 
 type CDic = CondensedDictionary
@@ -90,13 +86,13 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 		}
 		return results
 	}
-
-	static specs2url = (locales: Locale[], zones: Zone[]) => ({
-		locales: `${encodeURIComponent(locales.join('€'))}`,
-		zones: `${encodeURIComponent(zones.join('€'))}`
-	})
-	static url2specs = (locales: string, zones: string) => ({
-		locales: locales.split('€'),
-		zones: zones.split('€')
-	})
 }
+
+export const specs2url = (locales: Locale[], zones: Zone[]) => ({
+	locales: `${encodeURIComponent(locales.join('€'))}`,
+	zones: `${encodeURIComponent(zones.join('€'))}`
+})
+export const url2specs = (locales: string, zones: string) => ({
+	locales: locales.split('€'),
+	zones: zones.split('€')
+})

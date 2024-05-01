@@ -1,17 +1,13 @@
 import {
-	type CondensedDictionary,
-	type Condense,
-	type InteractiveDB,
-	type Locale,
-	type OnModification,
-	type RawDictionary,
-	type TextKey,
-	type Translation,
-	type Zone,
 	WorkDictionary,
 	WorkDictionaryEntry,
 	WorkDictionaryText,
-	DB
+	type InteractiveDB,
+	type Locale,
+	type RawDictionary,
+	type TextKey,
+	type Translation,
+	type Zone
 } from '../types'
 
 interface SystemEntry<KeyInfos extends {}, TextInfos extends {}> {

@@ -27,7 +27,13 @@ export {
 	formats,
 	processors
 } from './client/index'
-export { I18nServer, InteractiveServer, type Modification } from './server/index'
+export {
+	I18nServer,
+	InteractiveServer,
+	type Modification,
+	specs2url,
+	url2specs
+} from './server/index'
 export { FileDB, MemDB, type MemDBDictionary, type MemDBDictionaryEntry } from './db/index'
 
 declare global {

@@ -1,28 +1,17 @@
 import { parse } from 'hjson'
+import { type CondensedDictionary, type TextKey, type Translation, type Zone } from '../types'
 import {
 	ClientDictionary,
+	ReportingClient,
 	TContext,
+	Translatable,
 	TranslationError,
 	Translator,
-	text,
-	zone,
-	fallback,
 	contextKey,
-	Translatable,
-	ReportingClient
+	fallback,
+	text,
+	zone
 } from './types'
-import {
-	type CondensedDictionary,
-	type Condense,
-	type InteractiveDB,
-	type Locale,
-	type OnModification,
-	type RawDictionary,
-	type TextKey,
-	type Translation,
-	type Zone,
-	WorkDictionary
-} from '../types'
 
 function entry(t: Translation, z: Zone, isFallback?: boolean): ClientDictionary {
 	return { [text]: t, [zone]: z, ...(isFallback ? { [fallback]: true } : {}) }

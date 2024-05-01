@@ -1,3 +1,7 @@
+# OmnI18n
+
+Generic i18n library managing the fullstack interaction in a CI/CD pace. The fact the dictionaries are stored in a DB edited by the translators through a(/the same) web application - managing translation errors, missing keys, ...
+
 [![view on npm](https://badgen.net/npm/v/omni18n)](https://www.npmjs.org/package/omni18n)
 [![npm module downloads](https://badgen.net/npm/dt/omni18n)](https://www.npmjs.org/package/omni18n)
 [![Github repo dependents](https://badgen.net/github/dependents-repo/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=REPOSITORY)
@@ -6,11 +10,6 @@
 
 <!-- [![Coverage Status](https://coveralls.io/repos/github/emedware/omni18n/badge.svg)](https://coveralls.io/github/emedware/omni18n) -->
 
-# omni18n
-
-Generic i18n library managing the fullstack interaction in a CI/CD pace. The fact the dictionaries are stored in a DB edited by the translators through a(/the same) web application - managing translation errors, missing keys, ...
-
-It can even manage update of all (concerned) clients when a translation is modified
 
 The main documentation in [the repository](./docs/README.md)
 
@@ -108,9 +107,9 @@ Root zone that will contain all the common "Yes", "No", `internals`, ....
 
 In case of PoC, only the root zone can be used.
 
-> :information_source: The library is optimized to download only the missing parts through a user's browsing experience
+> :information_source: The library is optimized to download only the missing parts through a user's browsing experience.
 
-> :warning: Zones are not different name spaces for text keys, each key is unique and has an associated zone
+> :warning: Zones are not different name spaces for text keys, each key is unique and has an associated zone.
 
 ## Interpolation
 
@@ -128,7 +127,7 @@ There {plural|$1|is|are} {number|$1} {plural|$1|entry|entries}
 
 ## Error reporting
 
-[Error reporting](./docs/client.md#reports) can be done either with a global value as such: ([details](./docs/client.md#global-reporting))
+[Error reporting](./docs/client.md#reports) can be done either with a [global value](./docs/client.md#global-reporting) as such:
 
 ```ts
 import { reports, type TContext } from "omni18n";

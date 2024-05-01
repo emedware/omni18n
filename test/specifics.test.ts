@@ -1,3 +1,4 @@
+import { readFile, unlink, writeFile } from 'node:fs/promises'
 import {
 	FileDB,
 	I18nClient,
@@ -5,11 +6,10 @@ import {
 	MemDBDictionary,
 	TContext,
 	Translator,
-	bulkObject,
 	bulkDictionary,
+	bulkObject,
 	reports
 } from '../src/index'
-import { readFile, writeFile, unlink } from 'node:fs/promises'
 import { localStack } from './utils'
 
 const misses = jest.fn()

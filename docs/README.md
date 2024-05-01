@@ -2,8 +2,6 @@
 
 The first document presents an [overview](../README.md), here is a more detailed description
 
-> :warning: **Work in progress!**. Remaining: server, DB, interpolation
-
 Projects using OmnI18n use it in 4 layers
 
 1. [The `client`](./client.md): The client manages the cache and download along with providing [`Translator`s](./translator.md) that will [interpolate](./interpolation.md)

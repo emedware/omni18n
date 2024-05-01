@@ -1,10 +1,10 @@
 {
 	"name": "omni18n",
-	"version": "1.0.8",
+	"version": "1.0.9",
 	"description": "",
 	"main": "dist/index.js",
 	"module": "dist/index.js",
-	"types": "dist/typings.d.ts",
+	"types": "dist/index.d.ts",
 	"type": "module",
 	"scripts": {
 		"test": "jest",
@@ -20,9 +20,11 @@
 	"keywords": [
 		"omni18n",
 		"internationalization",
+		"i18n",
+		"intl",
 		"localization",
 		"fullstack",
-		"automation"
+		"ci-cd"
 	],
 	"author": "fmdm",
 	"license": "ISC",

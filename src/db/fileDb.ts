@@ -1,20 +1,8 @@
-import {
-	type CondensedDictionary,
-	type Condense,
-	type InteractiveDB,
-	type Locale,
-	type OnModification,
-	type RawDictionary,
-	type TextKey,
-	type Translation,
-	type Zone,
-	WorkDictionary,
-	DB
-} from '../types'
-import MemDB, { MemDBDictionary, MemDBDictionaryEntry } from './memDb'
-import { readFile, writeFile, stat } from 'node:fs/promises'
 import { parse, stringify } from 'hjson'
+import { readFile, stat, writeFile } from 'node:fs/promises'
 import Defer from '../defer'
+import { WorkDictionary, type Locale, type TextKey, type Translation, type Zone } from '../types'
+import MemDB, { MemDBDictionary, MemDBDictionaryEntry } from './memDb'
 
 function parseError(str: string, position: number, end: number = position + 100) {
 	let count = 0,

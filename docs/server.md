@@ -14,11 +14,11 @@ type Condense = (locales: Locale[], zones: Zone[]) => Promise<CondensedDictionar
 
 This function never has to be called directly, just forwarded, nor overrode. Just give it straight forward to the client (with a `bind` if necessary, though the server `bind`s it in the constructor)
 
-> Fun fact: Did you know the `$` character is escaped but not the `€` one ?
-
 ### Forwarding
 
 > Don't c/p the code here, it never ran and is given for a structure example
+
+> Fun fact: Did you know the `$` character is escaped on URLs but not the `€` one ?
 
 On the client-side, shall it be UI/REST-api, communication with a worker, websocket, whatever:
 
@@ -26,7 +26,7 @@ On the client-side, shall it be UI/REST-api, communication with a worker, websoc
 
 ```ts
 const condense: Condense = async (locales: Locale[], zones: Zone[]) => {
-	const { locales: urlLocales, zones: urlZones } = Server.specs2url(locales, zones)
+	const { locales: urlLocales, zones: urlZones } = specs2url(locales, zones)
 	const result = await fetch(`/condense?locales=${urlLocales}&zones=${urlZones}`)
 	// if result.status is ok & stuff
 	return <CondensedDictionary>await result.json()
@@ -37,7 +37,7 @@ const condense: Condense = async (locales: Locale[], zones: Zone[]) => {
 
 ```ts
 app.get('/condense', async (req, res) => {
-	const { locales, zones } = Server.url2specs(req.query.locales, req.query.zones)
+	const { locales, zones } = url2specs(req.query.locales, req.query.zones)
 	try {
 		const result = await server.condense(locales, zones)
 		res.json(result)

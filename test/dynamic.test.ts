@@ -1,24 +1,11 @@
-import { WaitingDB } from './db'
 import {
-	type CondensedDictionary,
-	type Condense,
-	type InteractiveDB,
-	type Locale,
-	type OnModification,
-	type RawDictionary,
-	type TextKey,
-	type Translation,
-	type Zone,
-	type WorkDictionary,
-	type WorkDictionaryEntry,
-	type WorkDictionaryText,
-	type DB,
-	Translator,
 	I18nClient,
 	InteractiveServer,
 	MemDB,
-	MemDBDictionaryEntry
+	MemDBDictionaryEntry,
+	Translator
 } from '../src/index'
+import { WaitingDB } from './db'
 
 describe('Dynamic functionality', () => {
 	let server: InteractiveServer,
