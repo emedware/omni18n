@@ -4,7 +4,7 @@ interface SystemEntry<KeyInfos extends {}, TextInfos extends {}> {
 	'.textInfos'?: Record<OmnI18n.Locale, TextInfos>
 }
 
-export type MemDBDictionaryEntry<KeyInfos extends {}, TextInfos extends {}> = {
+export type MemDBDictionaryEntry<KeyInfos extends {} = {}, TextInfos extends {} = {}> = {
 	[k in Exclude<OmnI18n.Locale, keyof SystemEntry<KeyInfos, TextInfos>>]?: OmnI18n.Translation
 } & SystemEntry<KeyInfos, TextInfos>
 
@@ -33,7 +33,7 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 		Object.entries(this.dictionary).forEach(([key, value]) => {
 			const entry: OmnI18n.WorkDictionaryEntry<KeyInfos, TextInfos> = {
 				zone: value['.zone'] || '',
-				locales: {},
+				texts: {},
 				...(value['.keyInfos'] && { infos: value['.keyInfos'] })
 			}
 
@@ -41,7 +41,7 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 
 			for (const locale in keys) {
 				if (locales.some((demanded) => locale.startsWith(demanded))) {
-					entry.locales[locale] = <OmnI18n.WorkDictionaryText<TextInfos>>{
+					entry.texts[locale] = <OmnI18n.WorkDictionaryText<TextInfos>>{
 						...(value[locale] && { text: value[locale] }),
 						...(value['.textInfos']?.[locale] && { infos: value['.textInfos'][locale] })
 					}
@@ -102,7 +102,9 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 
 	async reKey(key: OmnI18n.TextKey, newKey?: OmnI18n.TextKey) {
 		const rv = {
-			locales: Object.keys(this.dictionary[key] || {}),
+			texts: Object.fromEntries(
+				Object.entries(this.dictionary[key] || {}).filter(([k]) => !k.startsWith('.'))
+			) as Record<OmnI18n.Locale, OmnI18n.Translation>,
 			zone: this.dictionary[key]['.zone'] || ''
 		}
 		if (newKey) this.dictionary[newKey] = this.dictionary[key]

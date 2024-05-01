@@ -54,7 +54,7 @@ type WorkDictionaryText<TextInfos> = {
 	infos: TextInfos
 }
 type WorkDictionaryEntry<KeyInfos, TextInfos> = {
-	locales: { [locale: Locale]: WorkDictionaryText<TextInfos> }
+	texts: { [locale: Locale]: WorkDictionaryText<TextInfos> }
 	zone: Zone
 	infos: KeyInfos
 }

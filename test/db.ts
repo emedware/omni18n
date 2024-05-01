@@ -28,7 +28,7 @@ export class WaitingDB implements OmnI18n.InteractiveDB {
 	reKey(
 		key: OmnI18n.TextKey,
 		newKey?: OmnI18n.TextKey
-	): Promise<{ zone: OmnI18n.Zone; locales: OmnI18n.Locale[] }> {
+	): Promise<{ zone: OmnI18n.Zone; texts: Record<OmnI18n.Locale, OmnI18n.Translation> }> {
 		return waiting(() => this.db.reKey(key, newKey))
 	}
 }

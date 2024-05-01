@@ -155,10 +155,10 @@ export default class InteractiveServer<
 		)
 	}
 	async reKey(key: OmnI18n.TextKey, newKey?: OmnI18n.TextKey): Promise<void> {
-		const { zone, locales } = await this.db.reKey(key, newKey)
-		for (const locale of locales) {
+		const { zone, texts } = await this.db.reKey(key, newKey)
+		for (const locale in texts) {
 			this.modifications.push([key, locale, zone, undefined])
-			if (newKey) this.modifications.push([newKey, locale, zone, undefined])
+			if (newKey) this.modifications.push([newKey, locale, zone, texts[locale]])
 		}
 	}
 }

@@ -1,6 +1,9 @@
 import { reportMissing, reportError, translate } from './helpers'
 import { TContext, TranslationError } from './types'
 
+// TODO: .text.key to react as $arg => sub-translation ?
+// TODO: Multiple defaults ? (= $1 | $price | 'unknown')
+
 export const formats: Record<'date' | 'number' | 'relative', Record<string, object>> = {
 	date: {
 		date: {

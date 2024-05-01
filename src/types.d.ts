@@ -23,7 +23,7 @@ declare namespace OmnI18n {
 		infos: TextInfos
 	}
 	type WorkDictionaryEntry<KeyInfos extends {} = {}, TextInfos extends {} = {}> = {
-		locales: { [locale: Locale]: WorkDictionaryText<TextInfos> }
+		texts: { [locale: Locale]: WorkDictionaryText<TextInfos> }
 		zone: Zone
 		infos?: KeyInfos
 	}
@@ -91,6 +91,9 @@ declare namespace OmnI18n {
 		 * @param newKey
 		 * @returns The zone where the key was stored and the locales where it was translated
 		 */
-		reKey(key: TextKey, newKey?: TextKey): Promise<{ zone: Zone; locales: Locale[] }>
+		reKey(
+			key: TextKey,
+			newKey?: TextKey
+		): Promise<{ zone: Zone; texts: Record<Locale, Translation> }>
 	}
 }
