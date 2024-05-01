@@ -1,4 +1,4 @@
-import { I18nClient, Translator, I18nServer, MemDB } from '../src/index'
+import { I18nClient, Translator, I18nServer, MemDB, Locale } from '../src/index'
 import { WaitingDB } from './db'
 
 // This is for test purpose: in general usage, only one locale/T is used
@@ -69,7 +69,7 @@ beforeAll(async () => {
 		)
 	)
 
-	function condense(locales: OmnI18n.Locale[], zones: string[] = ['']) {
+	function condense(locales: Locale[], zones: string[] = ['']) {
 		loads.push({ locales, zones })
 		return server.condense(locales, zones)
 	}

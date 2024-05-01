@@ -1,3 +1,16 @@
+import {
+	type CondensedDictionary,
+	type Condense,
+	type InteractiveDB,
+	type Locale,
+	type OnModification,
+	type RawDictionary,
+	type TextKey,
+	type Translation,
+	type Zone,
+	WorkDictionary,
+	DB
+} from '../types'
 import MemDB, { MemDBDictionary, MemDBDictionaryEntry } from './memDb'
 import { readFile, writeFile, stat } from 'node:fs/promises'
 import { parse, stringify } from 'hjson'
@@ -44,33 +57,33 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 
 	//#region Forwards
 
-	async list(locales: OmnI18n.Locale[], zone: OmnI18n.Zone) {
+	async list(locales: Locale[], zone: Zone) {
 		await this.loaded
 		return super.list(locales, zone)
 	}
-	async workList(locales: OmnI18n.Locale[]): Promise<OmnI18n.WorkDictionary> {
+	async workList(locales: Locale[]): Promise<WorkDictionary> {
 		await this.loaded
 		return super.workList(locales)
 	}
-	async getZone(key: OmnI18n.TextKey, locales?: OmnI18n.Locale[]) {
+	async getZone(key: TextKey, locales?: Locale[]) {
 		await this.loaded
 		return super.getZone(key, locales)
 	}
-	async modify(key: OmnI18n.TextKey, locale: OmnI18n.Locale, value: OmnI18n.Translation) {
+	async modify(key: TextKey, locale: Locale, value: Translation) {
 		await this.loaded
 		this.saving.defer()
 		return super.modify(key, locale, value)
 	}
-	async key(key: OmnI18n.TextKey, zone: OmnI18n.Zone) {
+	async key(key: TextKey, zone: Zone) {
 		await this.loaded
 		this.saving.defer()
 		return super.key(key, zone)
 	}
-	async get(key: OmnI18n.TextKey) {
+	async get(key: TextKey) {
 		await this.loaded
 		return super.get(key)
 	}
-	async reKey(key: OmnI18n.TextKey, newKey?: OmnI18n.TextKey) {
+	async reKey(key: TextKey, newKey?: TextKey) {
 		await this.loaded
 		this.saving.defer()
 		return super.reKey(key, newKey)
@@ -133,9 +146,9 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 		while ((keyFetch = rex.key.exec(data))) {
 			if (keyFetch.index > lastIndex) throw parseError(data, lastIndex, keyFetch.index)
 			const key = keyFetch[1],
-				zone = keyFetch[3] as OmnI18n.Zone
+				zone = keyFetch[3] as Zone
 			let keyInfos: any,
-				textInfos: Record<OmnI18n.Locale, any> = {}
+				textInfos: Record<Locale, any> = {}
 			if (keyFetch[2]) keyInfos = parse(keyFetch[2].replace(/\u0000/g, '\n'))
 			const entry: MemDBDictionaryEntry<KeyInfos, TextInfos> = {
 				'.zone': zone,
@@ -147,11 +160,9 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 				if (localeFetch.index > lastIndex) break
 				lastIndex = rex.locale.lastIndex
 				if (localeFetch[3])
-					entry[localeFetch[1] as OmnI18n.Locale] = localeFetch[3].replace(/\u0000\t\t/g, '\n')
+					entry[localeFetch[1] as Locale] = localeFetch[3].replace(/\u0000\t\t/g, '\n')
 				if (localeFetch[2])
-					textInfos[localeFetch[1] as OmnI18n.Locale] = parse(
-						localeFetch[2].replace(/\u0000/g, '\n')
-					)
+					textInfos[localeFetch[1] as Locale] = parse(localeFetch[2].replace(/\u0000/g, '\n'))
 			}
 			rex.key.lastIndex = lastIndex
 			if (Object.keys(textInfos).length) entry['.textInfos'] = textInfos

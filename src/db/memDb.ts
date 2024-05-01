@@ -1,24 +1,40 @@
+import {
+	type CondensedDictionary,
+	type Condense,
+	type InteractiveDB,
+	type Locale,
+	type OnModification,
+	type RawDictionary,
+	type TextKey,
+	type Translation,
+	type Zone,
+	WorkDictionary,
+	WorkDictionaryEntry,
+	WorkDictionaryText,
+	DB
+} from '../types'
+
 interface SystemEntry<KeyInfos extends {}, TextInfos extends {}> {
-	'.zone'?: OmnI18n.Zone
+	'.zone'?: Zone
 	'.keyInfos'?: KeyInfos
-	'.textInfos'?: Record<OmnI18n.Locale, TextInfos>
+	'.textInfos'?: Record<Locale, TextInfos>
 }
 
 export type MemDBDictionaryEntry<KeyInfos extends {} = {}, TextInfos extends {} = {}> = {
-	[k in Exclude<OmnI18n.Locale, keyof SystemEntry<KeyInfos, TextInfos>>]?: OmnI18n.Translation
+	[k in Exclude<Locale, keyof SystemEntry<KeyInfos, TextInfos>>]?: Translation
 } & SystemEntry<KeyInfos, TextInfos>
 
 export type MemDBDictionary<KeyInfos extends {} = {}, TextInfos extends {} = {}> = {
-	[key in OmnI18n.TextKey]: MemDBDictionaryEntry<KeyInfos, TextInfos>
+	[key in TextKey]: MemDBDictionaryEntry<KeyInfos, TextInfos>
 }
 
 export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
-	implements OmnI18n.InteractiveDB<KeyInfos, TextInfos>
+	implements InteractiveDB<KeyInfos, TextInfos>
 {
 	constructor(public dictionary: MemDBDictionary<KeyInfos, TextInfos> = {}) {}
 
-	async list(locales: OmnI18n.Locale[], zone: OmnI18n.Zone) {
-		const result: OmnI18n.RawDictionary = {}
+	async list(locales: Locale[], zone: Zone) {
+		const result: RawDictionary = {}
 		Object.entries(this.dictionary).forEach(([key, value]) => {
 			if (zone == value['.zone'] || (!zone && !value['.zone'])) {
 				const locale = locales.find((locale) => locale in value)
@@ -28,10 +44,10 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 		return result
 	}
 
-	async workList(locales: OmnI18n.Locale[]) {
-		const result: OmnI18n.WorkDictionary = {}
+	async workList(locales: Locale[]) {
+		const result: WorkDictionary = {}
 		Object.entries(this.dictionary).forEach(([key, value]) => {
-			const entry: OmnI18n.WorkDictionaryEntry<KeyInfos, TextInfos> = {
+			const entry: WorkDictionaryEntry<KeyInfos, TextInfos> = {
 				zone: value['.zone'] || '',
 				texts: {},
 				...(value['.keyInfos'] && { infos: value['.keyInfos'] })
@@ -41,7 +57,7 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 
 			for (const locale in keys) {
 				if (locales.some((demanded) => locale.startsWith(demanded))) {
-					entry.texts[locale] = <OmnI18n.WorkDictionaryText<TextInfos>>{
+					entry.texts[locale] = <WorkDictionaryText<TextInfos>>{
 						...(value[locale] && { text: value[locale] }),
 						...(value['.textInfos']?.[locale] && { infos: value['.textInfos'][locale] })
 					}
@@ -52,24 +68,19 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 		return result
 	}
 
-	async getZone(key: OmnI18n.TextKey, locales?: OmnI18n.Locale[]) {
+	async getZone(key: TextKey, locales?: Locale[]) {
 		if (!this.dictionary[key]) return false
 		const zone = this.dictionary[key]['.zone']
 		return !locales || locales.some((locale) => this.dictionary[key]?.[locale]) ? zone || '' : false
 	}
 
-	async modify(
-		key: OmnI18n.TextKey,
-		locale: OmnI18n.Locale,
-		value: OmnI18n.Translation,
-		textInfos?: Partial<TextInfos>
-	) {
+	async modify(key: TextKey, locale: Locale, value: Translation, textInfos?: Partial<TextInfos>) {
 		if (!this.dictionary[key]) throw new Error(`Key "${key}" not found`)
 		if (!/^[\w-]*$/g.test(locale))
 			throw new Error(`Bad locale: ${locale} (only letters, digits, "_" and "-" allowed)`)
 		this.dictionary[key][locale] = value
 		if (textInfos) {
-			const tis = <Record<OmnI18n.Locale, TextInfos>>this.dictionary[key]['.textInfos']
+			const tis = <Record<Locale, TextInfos>>this.dictionary[key]['.textInfos']
 			tis[locale] = {
 				...tis[locale],
 				...textInfos
@@ -79,7 +90,7 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 		return this.dictionary[key]['.zone'] || ''
 	}
 
-	async key(key: OmnI18n.TextKey, zone: OmnI18n.Zone, keyInfos?: Partial<KeyInfos>) {
+	async key(key: TextKey, zone: Zone, keyInfos?: Partial<KeyInfos>) {
 		const entry = this.dictionary[key] || {},
 			ez = entry['.zone']
 		if (!/^[\w\-\+\*\.]*$/g.test(key))
@@ -100,11 +111,11 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 		return zone !== ez
 	}
 
-	async reKey(key: OmnI18n.TextKey, newKey?: OmnI18n.TextKey) {
+	async reKey(key: TextKey, newKey?: TextKey) {
 		const rv = {
 			texts: Object.fromEntries(
 				Object.entries(this.dictionary[key] || {}).filter(([k]) => !k.startsWith('.'))
-			) as Record<OmnI18n.Locale, OmnI18n.Translation>,
+			) as Record<Locale, Translation>,
 			zone: this.dictionary[key]['.zone'] || ''
 		}
 		if (newKey) this.dictionary[newKey] = this.dictionary[key]
@@ -112,9 +123,9 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 		return rv
 	}
 
-	async get(key: OmnI18n.TextKey) {
+	async get(key: TextKey) {
 		return Object.fromEntries(
 			Object.entries(this.dictionary[key]).filter(([k]) => !k.startsWith('.'))
-		) as Record<OmnI18n.Locale, OmnI18n.Translation>
+		) as Record<Locale, Translation>
 	}
 }

@@ -1,4 +1,19 @@
 export {
+	type CondensedDictionary,
+	type Condense,
+	type InteractiveDB,
+	type Locale,
+	type OnModification,
+	type RawDictionary,
+	type TextKey,
+	type Translation,
+	type Zone,
+	type WorkDictionary,
+	type WorkDictionaryEntry,
+	type WorkDictionaryText,
+	type DB
+} from './types'
+export {
 	I18nClient,
 	type TContext,
 	getContext,

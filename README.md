@@ -49,7 +49,7 @@ In interactive mode (using [`InteractiveServer`](./docs/server.md#interactiveser
 
 ### DB-level
 
-Two interfaces allow to implement an interface to any database: [`OmnI18n.DB`](./docs/db.md) (who basically just has a `list`) and [`OmnI18n.InteractiveDB`](./docs/db.md#interactivedb) who has some modification access
+Two interfaces allow to implement an interface to any database: [`DB`](./docs/db.md) (who basically just has a `list`) and [`InteractiveDB`](./docs/db.md#interactivedb) who has some modification access
 
 Two are provided: a [`MemDB`](./docs/db.md#memdb) who is basically an "in-memory database" and its descendant, a [`FileDB`](./docs/db.md#filedb) who allows:
 
@@ -140,8 +140,8 @@ reports.error = (context: TContext, error: string, spec: object) => string
 Or the [object-oriented way](./docs/client.md#oo-reporting) by extending `I18nClient` implementing the `ReportingClient` interface.
 
 ```ts
-missing(key: string, fallback: OmnI18n.Translation | undefined, zones: OmnI18n.Zone[]): string
-error(key: string, error: string, spec: object, zones: OmnI18n.Zone[]): string
+missing(key: string, fallback: Translation | undefined, zones: Zone[]): string
+error(key: string, error: string, spec: object, zones: Zone[]): string
 ```
 
 ## TODO

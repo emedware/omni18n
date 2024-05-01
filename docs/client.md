@@ -11,7 +11,7 @@ In order to acquire translations, the client just has to `enter` a zone to retri
 ### With the server
 
 ```ts
-I18nClient(locales: OmnI18n.Locale[], condense: OmnI18n.Condense, onModification?: OmnI18n.OnModification)
+I18nClient(locales: Locale[], condense: Condense, onModification?: OnModification)
 ```
 
 - `locales`: A list of locales: from preferred to fallback
@@ -83,8 +83,8 @@ The interface `ReportingClient` exposes the methods :
 
 ```ts
 export interface ReportingClient extends OmnI18nClient {
-	missing(key: string, fallback: string | undefined, zones: OmnI18n.Zone[]): string
-	error(key: string, error: string, spec: object, zones: OmnI18n.Zone[]): string
+	missing(key: string, fallback: string | undefined, zones: Zone[]): string
+	error(key: string, error: string, spec: object, zones: Zone[]): string
 }
 ```
 

@@ -1,34 +1,34 @@
-import MemDB, { MemDBDictionary } from '../src/db/memDb'
+import { InteractiveDB, Locale, TextKey, Translation, WorkDictionary, Zone } from 'src/index'
 
 // As this is for test purpose, actually wait even for direct-memory operations
 function waiting<RV>(func: () => Promise<RV>) {
 	return new Promise<RV>((resolve) => setTimeout(() => resolve(func()), 1))
 }
 
-export class WaitingDB implements OmnI18n.InteractiveDB {
-	constructor(private db: OmnI18n.InteractiveDB) {}
-	getZone(key: OmnI18n.TextKey, locales?: OmnI18n.Locale[]) {
+export class WaitingDB implements InteractiveDB {
+	constructor(private db: InteractiveDB) {}
+	getZone(key: TextKey, locales?: Locale[]) {
 		return waiting(() => this.db.getZone(key, locales))
 	}
-	modify(key: OmnI18n.TextKey, locale: OmnI18n.Locale, value: OmnI18n.Translation) {
+	modify(key: TextKey, locale: Locale, value: Translation) {
 		return waiting(() => this.db.modify(key, locale, value))
 	}
-	key(key: OmnI18n.TextKey, zone: OmnI18n.Zone) {
+	key(key: TextKey, zone: Zone) {
 		return waiting(() => this.db.key(key, zone))
 	}
-	list(locales: OmnI18n.Locale[], zone: OmnI18n.Zone) {
+	list(locales: Locale[], zone: Zone) {
 		return waiting(() => this.db.list(locales, zone))
 	}
-	get(key: OmnI18n.TextKey) {
+	get(key: TextKey) {
 		return waiting(() => this.db.get(key))
 	}
-	workList(locales: OmnI18n.Locale[]): Promise<OmnI18n.WorkDictionary> {
+	workList(locales: Locale[]): Promise<WorkDictionary> {
 		return waiting(() => this.db.workList(locales))
 	}
 	reKey(
-		key: OmnI18n.TextKey,
-		newKey?: OmnI18n.TextKey
-	): Promise<{ zone: OmnI18n.Zone; texts: Record<OmnI18n.Locale, OmnI18n.Translation> }> {
+		key: TextKey,
+		newKey?: TextKey
+	): Promise<{ zone: Zone; texts: Record<Locale, Translation> }> {
 		return waiting(() => this.db.reKey(key, newKey))
 	}
 }

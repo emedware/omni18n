@@ -1,10 +1,10 @@
-import { I18nClient, I18nServer, MemDB, MemDBDictionary } from '../src/index'
+import { I18nClient, I18nServer, Locale, MemDB, MemDBDictionary, Zone } from '../src/index'
 import { WaitingDB } from './db'
 
 export function localStack<KeyInfos extends {} = {}, TextInfos extends {} = {}>(
 	dictionary: MemDBDictionary<KeyInfos, TextInfos>,
-	locales: OmnI18n.Locale[] = ['fr', 'en'],
-	zones: OmnI18n.Zone[] = ['']
+	locales: Locale[] = ['fr', 'en'],
+	zones: Zone[] = ['']
 ) {
 	const server = new I18nServer(new WaitingDB(new MemDB(dictionary))),
 		client = new I18nClient(locales, server.condense),

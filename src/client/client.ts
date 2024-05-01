@@ -1,5 +1,15 @@
-/// <reference path="../types.d.ts" />
-
+import {
+	type CondensedDictionary,
+	type Condense,
+	type InteractiveDB,
+	type Locale,
+	type OnModification,
+	type RawDictionary,
+	type TextKey,
+	type Translation,
+	type Zone,
+	WorkDictionary
+} from '../types'
 /**
  * i18n consumption/usage, both client and server side.
  */
@@ -27,8 +37,8 @@ export default class I18nClient implements OmnI18nClient {
 	readonly cardinalRules: Intl.PluralRules
 	internals: Internals = {}
 	dictionary: ClientDictionary = {}
-	protected loadedZones = new Set<OmnI18n.Zone>()
-	private toLoadZones = new Set<OmnI18n.Zone>()
+	protected loadedZones = new Set<Zone>()
+	private toLoadZones = new Set<Zone>()
 	private loadDefer = new Defer()
 
 	public timeZone?: string
@@ -42,10 +52,10 @@ export default class I18nClient implements OmnI18nClient {
 	 * @example new I18nClient(['fr', 'en'], server.condense, frontend.refreshTexts)
 	 */
 	constructor(
-		public locales: OmnI18n.Locale[],
+		public locales: Locale[],
 		// On the server side, this is `server.condensed`. From the client-side this is an http request of some sort
-		public condense: OmnI18n.Condense,
-		public onModification?: OmnI18n.OnModification
+		public condense: Condense,
+		public onModification?: OnModification
 	) {
 		this.ordinalRules = new Intl.PluralRules(locales[0], { type: 'ordinal' })
 		this.cardinalRules = new Intl.PluralRules(locales[0], { type: 'cardinal' })
@@ -58,7 +68,7 @@ export default class I18nClient implements OmnI18nClient {
 	 * @param zones Zones entered
 	 * @returns The translator
 	 */
-	public async enter(...zones: OmnI18n.Zone[]) {
+	public async enter(...zones: Zone[]) {
 		if (!zones.includes('')) zones.push('')
 		const knownZones = this.loadedZones.union(this.toLoadZones),
 			toAdd = zones.filter((zone) => !knownZones.has(zone))
@@ -73,7 +83,7 @@ export default class I18nClient implements OmnI18nClient {
 		return translator({ client: this, zones, key: '' })
 	}
 
-	protected received(zones: OmnI18n.Zone[], condensed: OmnI18n.CondensedDictionary[]) {
+	protected received(zones: Zone[], condensed: CondensedDictionary[]) {
 		for (let i = 0; i < zones.length; i++) {
 			this.loadedZones.add(zones[i])
 			recurExtend(this.dictionary, condensed[i], zones[i])
@@ -84,12 +94,12 @@ export default class I18nClient implements OmnI18nClient {
 		this.onModification?.(condensed.map(longKeyList).flat())
 	}
 
-	private async download(zones: OmnI18n.Zone[]) {
+	private async download(zones: Zone[]) {
 		const toLoad = zones.filter((zone) => !this.loadedZones.has(zone))
 		if (toLoad.length) this.received(toLoad, await this.condense(this.locales, toLoad))
 	}
 
-	async setLocale(locales: OmnI18n.Locale[]) {
+	async setLocale(locales: Locale[]) {
 		if (this.locales.every((locale, i) => locale == locales[1])) return
 		this.locales = locales
 		const toLoad = Array.from(this.loadedZones)
@@ -99,10 +109,10 @@ export default class I18nClient implements OmnI18nClient {
 		await this.download(toLoad)
 	}
 
-	modified(entries: Record<OmnI18n.TextKey, [OmnI18n.Translation, OmnI18n.Zone] | undefined>) {
+	modified(entries: Record<TextKey, [Translation, Zone] | undefined>) {
 		for (const [key, value] of Object.entries(entries)) {
 			const keys = key.split('.'),
-				lastKey = keys.pop() as OmnI18n.TextKey
+				lastKey = keys.pop() as TextKey
 			let browser = this.dictionary
 			for (const key of keys) {
 				if (!browser[key]) browser[key] = {}
@@ -123,7 +133,7 @@ export default class I18nClient implements OmnI18nClient {
 		this.onModification?.(Object.keys(entries))
 	}
 
-	interpolate: (context: TContext, text: OmnI18n.Translation, args: any[]) => string = interpolate
+	interpolate: (context: TContext, text: Translation, args: any[]) => string = interpolate
 }
 
 export function getContext(translator: Translator): TContext {

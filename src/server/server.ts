@@ -1,13 +1,25 @@
-/// <reference path="../types.d.ts" />
+import {
+	type CondensedDictionary,
+	type Condense,
+	type InteractiveDB,
+	type Locale,
+	type OnModification,
+	type RawDictionary,
+	type TextKey,
+	type Translation,
+	type Zone,
+	WorkDictionary,
+	DB
+} from '../types'
 
-type CDic = OmnI18n.CondensedDictionary
-type CDicE = CDic & OmnI18n.Translation
+type CDic = CondensedDictionary
+type CDicE = CDic & Translation
 
 /**
  * Abstract file used between the http layer and the database
  */
 
-export function localeTree(locale: OmnI18n.Locale) {
+export function localeTree(locale: Locale) {
 	const parts = locale.split('-')
 	const rv = []
 	for (let i = parts.length; i > 0; i--) rv.push(parts.slice(0, i).join('-'))
@@ -24,11 +36,11 @@ function removeDup(arr: string[]) {
  * Server class that should be instantiated once and used to interact with the database
  */
 export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} = {}> {
-	constructor(protected db: OmnI18n.DB) {
+	constructor(protected db: DB) {
 		this.condense = this.condense.bind(this)
 	}
 
-	private list(locales: OmnI18n.Locale[], zone: OmnI18n.Zone): Promise<OmnI18n.RawDictionary> {
+	private list(locales: Locale[], zone: Zone): Promise<RawDictionary> {
 		const [primary, ...fallbacks] = locales
 		return this.db.list(
 			removeDup([...localeTree(primary), '', ...fallbacks.map(localeTree).flat()]),
@@ -41,25 +53,22 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 	 * @param zones List of zones to condense.
 	 * @returns
 	 */
-	async condense(
-		locales: OmnI18n.Locale[],
-		zones: OmnI18n.Zone[] = ['']
-	): Promise<OmnI18n.CondensedDictionary[]> {
+	async condense(locales: Locale[], zones: Zone[] = ['']): Promise<CondensedDictionary[]> {
 		const raws = await Promise.all(zones.map((zone) => this.list(locales, zone))),
-			results: OmnI18n.CondensedDictionary[] = []
+			results: CondensedDictionary[] = []
 		for (const raw of raws) {
-			const result: OmnI18n.CondensedDictionary = {}
+			const result: CondensedDictionary = {}
 			results.push(result)
 			for (const key in raw) {
 				const value = raw[key],
 					keys = key.split('.'),
-					lastKey = keys.pop() as OmnI18n.TextKey
+					lastKey = keys.pop() as TextKey
 				let current = result,
 					hasValue = false // Do we have a value who is not a fall back with a shorter key?
 				for (const k of keys) {
 					if (!(k in current)) current[k] = <CDicE>{}
 					else if (typeof current[k] === 'string')
-						current[k] = <CDicE>{ '': <OmnI18n.Translation>current[k] }
+						current[k] = <CDicE>{ '': <Translation>current[k] }
 					const next = current[k] as CDic
 					if ('' in next && !('.' in next)) hasValue = true
 					current = next
@@ -82,7 +91,7 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 		return results
 	}
 
-	static specs2url = (locales: OmnI18n.Locale[], zones: OmnI18n.Zone[]) => ({
+	static specs2url = (locales: Locale[], zones: Zone[]) => ({
 		locales: `${encodeURIComponent(locales.join('€'))}`,
 		zones: `${encodeURIComponent(zones.join('€'))}`
 	})
