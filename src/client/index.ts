@@ -5,5 +5,5 @@ export {
 	type Translator,
 	type ReportingClient
 } from './types'
-export { reports, bulkObject, bulkDictionary as objectFromDictionary } from './helpers'
+export { reports, bulkObject, bulkDictionary } from './helpers'
 export { formats, processors } from './interpolation'

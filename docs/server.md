@@ -1,12 +1,13 @@
 # Server
 
-The server class *shouldn't* have to be extended (now, you do what you want)
+The server class _shouldn't_ have to be extended (now, you do what you want)
 
 It is **not** instantiated client-side and is instantiated once/per request/per user on the server-side.
 
 ## Standard server
 
 The usual use-case is to have a server instance created with a [`DB`](./db.md#structure) instance who provide a `condense` member.
+
 ```ts
 type Condense = (locales: Locale[], zones: Zone[]) => Promise<CondensedDictionary[]>
 ```
@@ -25,10 +26,10 @@ On the client-side, shall it be UI/REST-api, communication with a worker, websoc
 
 ```ts
 const condense: Condense = async (locales: Locale[], zones: Zone[]) => {
-	const {locales: urlLocales, zones: urlZones} = Server.specs2url(locales, zones)
+	const { locales: urlLocales, zones: urlZones } = Server.specs2url(locales, zones)
 	const result = await fetch(`/condense?locales=${urlLocales}&zones=${urlZones}`)
 	// if result.status is ok & stuff
-	return <CondensedDictionary>(await result.json())
+	return <CondensedDictionary>await result.json()
 }
 ```
 
@@ -52,18 +53,21 @@ Imagine that you wish your application to shine so much that you want the transl
 
 Yes, that's how nerdy this `InteractiveServer` is - use only if you wish to.
 
-1- An instance has to be created per *client tab* - or if you wish, make a service worker (but make a PR about it if you do)
+1- An instance has to be created per _client tab_ - or if you wish, make a service worker (but make a PR about it if you do)
 2- Instances have to be `.destroy()`-ed when the channel is closed
 
 Interactive servers are created with a second parameter:
+
 ```ts
-(entries: Record<string, [string, string] | undefined>)=> Promise<void>
+;(entries: Record<string, [string, string] | undefined>) => Promise<void>
 ```
+
 And, you guessed it, this one should just be forwarded to `OmnI18nClient::modified` through whichever medium you wish/can (I guess a websocket or such)
 
 ### Exposed interface
 
 #### `InteractiveDB` forwards.
+
 > To be called by the client
 
 ```ts
@@ -83,9 +87,10 @@ key(
 ): Promise<void>
 ```
 
-Only the `key` function differs as it takes the *translation modifications* as an argument (to *remove* a translation, specify `locale: undefined`)
+Only the `key` function differs as it takes the _translation modifications_ as an argument (to _remove_ a translation, specify `locale: undefined`)
 
 #### DB notifications
+
 > To be called by the DB
 
 If a DB is reloaded or modified from another source and manage to have the event, one can raise the flag with:

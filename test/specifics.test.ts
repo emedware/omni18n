@@ -6,7 +6,7 @@ import {
 	TContext,
 	Translator,
 	bulkObject,
-	objectFromDictionary,
+	bulkDictionary,
 	reports
 } from '../src/index'
 import { readFile, writeFile, unlink } from 'node:fs/promises'
@@ -58,7 +58,7 @@ describe('bulk', () => {
 
 	test('from dictionary', async () => {
 		misses.mockClear()
-		const built = objectFromDictionary(T.struct, { parm: 42 })
+		const built = bulkDictionary(T.struct, { parm: 42 })
 		expect(built).toEqual(expected)
 		expect(misses).toHaveBeenCalledWith('struct.missing')
 		expect('' + built.sub).toBe('toString')

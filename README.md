@@ -119,6 +119,7 @@ In case of PoC, only the root zone can be used.
 It heavily relies on the [hard-coded Intl](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl) mechanism, especially for date/number formats as well as plural and ordinal formations.
 
 Examples:
+
 ```
 Hello {=1|here}
 There {plural|$1|is|are} {number|$1} {plural|$1|entry|entries}
@@ -128,6 +129,7 @@ There {plural|$1|is|are} {number|$1} {plural|$1|entry|entries}
 ## Error reporting
 
 [Error reporting](./docs/client.md#reports) can be done either with a global value as such: ([details](./docs/client.md#global-reporting))
+
 ```ts
 import { reports, type TContext } from "omni18n";
 
@@ -136,6 +138,7 @@ reports.error = (context: TContext, error: string, spec: object) => string
 ```
 
 Or the [object-oriented way](./docs/client.md#oo-reporting) by extending `I18nClient` implementing the `ReportingClient` interface.
+
 ```ts
 missing(key: string, fallback: OmnI18n.Translation | undefined, zones: OmnI18n.Zone[]): string
 error(key: string, error: string, spec: object, zones: OmnI18n.Zone[]): string

@@ -33,12 +33,11 @@ A kind of API has been designed for the server to be able to _modify_ the conten
 
 Here, we get already in the realm where we can specify `KeyInfos` and `TextInfos`. The former is given by developers, in english or some common language if text is needed - and appear in the `keys` database - and the `TextInfo`, more often used/edited by the translators and appearing in the `translations` database.
 
-If a database implementation is meant to be generic, it should store the `...Infos` as json I guess or something, but an application can specify both these generic arguments *and* the database adapter to deal with it.
+If a database implementation is meant to be generic, it should store the `...Infos` as json I guess or something, but an application can specify both these generic arguments _and_ the database adapter to deal with it.
 
 The `KeyInfo` might store information like notes from the dev, a flag to know if the text is pure, html, md, ... Whatever concerns development.
 
 The `Textinfo` might store translation notes I guess, a link to a discussion with chatGPT, I really don't know - in case of doubt, let the default `{}`
-
 
 ```ts
  ...Infos extends {} = {}
@@ -80,6 +79,7 @@ The first one retrieves the list of translations for a key, the second the key's
 ### Setters
 
 #### Translate
+
 > Write in the texts table, read in the keys table
 
 ```ts
@@ -117,12 +117,13 @@ reKey(key: string, newKey?: string): Promise<{ zone: string; locales: Locale[] }
 FileDB is basically a MemDB with a file I/O ability. It is constructed with a file name and a `delay`, specifying the defer time between modifications and file writing (if a modification intervenes before file writing, the writing is deferred again to group it)
 
 This allows:
+
 - All the translations to simply be gathered under a file under source control (backup-able)
 - The development activities (adding/removing/removing/rezoning a key) to be made and applied on commit/merge, and the "translation" (text-change) activities to still be available through the UI in real time
 
 #### File format
 
-The serialization file-format is specific for regexp-ability *and* human interactions; grouping is done by indentation (made with tabulations - `\t`).
+The serialization file-format is specific for regexp-ability _and_ human interactions; grouping is done by indentation (made with tabulations - `\t`).
 
 `KeyInfos` and `TextInfos` are stored in [`hjson`](https://www.npmjs.com/package/hjson) format
 
@@ -133,6 +134,7 @@ A line beginning with no tabs is a key specification
 ```
 [text-key]:[zone]
 ```
+
 ```
 [text-key][{ SomeKeyInfos: 'hjson format' }]:[zone]
 ```
@@ -143,17 +145,17 @@ A line beginning with no tabs is a key specification
 
 A line beginning with one tab is a locale specification for the key "en cours"
 
-
 ```
 	[locale]:
 ```
+
 ```
 	[locale][{ SomeTextInfos: 'hjson format' }]:
 ```
 
 ##### 2-tabs
 
-A line beginning with two tabs is the *continuation* of the translation.
+A line beginning with two tabs is the _continuation_ of the translation.
 
 ```
 	[locale]:Line1
@@ -165,4 +167,3 @@ Will specify `locale: "Line1\nLine2"`
 ##### 3-tabs
 
 A line beginning with three tabs is the continuation of a translation containing a tab ... &c.
-

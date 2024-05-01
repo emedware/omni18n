@@ -11,7 +11,6 @@ import {
 	Translatable,
 	ReportingClient
 } from './types'
-import { interpolate } from './interpolation'
 
 function entry(t: OmnI18n.Translation, z: OmnI18n.Zone, isFallback?: boolean): ClientDictionary {
 	return { [text]: t, [zone]: z, ...(isFallback ? { [fallback]: true } : {}) }
@@ -214,7 +213,11 @@ export function bulkDictionary<T extends Translatable = Translatable>(
 		const rv: any = {}
 		const subCtx = { ...context, key }
 		const value = () =>
-			interpolate(subCtx, obj[fallback] ? reportMissing(subCtx, obj[text]) : obj[text]!, args)
+			context.client.interpolate(
+				subCtx,
+				obj[fallback] ? reportMissing(subCtx, obj[text]) : obj[text]!,
+				args
+			)
 		if (Object.keys(obj).every((k) => typeof k === 'symbol')) return value()
 		for (const [k, v] of Object.entries(obj))
 			rv[k] = dictionaryToTranslation(v, key ? `${key}.${k}` : k)
