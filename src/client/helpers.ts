@@ -86,7 +86,7 @@ export function translator(context: TContext): Translator {
 				if (typeof key === 'string') return translate({ ...context, key }, args)
 				return translate({ ...context, key }, args)
 			}
-	return <Translator>new Proxy(translation, {
+	const primitive = <Translator>new Proxy(translation, {
 		get(target, key) {
 			switch (key) {
 				case 'toString':
@@ -94,7 +94,7 @@ export function translator(context: TContext): Translator {
 				case 'valueOf':
 					return translation()
 				case Symbol.toPrimitive:
-					return target
+					return primitive
 				case 'constructor':
 					return String
 				case 'then': // Must be un-then-able in order to be awaited
@@ -115,6 +115,7 @@ export function translator(context: TContext): Translator {
 			return translator({ ...context, key: context.key ? `${context.key}.${key}` : key })
 		}
 	})
+	return primitive
 }
 
 export function parseInternals(dictionary: ClientDictionary | string) {

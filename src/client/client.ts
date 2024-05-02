@@ -95,7 +95,7 @@ export default class I18nClient implements OmnI18nClient {
 	}
 
 	async setLocale(locales: Locale[]) {
-		if (this.locales.every((locale, i) => locale == locales[1])) return
+		if (this.locales.every((locale, i) => locale == locales[i])) return
 		this.locales = locales
 		const toLoad = Array.from(this.loadedZones)
 		this.loadedZones = new Set()

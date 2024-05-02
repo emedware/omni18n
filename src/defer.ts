@@ -40,7 +40,10 @@ export default class Defer {
 	}
 
 	resolve() {
-		if (this.timeout) this.internalCB?.()
+		if (this.timeout) {
+			clearTimeout(this.timeout)
+			this.internalCB?.()
+		}
 		return this.promise
 	}
 }

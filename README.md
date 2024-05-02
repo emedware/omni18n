@@ -1,6 +1,10 @@
 # OmnI18n
 
-Generic i18n library managing the fullstack interaction in a CI/CD pace. The fact the dictionaries are stored in a DB edited by the translators through a(/the same) web application - managing translation errors, missing keys, ...
+Generic i18n library managing the fullstack interaction in a CI/CD pace. The dictionaries are stored in a DB edited by the translators through a(/the same) web application - managing translation errors, missing keys, ...
+
+The library is in a really early stage (published since this sunday)
+- 1.0.x - ~~alpha~~
+- 1.1.x - [beta](https://www.youtube.com/watch?v=1gSZfX91zYk)
 
 [![view on npm](https://badgen.net/npm/v/omni18n)](https://www.npmjs.org/package/omni18n)
 [![npm module downloads](https://badgen.net/npm/dt/omni18n)](https://www.npmjs.org/package/omni18n)
@@ -11,16 +15,18 @@ Generic i18n library managing the fullstack interaction in a CI/CD pace. The fac
 <!-- [![Coverage Status](https://coveralls.io/repos/github/emedware/omni18n/badge.svg)](https://coveralls.io/github/emedware/omni18n) -->
 
 
-The main documentation in [the repository](./docs/README.md)
+The main documentation is in [the repository](./docs/README.md)
 
 ## General structure
 
 The library is composed of a server part and a client part.
 
-The server takes an object containing a `list` function that will query the DB and expose a `condensed` function that retrieve a condensed (processed) version of the dictionary for a locale (completely json-able).
+The server:
+- takes an object containing a `list` function that will query the DB
+- exposes a `condensed` function that retrieve a condensed (processed) version of the dictionary for a locale (completely json-able).
 
-The client part is a `I18nClient` that will remember a locale and manage the queries to the server and language changes
-This client will produce `Translators` who are described in typescript by the type `any`, or you can specify yours for your dictionary structure.
+The client part is a `I18nClient` that will remember a locale and manage the queries to the server and language changes.
+This client will produce `Translator`s who are described in typescript by the type `any`, or you can specify yours for your dictionary structure.
 
 ### Server side
 
@@ -32,8 +38,8 @@ const client = new I18nClient(['en-US'], server.condense)
 const T = await client.enter()
 
 // Will both display the entry `msg.hello` for the `en-US` (or `en`) locale
-console.log(T.msg.hello)
-console.log(T('msg.hello'))
+console.log(`${T.msg.hello}, ...`)
+console.log(T('msg.hello') + ', ...')
 ```
 
 ### Full-stack usage
