@@ -82,7 +82,6 @@ beforeAll(async () => {
 			Object.entries(clients).map(async ([key, value]) => [key, await value.enter()])
 		)
 	)
-	debugger
 })
 
 describe('basic functionalities', () => {
@@ -220,5 +219,18 @@ describe('parameters', () => {
 		expect(T.msg.greet()).toBe('Hello here')
 		await client.setLocale(['fr'])
 		expect(T.msg.greet()).toBe('Salut tout le monde')
+	})
+})
+
+describe('load Management', () => {
+	test('load', async () => {
+		expect(clients.en.getPartialLoad([''])).toEqual([
+			['adm'],
+			{
+				cmd: {
+					ban: 'Ban user'
+				}
+			}
+		])
 	})
 })

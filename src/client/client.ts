@@ -12,7 +12,14 @@ import {
  */
 import Defer from '../defer'
 import '../polyfill'
-import { longKeyList, parseInternals, recurExtend, reports, translator } from './helpers'
+import {
+	longKeyList,
+	mergeCondensed,
+	parseInternals,
+	recurExtend,
+	reports,
+	translator
+} from './helpers'
 import { interpolate } from './interpolation'
 import {
 	ClientDictionary,
@@ -21,11 +28,11 @@ import {
 	TContext as RootContext,
 	Translator,
 	contextKey,
-	text,
-	zone
+	text
 } from './types'
 
 export type TContext = RootContext<I18nClient>
+export type PartialLoad = [Zone[], CondensedDictionary]
 
 export default class I18nClient implements OmnI18nClient {
 	readonly ordinalRules: Intl.PluralRules
@@ -38,6 +45,8 @@ export default class I18nClient implements OmnI18nClient {
 
 	public timeZone?: string
 	public currency?: string
+
+	private partialLoads: Record<Zone, CondensedDictionary> = {}
 
 	/**
 	 *
@@ -78,15 +87,36 @@ export default class I18nClient implements OmnI18nClient {
 		return translator({ client: this, zones, key: '' })
 	}
 
-	protected received(zones: Zone[], condensed: CondensedDictionary[]) {
-		for (let i = 0; i < zones.length; i++) {
-			this.loadedZones.add(zones[i])
-			recurExtend(this.dictionary, condensed[i], zones[i])
-		}
+	public getPartialLoad(excludedZones: Zone[] = []): PartialLoad {
+		const rv: CondensedDictionary = {},
+			zones: Zone[] = []
+
+		for (const zone in this.partialLoads)
+			if (!excludedZones.includes(zone)) {
+				zones.push(zone)
+				mergeCondensed(rv, this.partialLoads[zone])
+			}
+
+		return [zones, rv]
+	}
+
+	public usePartial([zones, condensed]: PartialLoad) {
+		zones.map((zone) => this.loadedZones.add(zone))
+		recurExtend(this.dictionary, condensed)
 		if (zones.includes('') && this.dictionary.internals)
 			this.internals = parseInternals(this.dictionary.internals)
 
-		this.onModification?.(condensed.map(longKeyList).flat())
+		this.onModification?.(longKeyList(condensed))
+	}
+
+	protected received(zones: Zone[], condensed: CondensedDictionary[]) {
+		const wholeCondensed = {}
+		for (let i = 0; i < zones.length; i++) {
+			this.partialLoads[zones[i]] = condensed[i]
+			mergeCondensed(wholeCondensed, condensed[i])
+		}
+
+		this.usePartial([zones, wholeCondensed])
 	}
 
 	private async download(zones: Zone[]) {
@@ -104,7 +134,7 @@ export default class I18nClient implements OmnI18nClient {
 		await this.download(toLoad)
 	}
 
-	modified(entries: Record<TextKey, [Translation, Zone] | undefined>) {
+	modified(entries: Record<TextKey, Translation | undefined>) {
 		for (const [key, value] of Object.entries(entries)) {
 			const keys = key.split('.'),
 				lastKey = keys.pop() as TextKey
@@ -113,15 +143,13 @@ export default class I18nClient implements OmnI18nClient {
 				if (!browser[key]) browser[key] = {}
 				browser = browser[key]
 			}
-			if (value)
+			if (value !== undefined)
 				browser[lastKey] = <ClientDictionary>{
 					...browser[lastKey],
-					[text]: value[0],
-					[zone]: value[1]
+					[text]: value
 				}
 			else if (browser[lastKey]) {
 				delete browser[lastKey][text]
-				delete browser[lastKey][zone]
 				if (!Object.keys(browser[lastKey]).length) delete browser[lastKey]
 			}
 		}

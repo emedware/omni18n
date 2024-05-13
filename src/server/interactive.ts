@@ -26,13 +26,12 @@ export default class InteractiveServer<
 	KeyInfos extends {} = {},
 	TextInfos extends {} = {}
 > extends I18nServer<KeyInfos, TextInfos> {
-	modifiedValues: Record<TextKey, [Translation, Zone] | undefined> = {}
+	modifiedValues: Record<TextKey, Translation | undefined> = {}
 	modifications: Modification[] = []
 
 	constructor(
 		protected db: InteractiveDB,
-		private modified = (entries: Record<TextKey, [Translation, Zone] | undefined>) =>
-			Promise.resolve()
+		private modified = (entries: Record<TextKey, Translation | undefined>) => Promise.resolve()
 	) {
 		super(db)
 		subscriptions.set(this, { locale: '', zones: [] })
@@ -60,7 +59,7 @@ export default class InteractiveServer<
 							? !locales.some((testLocale) => testLocales.includes(testLocale))
 							: (await this.db.getZone(key, testLocales)) === false))
 				) {
-					server.modifiedValues[key] = text === undefined ? undefined : [text, zone]
+					server.modifiedValues[key] = text
 					servers.add(server)
 				}
 			}

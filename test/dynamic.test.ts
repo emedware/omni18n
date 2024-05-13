@@ -11,7 +11,7 @@ describe('Dynamic functionality', () => {
 	let server: InteractiveServer,
 		T: Translator,
 		client: I18nClient,
-		modifications: Record<string, [string, string] | undefined>[] = []
+		modifications: Record<string, string | undefined>[] = []
 
 	beforeEach(async () => {
 		server = new InteractiveServer(
@@ -27,7 +27,7 @@ describe('Dynamic functionality', () => {
 					'cmd.modify': { en: 'Modify', '.zone': 'adm' }
 				})
 			),
-			async (entries: Record<string, [string, string] | undefined>) => {
+			async (entries: Record<string, string | undefined>) => {
 				if (client) {
 					//ignore the initialization
 					modifications.push(entries)
@@ -70,7 +70,7 @@ describe('Dynamic functionality', () => {
 		expect('' + T.fld.name).toBe('Name')
 		await server.modify('fld.name', 'en', 'Surname')
 		await server.propagate()
-		expect(modifications).toEqual([{ 'fld.name': ['Surname', ''] }])
+		expect(modifications).toEqual([{ 'fld.name': 'Surname' }])
 		modifications = []
 		expect('' + T.fld.name).toBe('Surname')
 	})
@@ -84,7 +84,7 @@ describe('Dynamic functionality', () => {
 		expect(T.cmd.customize()).toBe('Customise')
 		await server.modify('cmd.customize', 'en-UK', 'Customise it')
 		await server.propagate()
-		expect(modifications).toEqual([{ 'cmd.customize': ['Customise it', ''] }])
+		expect(modifications).toEqual([{ 'cmd.customize': 'Customise it' }])
 		modifications = []
 		expect(T.cmd.customize()).toBe('Customise it')
 	})
@@ -99,7 +99,7 @@ describe('Dynamic functionality', () => {
 		expect(T.cmd.save()).toBe('Save it')
 		await server.modify('cmd.save', 'en', 'Save')
 		await server.propagate()
-		expect(modifications).toEqual([{ 'cmd.save': ['Save', 'adm'] }])
+		expect(modifications).toEqual([{ 'cmd.save': 'Save' }])
 		modifications = []
 		expect(T.cmd.save()).toBe('Save')
 	})
@@ -110,13 +110,13 @@ describe('Dynamic functionality', () => {
 			server.key('cmd.delete', '', { en: 'Delete', 'en-UK': 'Remove' })
 		).resolves.not.toThrow()
 		await expect(server.propagate()).resolves.not.toThrow()
-		expect(modifications).toEqual([{ 'cmd.delete': ['Remove', ''] }])
+		expect(modifications).toEqual([{ 'cmd.delete': 'Remove' }])
 		modifications = []
 		expect(T.cmd.delete()).toBe('Remove')
 
 		await expect(server.reKey('cmd.delete', 'cmd.remove')).resolves.not.toThrow()
 		await expect(server.propagate()).resolves.not.toThrow()
-		expect(modifications).toEqual([{ 'cmd.delete': undefined, 'cmd.remove': ['Remove', ''] }])
+		expect(modifications).toEqual([{ 'cmd.delete': undefined, 'cmd.remove': 'Remove' }])
 		modifications = []
 		expect(T.cmd.delete()).toBe('[cmd.delete]')
 		expect(T.cmd.remove()).toBe('Remove')
@@ -132,7 +132,7 @@ describe('Dynamic functionality', () => {
 		await server.key('cmd.modify', '', { fr: 'Modifie' })
 		await server.propagate()
 		// The text has not changed but the zone did
-		expect(modifications).toEqual([{ 'cmd.modify': ['Modify', ''] }])
+		expect(modifications).toEqual([{ 'cmd.modify': 'Modify' }])
 		modifications = []
 		await server.key('cmd.modify', '', { fr: 'Modifier' })
 		await server.propagate()

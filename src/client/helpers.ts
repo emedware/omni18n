@@ -8,12 +8,11 @@ import {
 	Translator,
 	contextKey,
 	fallback,
-	text,
-	zone
+	text
 } from './types'
 
-function entry(t: Translation, z: Zone, isFallback?: boolean): ClientDictionary {
-	return { [text]: t, [zone]: z, ...(isFallback ? { [fallback]: true } : {}) }
+function entry(t: Translation, isFallback?: boolean): ClientDictionary {
+	return { [text]: t, ...(isFallback ? { [fallback]: true } : {}) }
 }
 
 export function reportMissing(context: TContext, fallback?: Translation) {
@@ -52,18 +51,18 @@ export const reports = {
 export function translate(context: TContext, args: any[]): string {
 	const { client, key } = context
 	let current = client.dictionary,
-		value: [Translation, Zone, true | undefined] | undefined
+		value: [Translation, true | undefined] | undefined
 
 	for (const k of key.split('.')) {
 		if (!current[k]) break
 		else {
 			const next = current[k] as ClientDictionary
-			if (text in next) value = [next[text]!, next[zone]!, next[fallback]]
+			if (text in next) value = [next[text]!, next[fallback]]
 			current = next
 		}
 	}
 
-	return value?.[2]
+	return value?.[1]
 		? client.interpolate(context, reportMissing(context, value[0]), args)
 		: value
 			? client.interpolate(context, value[0], args)
@@ -121,34 +120,34 @@ export function parseInternals(dictionary: ClientDictionary | string) {
 	return result
 }
 
-function condensed2dictionary(condensed: CondensedDictionary, zone: Zone): ClientDictionary {
+function condensed2dictionary(condensed: CondensedDictionary): ClientDictionary {
 	const dictionary: ClientDictionary =
-		'' in condensed ? entry(condensed['']!, zone, !!condensed['.']) : {}
+		'' in condensed ? entry(condensed['']!, !!condensed['.']) : {}
 	for (const key in condensed)
 		if (!['', '.'].includes(key)) {
 			const value = condensed[key]
-			if (typeof value === 'string') dictionary[key] = entry(value, zone)
-			else dictionary[key] = condensed2dictionary(value, zone)
+			if (typeof value === 'string') dictionary[key] = entry(value)
+			else dictionary[key] = condensed2dictionary(value)
 		}
 	return dictionary
 }
 
-export function recurExtend(dst: ClientDictionary, src: CondensedDictionary, zone: Zone) {
+export function recurExtend(dst: ClientDictionary, src: CondensedDictionary) {
 	for (const key in src)
-		if (key === '') Object.assign(dst, entry(src[key]!, zone, !!src['.']))
+		if (key === '') Object.assign(dst, entry(src[key]!, !!src['.']))
 		else if (key !== '.') {
 			if (!dst[key])
 				dst[key] =
 					typeof src[key] === 'string'
-						? entry(<TextKey>src[key], zone)
-						: condensed2dictionary(<CondensedDictionary>src[key], zone)
+						? entry(<TextKey>src[key])
+						: condensed2dictionary(<CondensedDictionary>src[key])
 			else {
 				if (typeof src[key] === 'string')
 					dst[key] = {
 						...dst[key],
-						...entry(<TextKey>src[key], zone)
+						...entry(<TextKey>src[key])
 					}
-				else recurExtend(dst[key], <CondensedDictionary>src[key], zone)
+				else recurExtend(dst[key], <CondensedDictionary>src[key])
 			}
 		}
 }
@@ -168,6 +167,22 @@ export function longKeyList(condensed: CondensedDictionary) {
 	}
 	recur(condensed, '')
 	return keys
+}
+
+export function mergeCondensed(dst: CondensedDictionary, src: CondensedDictionary) {
+	for (const k in src) {
+		if (!(k in dst)) dst[k] = src[k]
+		else if (typeof src[k] === 'string') {
+			if (typeof dst[k] === 'string') throw new Error(`Conflicting keys: ${k}`)
+			;(dst[k] as CondensedDictionary)[''] = src[k] as string
+		} else {
+			dst[k] = mergeCondensed(
+				typeof dst[k] === 'string' ? { '': dst[k] as string } : (dst[k] as CondensedDictionary),
+				src[k] as CondensedDictionary
+			)
+		}
+	}
+	return dst
 }
 
 export function bulkObject<T extends Translatable = Translatable>(

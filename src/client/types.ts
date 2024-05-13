@@ -11,14 +11,12 @@ export interface Internals {
 	plurals?: Record<string, string>
 }
 
-export const zone = Symbol('Zone'),
-	text = Symbol('Text'),
+export const text = Symbol('Text'),
 	fallback = Symbol('Fallback'),
 	contextKey = Symbol('context')
 
 export type ClientDictionary = {
 	[key: TextKey]: ClientDictionary
-	[zone]?: Zone
 	[text]?: Translation
 	[fallback]?: true
 }
