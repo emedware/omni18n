@@ -121,6 +121,15 @@ This allows:
 - All the translations to simply be gathered under a file under source control (backup-able)
 - The development activities (adding/removing/removing/rezoning a key) to be made and applied on commit/merge, and the "translation" (text-change) activities to still be available through the UI in real time
 
+#### Recovering a file to export to a database
+
+An `FileDB.analyze` function is exposed who takes the string to analyze and 2/3 callbacks
+- `onKey` called when a new key is discovered
+- `onText` called when a translation is discovered
+- `endKey?` called when the key is finished
+
+For each key, the callback calls will be `onKey - onText* - endKey` for each key
+
 #### File format
 
 The serialization file-format is specific for regexp-ability _and_ human interactions; grouping is done by indentation (made with tabulations - `\t`).

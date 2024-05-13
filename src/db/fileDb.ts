@@ -124,6 +124,42 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 	static deserialize<KeyInfos extends {} = {}, TextInfos extends {} = {}>(data: string) {
 		if (!data.endsWith('\n')) data += '\n'
 		const dictionary: MemDBDictionary<KeyInfos, TextInfos> = {}
+		FileDB.analyze<KeyInfos, TextInfos>(
+			data,
+			(key, zone, infos) => {
+				dictionary[key] = {
+					...(infos && { '.keyInfos': infos }),
+					'.zone': zone,
+					'.textInfos': {}
+				} as MemDBDictionaryEntry<KeyInfos, TextInfos>
+			},
+			(key, locale, text, infos) => {
+				if (infos) dictionary[key]['.textInfos']![locale] = infos
+				if (text !== undefined) dictionary[key][locale] = text
+			},
+			(key) => {
+				if (Object.values(dictionary[key]['.textInfos']!).length === 0)
+					delete dictionary[key]['.textInfos']
+			}
+		)
+		return dictionary
+	}
+
+	/**
+	 * Analyze a file content. A key-context can be used in the scope as the callback calls will always be:
+	 * `onKey - onText* - endKey` for each key
+	 * @param data The textual data to analyze
+	 * @param onKey The callback to enter a key
+	 * @param onText The callback to specify a translation
+	 * @param endKey The callback when a key is finished
+	 */
+	static analyze<KeyInfos extends {} = {}, TextInfos extends {} = {}>(
+		data: string,
+		onKey: (key: TextKey, zone: Zone, infos: KeyInfos) => void,
+		onText: (key: TextKey, locale: Locale, text: Translation, infos: TextInfos) => void,
+		endKey?: (key: TextKey) => void
+	) {
+		if (!data.endsWith('\n')) data += '\n'
 		data = data.replace(/\n/g, '\u0000') // Only way to make regexp treat '\n' as a regular character
 		const rex = {
 			key: /([^\t\{:]+)(\{.*?\})?:([^\u0000]*)\u0000/g,
@@ -135,29 +171,25 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 			if (keyFetch.index > lastIndex) throw parseError(data, lastIndex, keyFetch.index)
 			const key = keyFetch[1],
 				zone = keyFetch[3] as Zone
-			let keyInfos: any,
-				textInfos: Record<Locale, any> = {}
+			let keyInfos: any
 			if (keyFetch[2]) keyInfos = parse(keyFetch[2].replace(/\u0000/g, '\n'))
-			const entry: MemDBDictionaryEntry<KeyInfos, TextInfos> = {
-				'.zone': zone,
-				...(keyInfos && { '.keyInfos': keyInfos })
-			}
+			onKey(key, zone, keyInfos)
 			let localeFetch: RegExpExecArray | null
 			rex.locale.lastIndex = lastIndex = rex.key.lastIndex
 			while ((localeFetch = rex.locale.exec(data))) {
 				if (localeFetch.index > lastIndex) break
 				lastIndex = rex.locale.lastIndex
-				if (localeFetch[3])
-					entry[localeFetch[1] as Locale] = localeFetch[3].replace(/\u0000\t\t/g, '\n')
-				if (localeFetch[2])
-					textInfos[localeFetch[1] as Locale] = parse(localeFetch[2].replace(/\u0000/g, '\n'))
+				onText(
+					key,
+					localeFetch[1] as Locale,
+					localeFetch[3] && localeFetch[3].replace(/\u0000\t\t/g, '\n'),
+					localeFetch[2] && parse(localeFetch[2].replace(/\u0000/g, '\n'))
+				)
 			}
+			endKey?.(key)
 			rex.key.lastIndex = lastIndex
-			if (Object.keys(textInfos).length) entry['.textInfos'] = textInfos
-			dictionary[key] = entry
 		}
 		if (rex.key.lastIndex > 0 || !rex.key.test(data)) throw parseError(data, rex.key.lastIndex)
-		return dictionary
 	}
 
 	//#endregion

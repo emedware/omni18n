@@ -127,15 +127,4 @@ describe('Dynamic functionality', () => {
 		modifications = []
 		expect(T.cmd.remove()).toBe('[cmd.remove]')
 	})
-
-	test('zone modification', async () => {
-		await server.key('cmd.modify', '', { fr: 'Modifie' })
-		await server.propagate()
-		// The text has not changed but the zone did
-		expect(modifications).toEqual([{ 'cmd.modify': 'Modify' }])
-		modifications = []
-		await server.key('cmd.modify', '', { fr: 'Modifier' })
-		await server.propagate()
-		expect(modifications).toEqual([])
-	})
 })

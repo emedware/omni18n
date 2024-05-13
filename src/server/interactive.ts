@@ -140,17 +140,10 @@ export default class InteractiveServer<
 		keyInfos?: Partial<KeyInfos>,
 		textInfos?: Partial<TextInfos>
 	): Promise<void> {
-		const keyModified = await this.db.key(key, zone, keyInfos)
-		if (keyModified) {
-			for (const [locale, text] of Object.entries({
-				...(await this.db.get(key)),
-				...translations
-			}))
-				this.modifications.push([key, locale, zone, text])
-		}
+		await this.db.key(key, zone, keyInfos)
 		await Promise.all(
 			Object.entries(translations).map(async ([locale, text]) => {
-				if ((await this.db.modify(key, locale, text, textInfos)) !== false && !keyModified)
+				if ((await this.db.modify(key, locale, text, textInfos)) !== false)
 					this.modifications.push([key, locale, zone, text])
 			})
 		)
