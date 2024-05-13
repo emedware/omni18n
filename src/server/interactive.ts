@@ -17,7 +17,7 @@ const subscriptions = new Map<
 	}
 >()
 
-export type Modification = [TextKey, Locale, Zone, Translation | undefined]
+export type Modification = [TextKey, Locale, Zone, Translation | undefined, ...([] | [Locale[]])]
 
 /**
  * Instance of a server who raises events when the dictionary is modified
@@ -44,19 +44,21 @@ export default class InteractiveServer<
 
 	async propagate() {
 		const servers = new Set<InteractiveServer>()
-		for (const [key, locale, zone, text] of this.modifications) {
+		for (const [key, locale, zone, text, locales] of this.modifications) {
 			for (const [server, specs] of subscriptions.entries()) {
 				// find all the locales the server use who are descendant of the modified locale
 				// example: locale = 'fr' & specs.locale = 'fr-BE-WA': avoid raising if the key is present in 'fr-BE' and 'fr-BE-WA'
+				const rightPart = specs.locale.substring(locale.length + 1),
+					testLocales = rightPart
+						? localeTree(rightPart).map((subLocale) => `${locale}-${subLocale}`)
+						: false
 				if (
 					specs.zones.includes(zone) &&
 					specs.locale.startsWith(locale) &&
-					(await this.db.getZone(
-						key,
-						localeTree(specs.locale.substring(locale.length + 1)).map(
-							(subLocale) => `${locale}-${subLocale}`
-						)
-					)) === false
+					(!testLocales ||
+						(locales
+							? !locales.some((testLocale) => testLocales.includes(testLocale))
+							: (await this.db.getZone(key, testLocales)) === false))
 				) {
 					server.modifiedValues[key] = text === undefined ? undefined : [text, zone]
 					servers.add(server)
@@ -157,7 +159,7 @@ export default class InteractiveServer<
 	async reKey(key: TextKey, newKey?: TextKey): Promise<void> {
 		const { zone, texts } = await this.db.reKey(key, newKey)
 		for (const locale in texts) {
-			this.modifications.push([key, locale, zone, undefined])
+			this.modifications.push([key, locale, zone, undefined, Object.keys(texts)])
 			if (newKey) this.modifications.push([newKey, locale, zone, texts[locale]])
 		}
 	}

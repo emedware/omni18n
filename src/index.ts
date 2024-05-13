@@ -20,7 +20,6 @@ export {
 	TranslationError,
 	type ClientDictionary,
 	type Translator,
-	type ReportingClient,
 	reports,
 	bulkObject,
 	bulkDictionary,

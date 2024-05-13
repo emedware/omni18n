@@ -65,9 +65,12 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 	}
 
 	async getZone(key: TextKey, locales?: Locale[]) {
+		if (!this.dictionary[key]) throw new Error(`Key "${key}" not found`)
 		if (!this.dictionary[key]) return false
 		const zone = this.dictionary[key]['.zone']
-		return !locales || locales.some((locale) => this.dictionary[key]?.[locale]) ? zone || '' : false
+		return !locales || locales.some((locale) => this.dictionary[key][locale] !== undefined)
+			? zone || ''
+			: false
 	}
 
 	async modify(key: TextKey, locale: Locale, value: Translation, textInfos?: Partial<TextInfos>) {
@@ -108,6 +111,8 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 	}
 
 	async reKey(key: TextKey, newKey?: TextKey) {
+		if (!this.dictionary[key]) throw new Error(`Key "${key}" not found`)
+		if (newKey && this.dictionary[newKey]) throw new Error(`Key "${newKey}" already exists`)
 		const rv = {
 			texts: Object.fromEntries(
 				Object.entries(this.dictionary[key] || {}).filter(([k]) => !k.startsWith('.'))
@@ -120,6 +125,7 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 	}
 
 	async get(key: TextKey) {
+		if (!this.dictionary[key]) throw new Error(`Key "${key}" not found`)
 		return Object.fromEntries(
 			Object.entries(this.dictionary[key]).filter(([k]) => !k.startsWith('.'))
 		) as Record<Locale, Translation>

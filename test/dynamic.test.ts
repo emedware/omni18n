@@ -106,21 +106,23 @@ describe('Dynamic functionality', () => {
 
 	test('add/remove', async () => {
 		expect(T.cmd.delete()).toBe('[cmd.delete]')
-		await server.key('cmd.delete', '', { en: 'Delete', 'en-UK': 'Remove' })
-		await server.propagate()
+		await expect(
+			server.key('cmd.delete', '', { en: 'Delete', 'en-UK': 'Remove' })
+		).resolves.not.toThrow()
+		await expect(server.propagate()).resolves.not.toThrow()
 		expect(modifications).toEqual([{ 'cmd.delete': ['Remove', ''] }])
 		modifications = []
 		expect(T.cmd.delete()).toBe('Remove')
 
-		await server.reKey('cmd.delete', 'cmd.remove')
-		await server.propagate()
+		await expect(server.reKey('cmd.delete', 'cmd.remove')).resolves.not.toThrow()
+		await expect(server.propagate()).resolves.not.toThrow()
 		expect(modifications).toEqual([{ 'cmd.delete': undefined, 'cmd.remove': ['Remove', ''] }])
 		modifications = []
 		expect(T.cmd.delete()).toBe('[cmd.delete]')
 		expect(T.cmd.remove()).toBe('Remove')
 
-		await server.reKey('cmd.remove')
-		await server.propagate()
+		await expect(server.reKey('cmd.remove')).resolves.not.toThrow()
+		await expect(server.propagate()).resolves.not.toThrow()
 		expect(modifications).toEqual([{ 'cmd.remove': undefined }])
 		modifications = []
 		expect(T.cmd.remove()).toBe('[cmd.remove]')

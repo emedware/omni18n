@@ -50,7 +50,7 @@ export interface InteractiveDB<KeyInfos extends {} = {}, TextInfos extends {} = 
 	workList(locales: Locale[]): Promise<WorkDictionary>
 
 	/**
-	 * Retrieves all the locales given for a certain key
+	 * Retrieves all the translations given for a certain key
 	 * @param key The key to search for
 	 */
 	get(key: TextKey): Promise<Record<Locale, Translation>>
@@ -89,7 +89,7 @@ export interface InteractiveDB<KeyInfos extends {} = {}, TextInfos extends {} = 
 	 * Renames a key - or removes it (and its translation) if newKey is undefined
 	 * @param key
 	 * @param newKey
-	 * @returns The zone where the key was stored and the locales where it was translated
+	 * @returns All the information about that key (actually useful on deletion)
 	 */
 	reKey(key: TextKey, newKey?: TextKey): Promise<{ zone: Zone; texts: Record<Locale, Translation> }>
 }

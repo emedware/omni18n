@@ -2,7 +2,6 @@ import { parse } from 'hjson'
 import { type CondensedDictionary, type TextKey, type Translation, type Zone } from '../types'
 import {
 	ClientDictionary,
-	ReportingClient,
 	TContext,
 	Translatable,
 	TranslationError,
@@ -19,16 +18,12 @@ function entry(t: Translation, z: Zone, isFallback?: boolean): ClientDictionary 
 
 export function reportMissing(context: TContext, fallback?: Translation) {
 	const { client, key } = context
-	return 'missing' in client
-		? (<ReportingClient>client).missing(key, fallback, context.zones)
-		: reports.missing(context, fallback)
+	return client.missing(key, fallback, context.zones)
 }
 
 export function reportError(context: TContext, error: string, spec: object) {
 	const { client, key } = context
-	return 'error' in client
-		? (<ReportingClient>client).error(key, error, spec, context.zones)
-		: reports.error(context, error, spec)
+	return client.error(key, error, spec, context.zones)
 }
 
 export const reports = {
@@ -50,7 +45,7 @@ export const reports = {
 	 * @returns The string to display instead of the expected translation
 	 */
 	error({ key, client }: TContext, error: string, spec: object): string {
-		return `[!${error}]`
+		return `[!${error}!]`
 	}
 }
 

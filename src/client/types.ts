@@ -33,9 +33,6 @@ export interface OmnI18nClient {
 	currency?: string
 	interpolate(context: TContext, text: Translation, args: any[]): string
 	onModification?: OnModification
-}
-
-export interface ReportingClient extends OmnI18nClient {
 	missing(key: string, fallback: Translation | undefined, zones: Zone[]): string
 	error(key: string, error: string, spec: object, zones: Zone[]): string
 }

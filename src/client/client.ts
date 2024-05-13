@@ -12,7 +12,7 @@ import {
  */
 import Defer from '../defer'
 import '../polyfill'
-import { longKeyList, parseInternals, recurExtend, translator } from './helpers'
+import { longKeyList, parseInternals, recurExtend, reports, translator } from './helpers'
 import { interpolate } from './interpolation'
 import {
 	ClientDictionary,
@@ -129,6 +129,13 @@ export default class I18nClient implements OmnI18nClient {
 	}
 
 	interpolate: (context: TContext, text: Translation, args: any[]) => string = interpolate
+
+	missing(key: string, fallback: Translation | undefined, zones: Zone[]): string {
+		return reports.missing({ key, client: this, zones }, fallback)
+	}
+	error(key: string, error: string, spec: object, zones: Zone[]): string {
+		return reports.error({ key, client: this, zones }, error, spec)
+	}
 }
 
 export function getContext(translator: Translator): TContext {

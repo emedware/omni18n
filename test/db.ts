@@ -2,7 +2,9 @@ import { InteractiveDB, Locale, TextKey, Translation, WorkDictionary, Zone } fro
 
 // As this is for test purpose, actually wait even for direct-memory operations
 function waiting<RV>(func: () => Promise<RV>) {
-	return new Promise<RV>((resolve) => setTimeout(() => resolve(func()), 1))
+	//return new Promise<RV>((resolve) => setTimeout(() => resolve(func()), 1))
+	// use this for debug purpose
+	return func()
 }
 
 export class WaitingDB implements InteractiveDB {

@@ -17,8 +17,9 @@ type CDicE = CDic & Translation
 
 export function localeTree(locale: Locale) {
 	const parts = locale.split('-')
-	const rv = []
-	for (let i = parts.length; i > 0; i--) rv.push(parts.slice(0, i).join('-'))
+	let cumulated = parts.shift() as string
+	const rv = [cumulated]
+	while (parts.length) rv.unshift((cumulated += '-' + parts.shift()))
 	return rv
 }
 

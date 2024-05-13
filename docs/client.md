@@ -36,8 +36,7 @@ Both return a string to display instead of the translated value.
 
 #### Global reporting
 
-`reports` is a variable imported from `omni18n` who can (and should) be edited. It is called by the engine
-Reporting mechanism in case of problem. They both take an argument of type `TContext` describing mainly the client and the key where the problem occurred
+`reports` is a variable imported from `omni18n` who can (and should) be edited. It is called by the engine reporting mechanism in case of problem. They both take an argument of type `TContext` describing mainly the client and the key where the problem occurred
 
 ```ts
 export interface TContext {
@@ -46,8 +45,6 @@ export interface TContext {
 	client: I18nClient
 }
 ```
-
-> If texts might be displayed before loading is complete, make sure `onModification` has been specified as it will be called when the translations will be provided
 
 These reports will:
 
@@ -64,11 +61,12 @@ reports.missing = ({ key, client }: TContext, fallback?: string) => {
 	return fallback ?? `[${key}]`
 }
 ```
+> The fallback comes from a locale that was specified in the list the client' locale but was not first-choice
 
 - An interpolation error
   When interpolating, an error calls this report with a textual description and some specifications depending on the error.
 
-> The specification is json-able _except_ in the case of `error: "Error in processor"`, in which case `spec.error` is whatever had been thrown and might be an `Error` or `Exception`
+> The specification is json-able _except_ in the case of `error: "Error in processor"`, in which case `spec.error` is whatever has been thrown and might be an `Error`
 
 ```ts
 reports.error = ({ key, client }: TContext, error: string, spec: object) => {
@@ -79,15 +77,9 @@ reports.error = ({ key, client }: TContext, error: string, spec: object) => {
 
 #### OO reporting
 
-The interface `ReportingClient` exposes the methods :
+Just override the `missing` and `error` members of `I18nClient` (who call the global `reports` by default)
 
 ```ts
-export interface ReportingClient extends OmnI18nClient {
-	missing(key: string, fallback: string | undefined, zones: Zone[]): string
-	error(key: string, error: string, spec: object, zones: Zone[]): string
-}
+missing(key: string, fallback: string | undefined, zones: Zone[]): string
+error(key: string, error: string, spec: object, zones: Zone[]): string
 ```
-
-Clients implementing this interface will have it called instead of the global `reports` value.
-
-> Of course, there will be no `super`

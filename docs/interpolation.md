@@ -114,12 +114,12 @@ We of course speak about the ones hard-coded in the Intl javascript core of Node
 These two processors use a specific key, respectively `internals.plurals` and `internal.ordinals`.
 These key contain js-like object who, for english would be:
 
-It can also be done by specifying `internals` as a js-like object or specifying `internals.plurals.one` as a string
-
 ```
 ordinals: {one: '$st', two: '$nd', few: '$rd', other: '$th'}
 numerals: {one: '$', other: '$s'}
 ```
+
+It can also be done by specifying `internals` as a js-like object or specifying `internals.plurals.one` as a string
 
 The keywords (`one`, `other`, ...) come from [`Intl.PluralRules`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/PluralRules).
 

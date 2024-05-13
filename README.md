@@ -2,7 +2,6 @@
 
 Generic i18n library managing the fullstack interaction in a CI/CD pace. The dictionaries are stored in a DB edited by the translators through a(/the same) web application - managing translation errors, missing keys, ...
 
-The library is in a really early stage (published since this sunday)
 - 1.0.x - ~~alpha~~
 - 1.1.x - [beta](https://www.youtube.com/watch?v=1gSZfX91zYk)
 
@@ -14,6 +13,7 @@ The library is in a really early stage (published since this sunday)
 
 <!-- [![Coverage Status](https://coveralls.io/repos/github/emedware/omni18n/badge.svg)](https://coveralls.io/github/emedware/omni18n) -->
 
+<!-- https://www.npmjs.com/package/country-code-to-flag-emoji -->
 
 The main documentation is in [the repository](./docs/README.md)
 
@@ -22,10 +22,11 @@ The main documentation is in [the repository](./docs/README.md)
 The library is composed of a server part and a client part.
 
 The server:
-- takes an object containing a `list` function that will query the DB
-- exposes a `condensed` function that retrieve a condensed (processed) version of the dictionary for a locale (completely json-able).
 
-The client part is a `I18nClient` that will remember a locale and manage the queries to the server and language changes.
+- takes an [object containing a `list`](./docs/db.md) function that will query the DB
+- exposes a `condense` function that retrieve a condensed (processed) version of the dictionary for a locale (completely json-able).
+
+The client part is a [`I18nClient`](./docs/client.md) that will remember a locale and manage the queries to a server and language changes.
 This client will produce `Translator`s who are described in typescript by the type `any`, or you can specify yours for your dictionary structure.
 
 ### Server side
@@ -44,9 +45,11 @@ console.log(T('msg.hello') + ', ...')
 
 ### Full-stack usage
 
-The full-stack case will insert the http protocol between [`client`](./docs/client.md) and [`server`](./docs/server.md). The `condense` function takes few arguments and return a (promise of) json-able object so can go through an http request.
+The full-stack case will insert the http protocol between [`client`](./docs/client.md) and [`server`](./docs/server.md). The `condense` function takes few json-able arguments and return a (promise of) json-able object so can go through an http request.
 
 The "Omni" part is that it can be integrated for various asynchronous scenarios and in many frameworks.
+
+`I18nServer` will never be instantiated in the browser, only a `condense` function that will be linked to an HTTP request
 
 ### Interactive mode
 
@@ -88,7 +91,7 @@ Example:
 
 In this case, _both_ `T.fld.name` _and_ `T.fld.name.short` will retrieve `"Name"` so that, if the project use shortened notations, it can display `T.fld[field].short` without demanding all the fields to have a `short` version in all languages
 
-Rule of the thumb: No value should be given as root keys. Every meaningful text has a category and should therefore be a sub-key. Also, some helpers function detect if there is a dot to identify keys vs. other kind of designations.
+> Rule of the thumb: No value should be given as root keys. Every meaningful text has a category and should therefore be a sub-key. Also, some helpers function detect if there is a dot to identify text-keys vs. other kind of designations.
 
 ### Locales
 
@@ -139,10 +142,10 @@ There {plural|$1|is|are} {number|$1} {plural|$1|entry|entries}
 import { reports, type TContext } from "omni18n";
 
 reports.missing: ({ key, client }: TContext, fallback?: string) => string
-reports.error = (context: TContext, error: string, spec: object) => string
+reports.error: (context: TContext, error: string, spec: object) => string
 ```
 
-Or the [object-oriented way](./docs/client.md#oo-reporting) by extending `I18nClient` implementing the `ReportingClient` interface.
+Or the [object-oriented way](./docs/client.md#oo-reporting) by overriding these two reports function (who by default call the global values)
 
 ```ts
 missing(key: string, fallback: Translation | undefined, zones: Zone[]): string
@@ -151,4 +154,12 @@ error(key: string, error: string, spec: object, zones: Zone[]): string
 
 ## TODO
 
-- testing the errors - both in interpolation and deserialization
+- testing the errors - both in interpolation and deserialization (coverage)
+
+## Contributing
+
+The best way to report a bug is to PR a failing unit test.
+
+Any DB or framework adaptation can be published separately, just report it and the reference will be added here.
+
+I made this functionality roughly ~10 times from scratch for a lot of different projects. It means the interface comes out of a shitload of years of trials/errors/fixes and so there is few breaking changes to expect, if not none at all.
