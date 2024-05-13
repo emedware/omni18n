@@ -8,7 +8,9 @@ import {
 	Translator,
 	bulkDictionary,
 	bulkObject,
-	reports
+	reports,
+	localeFlags,
+	flagCodeExceptions
 } from '../src/index'
 import { localStack } from './utils'
 
@@ -17,6 +19,17 @@ reports.missing = ({ key }: TContext, fallback?: string) => {
 	misses(key)
 	return fallback ?? '[no]'
 }
+
+test('flags', async () => {
+	expect(localeFlags('en')).toEqual(['🇬🇧'])
+	expect(localeFlags('en-GB')).toEqual(['🇬🇧'])
+	expect(localeFlags('en-US-gb')).toEqual(['🇬🇧', '🇺🇸'])
+	flagCodeExceptions.en = '🏴󠁧󠁢󠁥󠁮󠁧󠁿'
+	expect(localeFlags('en-GB')).toEqual(['🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🇬🇧'])
+	expect(localeFlags('fr')).toEqual(['🇫🇷'])
+	expect(localeFlags('fr-FR')).toEqual(['🇫🇷'])
+	expect(localeFlags('fr-BE')).toEqual(['🇫🇷', '🇧🇪'])
+})
 
 describe('bulk', () => {
 	let T: Translator, client: I18nClient

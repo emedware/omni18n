@@ -34,6 +34,7 @@ export {
 	url2specs
 } from './server/index'
 export { FileDB, MemDB, type MemDBDictionary, type MemDBDictionaryEntry } from './db/index'
+export { localeFlags, flagCodeExceptions } from './flags'
 
 declare global {
 	interface Set<T> {
