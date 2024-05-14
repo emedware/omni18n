@@ -154,7 +154,10 @@ error(key: string, error: string, spec: object, zones: Zone[]): string
 
 ## TODO
 
-- testing the errors - both in interpolation and deserialization (coverage)
+- tests:
+  - interpolation errors
+  - deserialization errors
+  - using client.onModification
 
 ## Contributing
 

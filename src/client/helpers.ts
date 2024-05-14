@@ -171,9 +171,9 @@ export function longKeyList(condensed: CondensedDictionary) {
 
 export function mergeCondensed(dst: CondensedDictionary, src: CondensedDictionary) {
 	for (const k in src) {
-		if (!(k in dst)) dst[k] = src[k]
+		if (!(k in dst)) dst = { ...dst, [k]: src[k] }
 		else if (typeof src[k] === 'string') {
-			if (typeof dst[k] === 'string') throw new Error(`Conflicting keys: ${k}`)
+			if (typeof dst[k] === 'string') throw new TranslationError(`Conflicting keys: ${k}`)
 			;(dst[k] as CondensedDictionary)[''] = src[k] as string
 		} else {
 			dst[k] = mergeCondensed(

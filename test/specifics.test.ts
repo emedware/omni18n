@@ -20,17 +20,6 @@ reports.missing = ({ key }: TContext, fallback?: string) => {
 	return fallback ?? '[no]'
 }
 
-test('flags', async () => {
-	expect(localeFlags('en')).toEqual(['🇬🇧'])
-	expect(localeFlags('en-GB')).toEqual(['🇬🇧'])
-	expect(localeFlags('en-US-gb')).toEqual(['🇬🇧', '🇺🇸'])
-	flagCodeExceptions.en = '🏴󠁧󠁢󠁥󠁮󠁧󠁿'
-	expect(localeFlags('en-GB')).toEqual(['🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🇬🇧'])
-	expect(localeFlags('fr')).toEqual(['🇫🇷'])
-	expect(localeFlags('fr-FR')).toEqual(['🇫🇷'])
-	expect(localeFlags('fr-BE')).toEqual(['🇫🇷', '🇧🇪'])
-})
-
 describe('bulk', () => {
 	let T: Translator, client: I18nClient
 	const expected = {
@@ -79,6 +68,32 @@ describe('bulk', () => {
 })
 
 describe('specifics', () => {
+	test('partial', async () => {
+		const { client: SSC } = localStack({
+			'test.only': { fr: 'only' },
+			'test.zone': { fr: 'zone', '.zone': 'z' }
+		})
+		await SSC.enter('z')
+		expect(JSON.stringify(SSC.getPartialLoad(['']))).toBe('[["z"],{"test":{"zone":"zone"}}]')
+		const partial = SSC.getPartialLoad(['z'])
+		expect(JSON.stringify(partial)).toBe('[[""],{"test":{"only":"only"}}]')
+		const CSC = new I18nClient(['fr'], () => {
+			throw 'no condensed'
+		})
+		CSC.usePartial(partial)
+		const T = await CSC.enter()
+		expect(T.test.only()).toBe('only')
+	})
+	test('flags', async () => {
+		expect(localeFlags('en')).toEqual(['🇬🇧'])
+		expect(localeFlags('en-GB')).toEqual(['🇬🇧'])
+		expect(localeFlags('en-US-gb')).toEqual(['🇬🇧', '🇺🇸'])
+		flagCodeExceptions.en = '🏴󠁧󠁢󠁥󠁮󠁧󠁿'
+		expect(localeFlags('en-GB')).toEqual(['🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🇬🇧'])
+		expect(localeFlags('fr')).toEqual(['🇫🇷'])
+		expect(localeFlags('fr-FR')).toEqual(['🇫🇷'])
+		expect(localeFlags('fr-BE')).toEqual(['🇫🇷', '🇧🇪'])
+	})
 	test('errors', async () => {
 		// TODO test errors
 	})

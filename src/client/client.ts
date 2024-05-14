@@ -88,13 +88,13 @@ export default class I18nClient implements OmnI18nClient {
 	}
 
 	public getPartialLoad(excludedZones: Zone[] = []): PartialLoad {
-		const rv: CondensedDictionary = {},
+		let rv: CondensedDictionary = {},
 			zones: Zone[] = []
 
 		for (const zone in this.partialLoads)
 			if (!excludedZones.includes(zone)) {
 				zones.push(zone)
-				mergeCondensed(rv, this.partialLoads[zone])
+				rv = mergeCondensed(rv, this.partialLoads[zone])
 			}
 
 		return [zones, rv]
@@ -110,10 +110,10 @@ export default class I18nClient implements OmnI18nClient {
 	}
 
 	protected received(zones: Zone[], condensed: CondensedDictionary[]) {
-		const wholeCondensed = {}
+		let wholeCondensed = {}
 		for (let i = 0; i < zones.length; i++) {
 			this.partialLoads[zones[i]] = condensed[i]
-			mergeCondensed(wholeCondensed, condensed[i])
+			wholeCondensed = mergeCondensed(wholeCondensed, condensed[i])
 		}
 
 		this.usePartial([zones, wholeCondensed])

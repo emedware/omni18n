@@ -1,6 +1,7 @@
 // shortcuts, it's just strings at the end of the day, it helps copilot/codeium
 export type Locale = Intl.UnicodeBCP47LocaleIdentifier
 export type Zone = string
+// No `then` as it would become `thenable` and no async function could return a `Translator`
 export type TextKey = Exclude<string, '' | '.' | 'then' | '.zone' | '.textInfos' | '.keyInfos'>
 export type Translation = string
 

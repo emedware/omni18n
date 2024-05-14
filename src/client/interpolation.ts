@@ -231,8 +231,7 @@ export function interpolate(context: TContext, text: string, args: any[]): strin
 					else if ('default' in proc) processed = proc.default
 					else return reportError(context, 'Case not found', { case: params[0], cases: proc })
 				} else if (proc.includes('.')) processed = translate({ ...context, key: proc }, params)
-				else if (!(proc in processors))
-					processed = reportError(context, 'Unknown processor', { proc })
+				else if (!(proc in processors)) return reportError(context, 'Unknown processor', { proc })
 				else
 					try {
 						processed = processors[proc].call(context, ...params)

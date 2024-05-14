@@ -17,14 +17,12 @@ beforeAll(async () => {
 				'msg.greet': {
 					en: 'Hello {$1|here}',
 					fr: 'Salut {$1|tout le monde}',
-					'fr-BE': "Salut {$1|m'fi}",
-					'.zone': ''
+					'fr-BE': "Salut {$1|m'fi}"
 				},
 				'cmd.ban': { en: 'Ban user', fr: "Bannir l'utilisateur", '.zone': 'adm' },
 				'specs.animal': {
 					en: '{$1} {plural::$1|ox|oxen}',
-					fr: '{$1} {plural::$1|one: cheval, other: chevaux}',
-					'.zone': ''
+					fr: '{$1} {plural::$1|one: cheval, other: chevaux}'
 				},
 				'specs.ordinal': { '': '{ordinal::$1}' },
 				'specs.escape': { en: '{$1|dot dot \\: ...}' },
@@ -50,29 +48,24 @@ beforeAll(async () => {
 				'format.currency': { '': '{currency::$1}' },
 				'msg.entries': {
 					en: 'There {plural::$1|is|are} {number::$1} {plural::$1|entry|entries}',
-					fr: 'Il y a {number::$1} {plural::$1|entrée}',
-					'.zone': ''
+					fr: 'Il y a {number::$1} {plural::$1|entrée}'
 				},
 				'cnv.naming': {
 					fr: '{$first} {$last}',
-					en: '{$last}, {$first}',
-					'.zone': ''
+					en: '{$last}, {$first}'
 				},
 				'cnv.subNaming': {
 					// Useful to test parameters management
 					en: '{cnv.naming :: first: $first, last: $last}',
-					fr: '{cnv.naming :: $}',
-					'.zone': ''
+					fr: '{cnv.naming :: $}'
 				},
 				'internals.ordinals': {
 					en: "{one: '$st', two: '$nd', few: '$rd', other: '$th'}",
-					fr: "{one: '$er', other: '$ème'}",
-					'.zone': ''
+					fr: "{one: '$er', other: '$ème'}"
 				},
 				'internals.plurals': {
 					en: "{one: '$', other: '$s'}",
-					fr: "{one: '$', other: '$s'}",
-					'.zone': ''
+					fr: "{one: '$', other: '$s'}"
 				}
 			})
 		)
