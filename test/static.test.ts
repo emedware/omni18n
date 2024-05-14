@@ -6,7 +6,7 @@ let server: I18nServer,
 	T: Record<string, any>,
 	clients: Record<string, I18nClient>,
 	loads: any[] = []
-
+// TODO? Add a global `dictionary` variable and add values to it near each tests ?
 beforeAll(async () => {
 	server = new I18nServer(
 		new WaitingDB(
@@ -15,44 +15,51 @@ beforeAll(async () => {
 				'fld.bdate': { en: 'Birthday', fr: 'Date de naissance' },
 				'fld.bdate.short': { en: 'B-dy' },
 				'msg.greet': {
-					en: 'Hello {=1|here}',
-					fr: 'Salut {=1|tout le monde}',
-					'fr-BE': "Salut {=1|m'fi}",
+					en: 'Hello {$1|here}',
+					fr: 'Salut {$1|tout le monde}',
+					'fr-BE': "Salut {$1|m'fi}",
 					'.zone': ''
 				},
 				'cmd.ban': { en: 'Ban user', fr: "Bannir l'utilisateur", '.zone': 'adm' },
 				'specs.animal': {
-					en: '{=1} {plural|$1|ox|oxen}',
-					fr: '{=1} {plural|$1|one: cheval, other: chevaux}',
+					en: '{$1} {plural::$1|ox|oxen}',
+					fr: '{$1} {plural::$1|one: cheval, other: chevaux}',
 					'.zone': ''
 				},
-				'specs.ordinal': { '': '{ordinal|$1}' },
-				'format.number': { '': '{number|$1}' },
-				'format.number.engineering': { '': '{number|$1|engineering}' },
-				'format.price': { '': '{number|$2|style: currency, currency: $1}' },
-				'format.dateTime': { '': '{date|$1}' },
-				'format.medium': { '': '{date|$1|dateStyle: medium}' },
-				'format.date': { '': '{date|$1|date}' },
-				'format.time': { '': '{date|$1|time}' },
-				'format.relative': { '': '{relative|$1|short}' },
-				'format.region': { '': '{region|$1}' },
-				'format.language': { '': '{language|$1}' },
-				'format.script': { '': '{script|$1}' },
-				'format.currency': { '': '{currency|$1}' },
+				'specs.ordinal': { '': '{ordinal::$1}' },
+				'emoji.flag': {
+					en: '🇬🇧',
+					fr: '🇫🇷',
+					'fr-BE': '🇧🇪'
+				},
+				'format.flagged': { '': '{$.emoji.flag $1}' },
+				'format.number': { '': '{number::$1}' },
+				'format.number.engineering': { '': '{number::$1|engineering}' },
+				'format.price': { '': '{number::$2|style: currency, currency: $1}' },
+				'format.dateTime': { '': '{date::$1}' },
+				'format.medium': { '': '{date::$1|dateStyle: medium}' },
+				'format.date': { '': '{date::$1|date}' },
+				'format.time': { '': '{date::$1|time}' },
+				'format.relative': { '': '{relative::$1|short}' },
+				'format.uRelative': { '': '{upper::relative::$1|short}' },
+				'format.region': { '': '{region::$1}' },
+				'format.language': { '': '{language::$1}' },
+				'format.script': { '': '{script::$1}' },
+				'format.currency': { '': '{currency::$1}' },
 				'msg.entries': {
-					en: 'There {plural|$1|is|are} {number|$1} {plural|$1|entry|entries}',
-					fr: 'Il y a {number|$1} {plural|$1|entrée}',
+					en: 'There {plural::$1|is|are} {number::$1} {plural::$1|entry|entries}',
+					fr: 'Il y a {number::$1} {plural::$1|entrée}',
 					'.zone': ''
 				},
 				'cnv.naming': {
-					fr: '{=first} {=last}',
-					en: '{=last}, {=first}',
+					fr: '{$first} {$last}',
+					en: '{$last}, {$first}',
 					'.zone': ''
 				},
 				'cnv.subNaming': {
 					// Useful to test parameters management
-					en: '{cnv.naming | first: $first, last: $last}',
-					fr: '{cnv.naming | $}',
+					en: '{cnv.naming :: first: $first, last: $last}',
+					fr: '{cnv.naming :: $}',
 					'.zone': ''
 				},
 				'internals.ordinals': {
@@ -152,6 +159,14 @@ describe('numbers', () => {
 		expect(T.be.specs.ordinal(4)).toBe('4ème')
 		expect(T.be.specs.ordinal(11)).toBe('11ème')
 		expect(T.be.specs.ordinal(12)).toBe('12ème')
+	})
+	test('composition', () => {
+		expect(T.en.format.uRelative('-1 month')).toBe('1 MONTH AGO')
+		expect(T.be.format.uRelative('2 seconds')).toBe('DANS 2 SECONDES')
+	})
+	test('sub-translate', () => {
+		expect(T.en.format.flagged('Beyond the seas!')).toBe('🇬🇧 Beyond the seas!')
+		expect(T.be.format.flagged('Haut les coeurs!')).toBe('🇧🇪 Haut les coeurs!')
 	})
 })
 describe('formatting', () => {

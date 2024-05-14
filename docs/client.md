@@ -59,6 +59,7 @@ reports.missing = ({ key, client }: TContext, fallback?: string) => {
 	return fallback ?? `[${key}]`
 }
 ```
+
 > The fallback comes from a locale that was specified in the list the client' locale but was not first-choice
 
 - An interpolation error

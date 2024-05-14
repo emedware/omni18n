@@ -41,10 +41,10 @@ describe('bulk', () => {
 
 	beforeAll(async () => {
 		const { Tp, client: lclClient } = localStack({
-			'obj.v1': { fr: 'fr-v1.{=parm}' },
+			'obj.v1': { fr: 'fr-v1.{$parm}' },
 			'obj.v2': { en: 'en-v2' },
 			'obj.v3': { fr: 'fr-v3' },
-			'struct.ok': { fr: 'fr-v1.{=parm}' },
+			'struct.ok': { fr: 'fr-v1.{$parm}' },
 			'struct.missing': { en: 'en-v2' },
 			'struct.sub.v3': { fr: 'fr-v3' },
 			'struct.sub': { fr: 'toString' }

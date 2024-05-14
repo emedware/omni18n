@@ -1,9 +1,6 @@
 import { reportMissing, reportError, translate } from './helpers'
 import { TContext, TranslationError } from './types'
 
-// TODO: .text.key to react as $arg => sub-translation ?
-// TODO: Multiple defaults ? (= $1 | $price | 'unknown')
-
 export const formats: Record<'date' | 'number' | 'relative', Record<string, object>> = {
 	date: {
 		date: {
@@ -145,90 +142,114 @@ export const processors: Record<string, (...args: any[]) => string> = {
 	}
 }
 
-function objectArgument(arg: any): string | Record<string, string> {
+function objectArgument(
+	arg: any,
+	unescape: (s: string) => string
+): string | Record<string, string> {
 	if (typeof arg === 'object') return arg
 	// Here we throw as it means the code gave a wrong argument
 	if (typeof arg !== 'string') throw new TranslationError(`Invalid argument type: ${typeof arg}`)
-	if (!/[^:]:/.test(arg)) return arg.replace(/::/g, ':')
+	if (!/:/.test(arg)) return arg
 	return Object.fromEntries(
-		arg
-			.replace(/::/g, '\u0000')
-			.replace(/,,/g, '\u0004')
-			.split(',')
-			.map((part) =>
-				part.split(':', 2).map((part) =>
-					part
-						.replace(/\u0000/g, ':')
-						.replace(/\u0004/g, ',')
-						.trim()
-				)
-			)
+		arg.split(',').map((part) => part.split(':', 2).map((part) => unescape(part.trim())))
 	)
 }
 
+/*
+Escapement characters:
+u0001: {
+u0002: }
+u0003: \n
+u0004-u0005: escapement parenthesis
+*/
+
 export function interpolate(context: TContext, text: string, args: any[]): string {
-	const { key, zones } = context
-	function arg(i: string | number, dft?: string) {
-		if (typeof i === 'string' && /^\d+$/.test(i)) i = parseInt(i)
-		if (i === 0) return key
-		const lastArg = args[args.length - 1],
-			val =
-				i === ''
-					? lastArg
-					: typeof i === 'number'
-						? args[i - 1]
-						: typeof lastArg === 'object' && i in lastArg
-							? lastArg[i]
-							: undefined
-		if (val instanceof Date) return '' + val.getTime()
-		if (typeof val === 'object')
-			return Object.entries(val)
-				.map(([key, value]) => `${key}: ${value}`)
-				.join(', ')
-		if (typeof val === 'number') return '' + val
-		return val !== undefined
-			? val
-			: dft !== undefined
-				? dft
-				: reportError(context, 'Missing arg', { arg: i, key })
-	}
-	text = text.replace(/{{/g, '\u0001').replace(/}}/g, '\u0002')
+	text = text.replace(/\\{/g, '\u0001').replace(/\\}/g, '\u0002').replace(/\n/g, '\u0003')
 	const placeholders = (text.match(/{(.*?)}/g) || []).map((placeholder) => {
 			placeholder = placeholder
 				.slice(1, -1)
 				.replace(/\u0001/g, '{')
 				.replace(/\u0002/g, '}')
-			// Special {=1}, {=1|default} for "First argument" syntax
-			const simpleArg = /^=(\w*)(?:\s*\|\s*(.*)\s*)?$/.exec(placeholder)
-			if (simpleArg) return arg(simpleArg[1], simpleArg[2])
-			else {
-				const [proc, ...params] = placeholder
-					.split('|')
-					.map((part) => part.trim().replace(/\$\$/g, '\u0003'))
-					.map((part) =>
-						part.replace(/\$(\w*)(?:\[(.*?)\])?/g, (_, num, dft) =>
-							arg(num.replace(/\u0003/g, '$'), dft?.replace(/\u0003/g, '$'))
-						)
-					)
-					.map((part) => objectArgument(part))
-				if (typeof proc === 'object')
-					return params.length !== 1 || typeof params[0] !== 'string'
-						? reportError(context, 'Case needs a string case', { params })
-						: params[0] in proc
-							? proc[params[0]]
-							: 'default' in proc
-								? proc.default
-								: reportError(context, 'Case not found', { case: params[0], cases: proc })
-				if (proc.includes('.')) return translate({ ...context, key: proc }, params)
-				if (!(proc in processors)) return reportError(context, 'Unknown processor', { proc })
-				try {
-					return processors[proc].call(context, ...params)
-				} catch (error) {
-					return reportError(context, 'Error in processor', { proc, error })
+			const escapements: Record<string, string> = { '/': '/' },
+				unescapements: Record<number, string> = {}
+			let escapementCounter = 0
+			placeholder = placeholder.replace(/\\(.)/g, (_, c) => {
+				if (!escapements[c]) {
+					unescapements[escapementCounter] = c
+					escapements[c] = '\u0004' + escapementCounter++ + '\u0005'
 				}
+				return escapements[c]
+			})
+			function unescape(s: string) {
+				return s
+					.replace(/\u0003/g, '\n')
+					.replace(/\u0004([0-9]+)\u0005/g, (_, i) => unescapements[+i])
 			}
+
+			function useArgument(i: string | number, dft?: string) {
+				const { key } = context
+				if (typeof i === 'string' && /^\d+$/.test(i)) i = parseInt(i)
+				if (i === 0) return key
+				const lastArg = nextArgs[nextArgs.length - 1],
+					val =
+						i === ''
+							? lastArg
+							: typeof i === 'number'
+								? nextArgs[i - 1]
+								: typeof lastArg === 'object' && i in lastArg
+									? lastArg[i]
+									: undefined
+				if (val instanceof Date) return '' + val.getTime()
+				if (typeof val === 'object')
+					return Object.entries(val)
+						.map(([key, value]) => `${key}: ${value}`)
+						.join(', ')
+				if (typeof val === 'number') return '' + val
+				return val !== undefined ? val : dft !== undefined ? dft : '' //reportError(context, 'Missing arg', { arg: i, key })
+			}
+			function processPart(part: string) {
+				return objectArgument(
+					part
+						.trim()
+						.replace(/\$(\w+)(?:\[(.*?)\])?/g, (_, num, dft) => useArgument(num, dft))
+						.replace(/\$\.([\.\w]*)/g, (_, key) => translate({ ...context, key }, nextArgs))
+						.replace(/\$(?:\[(.*?)\])?/g, (_, dft) => useArgument('', dft)),
+					unescape
+				)
+			}
+			let nextArgs = args
+			const apps = placeholder.split('::').map((app) => app.split('|').map(processPart))
+			while (apps.length > 1) {
+				const params = apps.pop()!,
+					app = apps.pop()!,
+					[proc, ...others] = app
+				let processed: string | null = null
+				if (typeof proc === 'object') {
+					if (params.length !== 1 || typeof params[0] !== 'string')
+						return reportError(context, 'Case needs a string case', { params })
+					if (params[0] in proc) processed = proc[params[0]]
+					else if ('default' in proc) processed = proc.default
+					else return reportError(context, 'Case not found', { case: params[0], cases: proc })
+				} else if (proc.includes('.')) processed = translate({ ...context, key: proc }, params)
+				else if (!(proc in processors))
+					processed = reportError(context, 'Unknown processor', { proc })
+				else
+					try {
+						processed = processors[proc].call(context, ...params)
+					} catch (error) {
+						return reportError(context, 'Error in processor', { proc, error })
+					}
+				if (processed === null) throw Error(`Unprocessed case: ${proc}`)
+				apps.push((nextArgs = [processed, ...others]))
+			}
+			return apps[0].find((cas) => !!cas)
 		}),
-		parts = text.split(/{.*?}/).map((part) => part.replace(/\u0001/g, '{').replace(/\u0002/g, '}'))
+		parts = text.split(/{.*?}/).map((part) =>
+			part
+				.replace(/\u0001/g, '{')
+				.replace(/\u0002/g, '}')
+				.replace(/\u0003/g, '\n')
+		)
 
 	return parts.map((part, i) => `${part}${placeholders[i] || ''}`).join('')
 }

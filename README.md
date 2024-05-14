@@ -98,7 +98,7 @@ In this case, _both_ `T.fld.name` _and_ `T.fld.name.short` will retrieve `"Name"
 If we take the examples of `en-GB` and `en-US`, four locales are going to be used: `en-GB` and `en-US` of course, `en` who will take care of all the common english texts and `''` (the empty-named local) who contains technical things common to all languages.
 So, downloading `en-US` will download `''` overwritten with `en` then overwritten with `en-US`.
 
-Common things are formats for example: `format.price: '{number|$2|style: currency, currency: $1}'` for prices allowing `T.format.price(currency, amount)`
+Common things are formats for example: `format.price: '{number::$2|style: currency, currency: $1}'` for prices allowing `T.format.price(currency, amount)`
 
 #### Fallbacks
 
@@ -129,9 +129,9 @@ It heavily relies on the [hard-coded Intl](https://developer.mozilla.org/en-US/d
 Examples:
 
 ```
-Hello {=1|here}
-There {plural|$1|is|are} {number|$1} {plural|$1|entry|entries}
-{number| $price | style: currency, currency: $currency}
+Hello {$1|here}
+There {plural::$1|is|are} {number::$1} {plural::$1|entry|entries}
+{number:: $price | style: currency, currency: $currency}
 ```
 
 ## Error reporting

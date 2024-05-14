@@ -124,6 +124,7 @@ This allows:
 #### Recovering a file to export to a database
 
 An `FileDB.analyze` function is exposed who takes the string to analyze and 2/3 callbacks
+
 - `onKey` called when a new key is discovered
 - `onText` called when a translation is discovered
 - `endKey?` called when the key is finished
