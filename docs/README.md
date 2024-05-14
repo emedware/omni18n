@@ -2,6 +2,8 @@
 
 The first document presents an [overview](../README.md), here is a more detailed description
 
+> :warning: The library has 2 entry points: `omni18n/server` and `omni18n/client`. Please only load the latter in the browser. (The `server` contains indeed everything)
+
 Projects using OmnI18n use it in 4 layers
 
 1. [The `client`](./client.md): The client manages the cache and download along with providing [`Translator`s](./translator.md) that will [interpolate](./interpolation.md)

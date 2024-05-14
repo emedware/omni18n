@@ -3,7 +3,7 @@
 		"moduleResolution": "Node",
 		"target": "es2015",
 		"module": "ESNext",
-		"outDir": "./dist",
+		"outDir": "./lib",
 		"declaration": true,
 		"strict": true,
 		"esModuleInterop": true,

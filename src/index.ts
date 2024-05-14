@@ -1,19 +1,14 @@
 export {
 	type CondensedDictionary,
 	type Condense,
-	type InteractiveDB,
 	type Locale,
 	type OnModification,
-	type RawDictionary,
 	type TextKey,
 	type Translation,
 	type Zone,
 	type WorkDictionary,
 	type WorkDictionaryEntry,
 	type WorkDictionaryText,
-	type DB
-} from './types'
-export {
 	I18nClient,
 	type TContext,
 	getContext,
@@ -24,8 +19,11 @@ export {
 	bulkObject,
 	bulkDictionary,
 	formats,
-	processors
-} from './client/index'
+	processors,
+	localeFlags,
+	flagCodeExceptions
+} from './client'
+export { type RawDictionary, type InteractiveDB, type DB } from './types'
 export {
 	I18nServer,
 	InteractiveServer,
@@ -34,10 +32,3 @@ export {
 	url2specs
 } from './server/index'
 export { FileDB, MemDB, type MemDBDictionary, type MemDBDictionaryEntry } from './db/index'
-export { localeFlags, flagCodeExceptions } from './flags'
-
-declare global {
-	interface Set<T> {
-		union(...sets: Set<T>[]): this
-	}
-}

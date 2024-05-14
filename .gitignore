@@ -1,13 +1,13 @@
 .DS_Store
 node_modules
-/dist
+/lib
 /.svelte-kit
 .env.*
 !.env.example
 .vercel
 .output
 /src/svemantic
-/static/dist
+/static/lib
 /static/modules
 /raw
 /temp

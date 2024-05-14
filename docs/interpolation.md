@@ -62,7 +62,7 @@ The syntax `{other.text.key | arg1 | arg2}` can be used to do such.
 The syntax also allow some processing specification, when a processor name (with no `.` in it) is used instead of a first element. The available processors can be extended :
 
 ```ts
-import { processors, type TContext } from 'omni18n';
+import { processors, type TContext } from 'omni18n/client';
 
 Object.assign(processors, {
 	myProc(this: TContext, arg1: any, ...args: any[]) {
@@ -96,7 +96,7 @@ example: `{upper | $1}` will render the first argument in upper-case
 A list of predefined options can be set in exported variables
 
 ```ts
-import { formats } from 'omni18n'
+import { formats } from 'omni18n/client'
 
 formats.date.year = { year: 'numeric' }
 formats.number.arabic = { numberingSystem: 'arab' }

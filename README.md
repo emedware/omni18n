@@ -29,6 +29,8 @@ The server:
 The client part is a [`I18nClient`](./docs/client.md) that will remember a locale and manage the queries to a server and language changes.
 This client will produce `Translator`s who are described in typescript by the type `any`, or you can specify yours for your dictionary structure.
 
+> :warning: The library has 2 entry points: `omni18n/server` and `omni18n/client`. Please only load the latter in the browser. (The `server` contains indeed everything)
+
 ### Server side
 
 ```ts
@@ -139,7 +141,7 @@ There {plural::$1|is|are} {number::$1} {plural::$1|entry|entries}
 [Error reporting](./docs/client.md#reports) can be done either with a [global value](./docs/client.md#global-reporting) as such:
 
 ```ts
-import { reports, type TContext } from "omni18n";
+import { reports, type TContext } from "omni18n/client";
 
 reports.missing: ({ key, client }: TContext, fallback?: string) => string
 reports.error: (context: TContext, error: string, spec: object) => string
