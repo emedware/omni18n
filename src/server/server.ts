@@ -24,7 +24,7 @@ export function localeTree(locale: Locale) {
 }
 
 // Remove duplicates while keeping the order
-function removeDup(arr: string[]) {
+function removeDuplicates(arr: string[]) {
 	const done = new Set<string>()
 	return arr.filter((k) => !done.has(k) && done.add(k))
 }
@@ -40,7 +40,7 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 	private list(locales: Locale[], zone: Zone): Promise<RawDictionary> {
 		const [primary, ...fallbacks] = locales
 		return this.db.list(
-			removeDup([...localeTree(primary), '', ...fallbacks.map(localeTree).flat()]),
+			removeDuplicates([...localeTree(primary), '', ...fallbacks.map(localeTree).flat()]),
 			zone
 		)
 	}
