@@ -29,15 +29,14 @@ export interface OmnI18nClient {
 	locales: Locale[]
 	timeZone?: string
 	currency?: string
-	interpolate(context: TContext, text: Translation, args: any[]): string
+	interpolate(key: TextKey, text: Translation, ...args: any[]): string
 	onModification?: OnModification
-	missing(key: string, fallback: Translation | undefined, zones: Zone[]): string
-	error(key: string, error: string, spec: object, zones: Zone[]): string
+	missing(key: string, fallback: Translation | undefined): string
+	error(key: string, error: string, spec: object): string
 }
 
 export interface TContext<Client extends OmnI18nClient = OmnI18nClient> {
 	key: TextKey
-	zones: Zone[]
 	client: Client
 }
 

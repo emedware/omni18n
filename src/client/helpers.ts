@@ -17,12 +17,12 @@ function entry(t: Translation, isFallback?: boolean): ClientDictionary {
 
 export function reportMissing(context: TContext, fallback?: Translation) {
 	const { client, key } = context
-	return client.missing(key, fallback, context.zones)
+	return client.missing(key, fallback)
 }
 
 export function reportError(context: TContext, error: string, spec: object) {
 	const { client, key } = context
-	return client.error(key, error, spec, context.zones)
+	return client.error(key, error, spec)
 }
 
 export const reports = {
@@ -63,9 +63,9 @@ export function translate(context: TContext, args: any[]): string {
 	}
 
 	return value?.[1]
-		? client.interpolate(context, reportMissing(context, value[0]), args)
+		? client.interpolate(key, reportMissing(context, value[0]), ...args)
 		: value
-			? client.interpolate(context, value[0], args)
+			? client.interpolate(key, value[0], ...args)
 			: reportMissing(context)
 }
 
@@ -219,9 +219,9 @@ export function bulkDictionary<T extends Translatable = Translatable>(
 		const subCtx = { ...context, key }
 		const value = () =>
 			context.client.interpolate(
-				subCtx,
+				key,
 				obj[fallback] ? reportMissing(subCtx, obj[text]) : obj[text]!,
-				args
+				...args
 			)
 		if (Object.keys(obj).every((k) => typeof k === 'symbol')) return value()
 		for (const [k, v] of Object.entries(obj))

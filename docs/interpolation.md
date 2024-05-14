@@ -14,6 +14,11 @@ In the braces, every character is escaped with the `\` character, even the `\` c
 Several values can be given for defaulting:
 `"This is a {$1}"` will have to be called with an argument, `"This is a {$1|distraction}"` may be called with an argument.
 
+To play with interpolation giving direct values for test purpose, one can use:
+```js
+client.interpolate('test', 'qwe {$1} asd {$2} zxc', 'abc', 'xyz')
+```
+
 ## Arguments
 
 > :information_source: While interpolating, the argument nr 0 is the key, the first argument is the argument nr 1. This is meant to be used by translators - literacy peeps - so of course the first argument has the number "1".

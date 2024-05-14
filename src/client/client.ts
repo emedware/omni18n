@@ -84,7 +84,7 @@ export default class I18nClient implements OmnI18nClient {
 				await this.download(Array.from(toLoad))
 			})
 		}
-		return translator({ client: this, zones, key: '' })
+		return translator({ client: this, key: '' })
 	}
 
 	public getPartialLoad(excludedZones: Zone[] = []): PartialLoad {
@@ -156,13 +156,15 @@ export default class I18nClient implements OmnI18nClient {
 		this.onModification?.(Object.keys(entries))
 	}
 
-	interpolate: (context: TContext, text: Translation, args: any[]) => string = interpolate
-
-	missing(key: string, fallback: Translation | undefined, zones: Zone[]): string {
-		return reports.missing({ key, client: this, zones }, fallback)
+	interpolate(key: TextKey, text: Translation, ...args: any[]) {
+		return interpolate({ client: this, key }, text, args)
 	}
-	error(key: string, error: string, spec: object, zones: Zone[]): string {
-		return reports.error({ key, client: this, zones }, error, spec)
+
+	missing(key: string, fallback: Translation | undefined): string {
+		return reports.missing({ key, client: this }, fallback)
+	}
+	error(key: string, error: string, spec: object): string {
+		return reports.error({ key, client: this }, error, spec)
 	}
 }
 

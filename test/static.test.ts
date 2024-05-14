@@ -27,6 +27,8 @@ beforeAll(async () => {
 					'.zone': ''
 				},
 				'specs.ordinal': { '': '{ordinal::$1}' },
+				'specs.escape': { en: '{$1|dot dot \\: ...}' },
+				'specs.cases': { fr: '{a: a, b: bé, c: cé, default: pff - $1 :: $1}' },
 				'emoji.flag': {
 					en: '🇬🇧',
 					fr: '🇫🇷',
@@ -92,6 +94,14 @@ beforeAll(async () => {
 })
 
 describe('basic functionalities', () => {
+	test('escapement', () => {
+		expect(T.en.specs.escape()).toBe('dot dot : ...')
+	})
+	test('cases', () => {
+		expect(T.be.specs.cases('a')).toBe('a')
+		expect(T.be.specs.cases('b')).toBe('bé')
+		expect(T.be.specs.cases('d')).toBe('pff - d')
+	})
 	test('several kind of text access', () => {
 		const fields = T.en.fld
 		expect('' + fields.name).toBe('Name')

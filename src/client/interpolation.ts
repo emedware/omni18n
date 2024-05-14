@@ -242,7 +242,10 @@ export function interpolate(context: TContext, text: string, args: any[]): strin
 				if (processed === null) throw Error(`Unprocessed case: ${proc}`)
 				apps.push((nextArgs = [processed, ...others]))
 			}
-			return apps[0].find((cas) => !!cas)
+			const rv = apps[0].find((cas) => !!cas)
+			return !rv || typeof rv === 'string'
+				? unescape(rv || '')
+				: reportError(context, 'Object return value', { rv })
 		}),
 		parts = text.split(/{.*?}/).map((part) =>
 			part

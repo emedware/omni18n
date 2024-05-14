@@ -39,7 +39,6 @@ Both return a string to display instead of the translated value.
 ```ts
 export interface TContext {
 	key: string
-	zones: string[]
 	client: I18nClient
 }
 ```
@@ -79,8 +78,8 @@ reports.error = ({ key, client }: TContext, error: string, spec: object) => {
 Just override the `missing` and `error` members of `I18nClient` (who call the global `reports` by default)
 
 ```ts
-missing(key: string, fallback: string | undefined, zones: Zone[]): string
-error(key: string, error: string, spec: object, zones: Zone[]): string
+missing(key: string, fallback: string | undefined): string
+error(key: string, error: string, spec: object): string
 ```
 
 ## SSR: Between clients
