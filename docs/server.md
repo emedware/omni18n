@@ -77,7 +77,7 @@ modify(
 	locale: Locale,
 	text: Translation,
 	textInfos?: Partial<TextInfos>
-): Promise<Zone | false>
+): Promise<void>
 key(
 	key: TextKey,
 	zone: Zone,

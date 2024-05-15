@@ -63,7 +63,7 @@ export interface TranslatableDB<TextInfos extends {} = {}> extends DB {
 		locale: Locale,
 		text: Translation,
 		textInfos?: Partial<TextInfos>
-	): Promise<Zone | false>
+	): Promise<void>
 }
 
 export interface EditableDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>

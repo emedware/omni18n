@@ -37,7 +37,7 @@ Translation occur with simple "select/upsert" operations. There is _no key manag
 
 Here, we get already in the realm where we can specify `KeyInfos` and `TextInfos`.
 
-The former is given by developers, in english or some common language if comments are needed, it might contain the type (text/html/md/...) for the translation interface, &c. - and appear in the `keys` database
+The former is given by developers, in english or some common language if comments are needed, it might contain the type (text/html/md/...) for the translation interface, &c. - and appears in the `keys` database
 
 The latter more often used/edited by the translators and appearing in the `translations` database. (comment, "Keep the default value"="Do not translate" tag, &c.)
 

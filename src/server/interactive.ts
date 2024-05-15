@@ -120,10 +120,9 @@ export default class InteractiveServer<
 		locale: Locale,
 		text: Translation,
 		textInfos?: Partial<TextInfos>
-	): Promise<Zone | false> {
+	): Promise<void> {
 		const zone = await this.db.modify(key, locale, text, textInfos)
-		if (zone !== false) this.modifications.push([key, locale, zone, text])
-		return zone
+		this.modifications.push([key, locale, (await this.db.getZone(key, [locale])) as string, text])
 	}
 	/**
 	 * Modify/creates a key
@@ -143,8 +142,8 @@ export default class InteractiveServer<
 		await this.db.key(key, zone, keyInfos)
 		await Promise.all(
 			Object.entries(translations).map(async ([locale, text]) => {
-				if ((await this.db.modify(key, locale, text, textInfos)) !== false)
-					this.modifications.push([key, locale, zone, text])
+				await this.db.modify(key, locale, text, textInfos)
+				this.modifications.push([key, locale, zone, text])
 			})
 		)
 	}

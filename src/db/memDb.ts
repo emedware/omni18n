@@ -74,7 +74,7 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 	}
 
 	async modify(key: TextKey, locale: Locale, value: Translation, textInfos?: Partial<TextInfos>) {
-		if (!this.dictionary[key]) return false
+		if (!this.dictionary[key]) throw new Error(`Key "${key}" not found`)
 		if (!/^[\w-]*$/g.test(locale))
 			throw new Error(`Bad locale: ${locale} (only letters, digits, "_" and "-" allowed)`)
 		this.dictionary[key][locale] = value
@@ -86,7 +86,6 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 			}
 			for (const ti in textInfos) if (textInfos[ti] === undefined) delete tis[locale][ti]
 		}
-		return this.dictionary[key]['.zone'] || ''
 	}
 
 	async key(key: TextKey, zone: Zone, keyInfos?: Partial<KeyInfos>) {

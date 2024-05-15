@@ -31,7 +31,7 @@ export interface OmnI18nClient {
 	currency?: string
 	interpolate(key: TextKey, text: Translation, ...args: any[]): string
 	onModification?: OnModification
-	missing(key: string, fallback: Translation | undefined): string
+	missing(key: string, fallback?: Translation): string
 	error(key: string, error: string, spec: object): string
 }
 

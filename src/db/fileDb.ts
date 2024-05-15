@@ -57,15 +57,15 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 		await this.loaded
 		return super.getZone(key, locales)
 	}
-	async modify(key: TextKey, locale: Locale, value: Translation) {
+	async modify(key: TextKey, locale: Locale, value: Translation, textInfos?: Partial<TextInfos>) {
 		await this.loaded
 		this.saving.defer()
-		return super.modify(key, locale, value)
+		return super.modify(key, locale, value, textInfos)
 	}
-	async key(key: TextKey, zone: Zone) {
+	async key(key: TextKey, zone: Zone, keyInfos?: Partial<KeyInfos>) {
 		await this.loaded
 		this.saving.defer()
-		return super.key(key, zone)
+		return super.key(key, zone, keyInfos)
 	}
 	async get(key: TextKey) {
 		await this.loaded

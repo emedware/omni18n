@@ -124,7 +124,7 @@ export default class I18nClient implements OmnI18nClient {
 		if (toLoad.length) this.received(toLoad, await this.condense(this.locales, toLoad))
 	}
 
-	async setLocale(locales: Locale[]) {
+	async setLocales(locales: Locale[]) {
 		if (
 			this.locales.length === locales.length &&
 			this.locales.every((locale, i) => locale == locales[i])
@@ -164,7 +164,7 @@ export default class I18nClient implements OmnI18nClient {
 		return interpolate({ client: this, key }, text, args)
 	}
 
-	missing(key: string, fallback: Translation | undefined): string {
+	missing(key: string, fallback?: Translation): string {
 		return reports.missing({ key, client: this }, fallback)
 	}
 	error(key: string, error: string, spec: object): string {

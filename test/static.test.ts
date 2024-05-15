@@ -233,7 +233,7 @@ describe('parameters', () => {
 		const client = new I18nClient(['en-US'], server.condense),
 			T: Translator = await client.enter()
 		expect(T.msg.greet()).toBe('Hello here')
-		await client.setLocale(['fr'])
+		await client.setLocales(['fr'])
 		expect(T.msg.greet()).toBe('Salut tout le monde')
 	})
 })
