@@ -169,7 +169,7 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 		let lastIndex = 0
 		while ((keyFetch = rex.key.exec(data))) {
 			if (keyFetch.index > lastIndex) throw parseError(data, lastIndex, keyFetch.index)
-			const key = keyFetch[1],
+			const key = keyFetch[1].trim(),
 				zone = keyFetch[3] as Zone
 			let keyInfos: any
 			if (keyFetch[2]) keyInfos = parse(keyFetch[2].replace(/\u0000/g, '\n'))

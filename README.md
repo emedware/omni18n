@@ -5,6 +5,8 @@ Generic i18n library managing the fullstack interaction in a CI/CD pace. The dic
 - 1.0.x - ~~alpha~~
 - 1.1.x - [beta](https://www.youtube.com/watch?v=1gSZfX91zYk)
 
+🎉 1.1.5 🥳 The library finally has well-set entry points and export bundles
+
 [![view on npm](https://badgen.net/npm/v/omni18n)](https://www.npmjs.org/package/omni18n)
 [![npm module downloads](https://badgen.net/npm/dt/omni18n)](https://www.npmjs.org/package/omni18n)
 [![Github repo dependents](https://badgen.net/github/dependents-repo/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=REPOSITORY)
@@ -29,7 +31,7 @@ The server:
 The client part is a [`I18nClient`](./docs/client.md) that will remember a locale and manage the queries to a server and language changes.
 This client will produce `Translator`s who are described in typescript by the type `any`, or you can specify yours for your dictionary structure.
 
-> :warning: The library has 2 entry points: `omni18n/server` and `omni18n/client`. Please only load the latter in the browser. (The `server` contains indeed everything)
+> :warning: The library has 2 entry points: `omni18n` and `omni18n/client`. Only load the latter in the browser.
 
 ### Server side
 

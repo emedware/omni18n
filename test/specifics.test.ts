@@ -114,6 +114,9 @@ describe('specifics', () => {
 		expect('' + T.fld.inexistent).toBe('[no]')
 		expect(misses).toHaveBeenCalledWith('fld.inexistent')
 	})
+})
+
+describe('fileDB', () => {
 	test('serialize', () => {
 		const content: MemDBDictionary<any, any> = {
 			'serializations.nl1': {

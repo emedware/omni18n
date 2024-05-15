@@ -218,11 +218,9 @@ describe('formatting', () => {
 })
 describe('parameters', () => {
 	test('zones', async () => {
-		/* We cannot predict the order
-		expect(loads).toEqual([
-			{ locale: 'en-US', zones: ['', 'adm'] },
-			{ locale: 'fr-BE', zones: [''] }
-		])*/
+		expect(loads.length).toBe(2)
+		expect(loads).toContainEqual({ locales: ['en-US'], zones: ['adm', ''] })
+		expect(loads).toContainEqual({ locales: ['fr-BE'], zones: [''] })
 		expect(T.en.cmd.ban()).toBe('Ban user')
 		expect(T.be.cmd.ban()).toBe('[cmd.ban]')
 		loads = []

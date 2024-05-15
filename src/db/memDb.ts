@@ -74,7 +74,7 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 	}
 
 	async modify(key: TextKey, locale: Locale, value: Translation, textInfos?: Partial<TextInfos>) {
-		if (!this.dictionary[key]) throw new Error(`Key "${key}" not found`)
+		if (!this.dictionary[key]) return false
 		if (!/^[\w-]*$/g.test(locale))
 			throw new Error(`Bad locale: ${locale} (only letters, digits, "_" and "-" allowed)`)
 		this.dictionary[key][locale] = value
@@ -92,8 +92,10 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 	async key(key: TextKey, zone: Zone, keyInfos?: Partial<KeyInfos>) {
 		const entry = this.dictionary[key] || {},
 			ez = entry['.zone']
-		if (!/^[\w\-\+\*\.]*$/g.test(key))
-			throw new Error(`Bad key-name: ${key} (only letters, digits, "_+-*." allowed)`)
+		if (!/^[\w\-\+\*\.]*$/g.test(key) || `.${key}.`.includes('.then.'))
+			throw new Error(
+				`Bad key-name: ${key} (only letters, digits, "_+-*." allowed) (and no "then" part)`
+			)
 		this.dictionary[key] = <MemDBDictionaryEntry<KeyInfos, TextInfos>>{
 			...entry,
 			...((entry['.keyInfos'] || keyInfos) && {

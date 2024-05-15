@@ -20,8 +20,8 @@ export type OnModification = (keys?: TextKey[]) => void
  */
 export type RawDictionary = Record<TextKey, [Locale, Translation]>
 export type WorkDictionaryText<TextInfos extends {} = {}> = {
-	text: Translation
-	infos: TextInfos
+	text?: Translation
+	infos?: TextInfos
 }
 export type WorkDictionaryEntry<KeyInfos extends {} = {}, TextInfos extends {} = {}> = {
 	texts: { [locale: Locale]: WorkDictionaryText<TextInfos> }
@@ -43,25 +43,12 @@ export interface DB {
 	list(locales: Locale[], zone: Zone): Promise<RawDictionary>
 }
 
-export interface InteractiveDB<KeyInfos extends {} = {}, TextInfos extends {} = {}> extends DB {
+export interface TranslatableDB<TextInfos extends {} = {}> extends DB {
 	/**
 	 * Retrieves all the values for certain locales, in order for translators to work on it
 	 * @param locales
 	 */
 	workList(locales: Locale[]): Promise<WorkDictionary>
-
-	/**
-	 * Retrieves all the translations given for a certain key
-	 * @param key The key to search for
-	 */
-	get(key: TextKey): Promise<Record<Locale, Translation>>
-
-	/**
-	 * Checks if a key is specified in a certain locale
-	 * @param key The key to search for
-	 * @param locales The locales to search in
-	 */
-	getZone(key: TextKey, locales?: Locale[]): Promise<Zone | false>
 
 	/**
 	 * Modifies/add the value for the key [key, locale]
@@ -77,12 +64,15 @@ export interface InteractiveDB<KeyInfos extends {} = {}, TextInfos extends {} = 
 		text: Translation,
 		textInfos?: Partial<TextInfos>
 	): Promise<Zone | false>
+}
 
+export interface EditableDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
+	extends TranslatableDB<TextInfos> {
 	/**
 	 * Creates or modifies a key
 	 * @param key The key to manipulate
 	 * @param zone The zone to create the key in, or undefined to delete it
-	 * @returns Wether there was a change
+	 * @returns Wether the zone was changed
 	 */
 	key(key: TextKey, zone: Zone, keyInfos?: Partial<KeyInfos>): Promise<boolean>
 
@@ -93,4 +83,20 @@ export interface InteractiveDB<KeyInfos extends {} = {}, TextInfos extends {} = 
 	 * @returns All the information about that key (actually useful on deletion)
 	 */
 	reKey(key: TextKey, newKey?: TextKey): Promise<{ zone: Zone; texts: Record<Locale, Translation> }>
+}
+
+export interface InteractiveDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
+	extends EditableDB<KeyInfos, TextInfos> {
+	/**
+	 * Retrieves all the translations given for a certain key
+	 * @param key The key to search for
+	 */
+	get(key: TextKey): Promise<Record<Locale, Translation>>
+
+	/**
+	 * Checks if a key is specified in a certain locale
+	 * @param key The key to search for
+	 * @param locales The locales to search in
+	 */
+	getZone(key: TextKey, locales?: Locale[]): Promise<Zone | false>
 }
