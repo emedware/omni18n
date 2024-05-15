@@ -2,7 +2,6 @@ import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import typescript from 'rollup-plugin-typescript2'
 import pluginDts from 'rollup-plugin-dts'
-import shim from 'rollup-plugin-shim'
 import { rm } from 'node:fs/promises'
 
 // clean out the destination folder
@@ -14,7 +13,7 @@ export default [
 		output: {
 			dir: 'lib'
 		},
-		external: ['hjson'],
+		external: ['json5'],
 		plugins: [
 			resolve(),
 			commonjs(),
@@ -35,7 +34,6 @@ export default [
 			format: 'cjs',
 			exports: 'named'
 		},
-		external: ['hjson'],
 		plugins: [
 			resolve(),
 			commonjs(),
@@ -54,7 +52,7 @@ export default [
 			sourcemap: true,
 			format: 'esm'
 		},
-		external: ['hjson'],
+		external: ['json5'],
 		plugins: [
 			resolve(),
 			commonjs(),
@@ -75,9 +73,6 @@ export default [
 			name: 'OmnI18n'
 		},
 		plugins: [
-			shim({
-				os: 'module.export = {}'
-			}),
 			resolve(),
 			commonjs(),
 			typescript({

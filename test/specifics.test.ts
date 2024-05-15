@@ -158,13 +158,9 @@ test.multiline:
 		await server.modify('fld.name', 'hu', 'Név')
 		await db.save()
 		const content = await readFile('./db.test', 'utf16le')
-		expect(content).toBe(`fld.name{
-	note: the name of the person
-}:
+		expect(content).toBe(`fld.name{note:'the name of the person'}:
 	en:Name
-	fr{
-		obvious: true
-	}:Nom
+	fr{obvious:true}:Nom
 	hu:Név
 test.multiline:
 	:Line 1

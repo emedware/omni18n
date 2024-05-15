@@ -1,4 +1,5 @@
-import { parse, stringify } from 'hjson'
+import json5 from 'json5'
+const { parse, stringify } = json5
 import { readFile, stat, writeFile } from 'node:fs/promises'
 import Defer from '../defer'
 import { WorkDictionary, type Locale, type TextKey, type Translation, type Zone } from '../types'
@@ -84,11 +85,7 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 		dictionary: MemDBDictionary<KeyInfos, TextInfos>
 	) {
 		function optioned(obj: any, preTabs = 0) {
-			const stringified = stringify(obj, {
-				bracesSameLine: true,
-				multiline: 'std',
-				space: '\t'
-			})
+			const stringified = stringify(obj)
 			return preTabs ? stringified.replace(/\n/g, '\n' + '\t'.repeat(preTabs)) : stringified
 		}
 		let rv = ''
@@ -155,8 +152,8 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 	 */
 	static analyze<KeyInfos extends {} = {}, TextInfos extends {} = {}>(
 		data: string,
-		onKey: (key: TextKey, zone: Zone, infos: KeyInfos) => void,
-		onText: (key: TextKey, locale: Locale, text: Translation, infos: TextInfos) => void,
+		onKey: (key: TextKey, zone: Zone, infos?: KeyInfos) => void,
+		onText: (key: TextKey, locale: Locale, text: Translation, infos?: TextInfos) => void,
 		endKey?: (key: TextKey) => void
 	) {
 		if (!data.endsWith('\n')) data += '\n'
@@ -183,7 +180,7 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 					key,
 					localeFetch[1] as Locale,
 					localeFetch[3] && localeFetch[3].replace(/\u0000\t\t/g, '\n'),
-					localeFetch[2] && parse(localeFetch[2].replace(/\u0000/g, '\n'))
+					localeFetch[2] ? parse<TextInfos>(localeFetch[2].replace(/\u0000/g, '\n')) : undefined
 				)
 			}
 			endKey?.(key)

@@ -50,7 +50,6 @@
 		"@rollup/plugin-commonjs": "^25.0.7",
 		"@rollup/plugin-node-resolve": "^15.2.3",
 		"@rollup/plugin-terser": "^0.4.4",
-		"@types/hjson": "^2.4.6",
 		"@types/jest": "^29.5.12",
 		"eslint": "^9.1.1",
 		"jest": "^29.7.0",
@@ -58,7 +57,6 @@
 		"prettier": "^3.2.5",
 		"rollup": "^4.16.4",
 		"rollup-plugin-dts": "^6.1.0",
-		"rollup-plugin-shim": "^1.0.0",
 		"rollup-plugin-typescript2": "^0.36.0",
 		"ts-jest": "^29.1.2",
 		"tslib": "^2.6.2",
@@ -66,6 +64,6 @@
 		"typescript": "^5.4.5"
 	},
 	"dependencies": {
-		"hjson": "^3.2.2"
+		"json5": "^2.2.3"
 	}
 }

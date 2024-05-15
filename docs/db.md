@@ -142,7 +142,7 @@ For each key, the callback calls will be `onKey - onText* - endKey` for each key
 
 The serialization file-format is specific for regexp-ability _and_ human interactions; grouping is done by indentation (made with tabulations - `\t`).
 
-`KeyInfos` and `TextInfos` are stored in [`hjson`](https://www.npmjs.com/package/hjson) format
+`KeyInfos` and `TextInfos` are stored in [`json5`](https://json5.org/) format
 
 ##### 0-tabs
 
@@ -153,7 +153,7 @@ A line beginning with no tabs is a key specification
 ```
 
 ```
-[text-key][{ SomeKeyInfos: 'hjson format' }]:[zone]
+[text-key][{ SomeKeyInfos: 'json5 format' }]:[zone]
 ```
 
 > Note: the zone can and will often be `""`
@@ -167,7 +167,7 @@ A line beginning with one tab is a locale specification for the key "en cours"
 ```
 
 ```
-	[locale][{ SomeTextInfos: 'hjson format' }]:Some fancy translation
+	[locale][{ SomeTextInfos: 'json5 format' }]:Some fancy translation
 ```
 
 ##### 2-tabs

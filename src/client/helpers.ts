@@ -1,4 +1,5 @@
-import { parse } from 'hjson'
+import json5 from 'json5'
+const { parse } = json5
 import { type CondensedDictionary, type TextKey, type Translation, type Zone } from '../types'
 import {
 	ClientDictionary,
