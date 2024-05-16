@@ -1,6 +1,6 @@
 {
 	"name": "omni18n",
-	"version": "1.1.5",
+	"version": "1.1.6",
 	"exports": {
 		"./client": {
 			"import": "./lib/esm/client.js",

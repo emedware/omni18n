@@ -158,6 +158,9 @@ Or the [object-oriented way](./docs/client.md#oo-reporting) by overriding these 
 missing(key: string, fallback: Translation | undefined, zones: Zone[]): string
 error(key: string, error: string, spec: object, zones: Zone[]): string
 ```
+## Integrations
+
+- [Svelte4](https://github.com/eddow/omni18n-svelte4)
 
 ## TODO
 

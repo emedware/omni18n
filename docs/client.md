@@ -6,7 +6,7 @@ For instance, in the browser for an SPA is is instantiated once for the whole we
 
 In order to acquire translations, the client just has to `enter` a zone to retrieve a [Translator](./translator.md)
 
-## With the server
+## Construction
 
 ```ts
 I18nClient(locales: Locale[], condense: Condense, onModification?: OnModification)
@@ -25,6 +25,13 @@ const client = new I18nClient(['fr', 'en'], server.condense, frontend.refreshTex
 Locales default to the more generic ones. Here, we can give several for fall-back purpose. In the case `['fr', 'en']`, if a french translation is not found while an english one is, the english version will be displayed while triggering the [`missing` report](./client.md#reports)
 
 If the locales `['fr-CA', 'en-UK', 'de-DE']` are given, the actual list of locales that will be used is `['fr-CA', 'fr', '', 'en-UK', 'en', 'de-DE', 'de']`. The `missing` report will be called when the used locale is english or german.
+
+### Other locales
+
+The `I18nClient` also have 2 properties:
+
+- `timeZone`: A timezone used when displaying dates (if none is specified) with [this format](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat)
+- `currency`: A currency to use when displaying a number with `style: currency` (3-uppercase code: USD, EUR, ...)
 
 ## Reports
 
@@ -93,3 +100,7 @@ When the application knows well it enters several zones while doing an action (l
 For this, **after** SSR-rendering, `payload = SSC.getPartialLoad(excludedZones: Zone[] = [])` can be called with the list of zones the CSC **already** possess. It will return a completely json-able in a compact format of the loaded dictionary
 
 This partial answer can be conveyed in the answer with the action' results (especially useful in a page load action) and given to the CSC with `CSC.usePartial(payload)`
+
+## Overriding `interpolate`
+
+`I18nClient.interpolate` is called on _each_ translation, and can be used to add a transformation or have a list of "last 20 translations" in the translator's UI
