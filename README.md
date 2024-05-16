@@ -34,8 +34,6 @@ The server:
 The client part is a [`I18nClient`](./docs/client.md) that will remember a locale and manage the queries to a server and language changes.
 This client will produce `Translator`s who are described in typescript by the type `any`, or you can specify yours for your dictionary structure.
 
-> :warning: The library has 2 entry points: `omni18n` and `omni18n/client`. Only load the latter in the browser.
-
 ### Server side
 
 ```ts
@@ -158,6 +156,7 @@ Or the [object-oriented way](./docs/client.md#oo-reporting) by overriding these 
 missing(key: string, fallback: Translation | undefined, zones: Zone[]): string
 error(key: string, error: string, spec: object, zones: Zone[]): string
 ```
+
 ## Integrations
 
 - [Svelte4](https://github.com/eddow/omni18n-svelte4)

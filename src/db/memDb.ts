@@ -2,13 +2,12 @@ import {
 	WorkDictionary,
 	WorkDictionaryEntry,
 	WorkDictionaryText,
-	type InteractiveDB,
 	type Locale,
-	type RawDictionary,
 	type TextKey,
 	type Translation,
 	type Zone
 } from '../types'
+import { type InteractiveDB, type RawDictionary } from './types'
 
 interface SystemEntry<KeyInfos extends {}, TextInfos extends {}> {
 	'.zone'?: Zone

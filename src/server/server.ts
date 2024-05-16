@@ -1,8 +1,7 @@
+import { DB, RawDictionary } from '../db'
 import {
-	DB,
 	type CondensedDictionary,
 	type Locale,
-	type RawDictionary,
 	type TextKey,
 	type Translation,
 	type Zone

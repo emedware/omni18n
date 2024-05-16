@@ -1,12 +1,12 @@
 import {
 	WorkDictionary,
 	type CondensedDictionary,
-	type InteractiveDB,
 	type Locale,
 	type TextKey,
 	type Translation,
 	type Zone
 } from '../types'
+import { type InteractiveDB } from '../db'
 import I18nServer, { localeTree } from './server'
 
 const subscriptions = new Map<
