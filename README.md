@@ -9,16 +9,13 @@ Generic i18n library managing the fullstack interaction in a CI/CD pace. The dic
 
 [![view on npm](https://badgen.net/npm/v/omni18n)](https://www.npmjs.org/package/omni18n)
 [![npm module downloads](https://badgen.net/npm/dt/omni18n)](https://www.npmjs.org/package/omni18n)
-
-<!--
 [![Github repo dependents](https://badgen.net/github/dependents-repo/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=REPOSITORY)
-[![NpmJs package dependents](https://badgen.net/github/dependents-pkg/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=PACKAGE) -->
-
 [![Node.js CI](https://github.com/emedware/omni18n/actions/workflows/node.js.yml/badge.svg)](https://github.com/emedware/omni18n/actions/workflows/node.js.yml)
 
-<!-- [![Coverage Status](https://coveralls.io/repos/github/emedware/omni18n/badge.svg)](https://coveralls.io/github/emedware/omni18n) -->
+<!--
+[![NpmJs package dependents](https://badgen.net/github/dependents-pkg/emedware/omni18n)](https://github.com/emedware/omni18n/network/dependents?dependent_type=PACKAGE) -->
 
-<!-- https://www.npmjs.com/package/country-code-to-flag-emoji -->
+<!-- [![Coverage Status](https://coveralls.io/repos/github/emedware/omni18n/badge.svg)](https://coveralls.io/github/emedware/omni18n) -->
 
 The main documentation is in [the repository](./docs/README.md)
 
@@ -94,7 +91,7 @@ Example:
 }
 ```
 
-In this case, _both_ `T.fld.name` _and_ `T.fld.name.short` will retrieve `"Name"` so that, if the project use shortened notations, it can display `T.fld[field].short` without demanding all the fields to have a `short` version in all languages
+In this case, _both_ `T.fld.name` _and_ `T.fld.name.short` will retrieve `"Name"` so that, if the project uses shortened notations, it can display `T.fld[field].short` without demanding all the fields to have a `short` version in all languages
 
 > Rule of the thumb: No value should be given as root keys. Every meaningful text has a category and should therefore be a sub-key. Also, some helpers function detect if there is a dot to identify text-keys vs. other kind of designations.
 
@@ -153,13 +150,13 @@ reports.error: (context: TContext, error: string, spec: object) => string
 Or the [object-oriented way](./docs/client.md#oo-reporting) by overriding these two reports function (who by default call the global values)
 
 ```ts
-missing(key: string, fallback: Translation | undefined, zones: Zone[]): string
-error(key: string, error: string, spec: object, zones: Zone[]): string
+missing(key: string, fallback: Translation | undefined): string
+error(key: string, error: string, spec: object): string
 ```
 
 ## Integrations
 
-- [Svelte4](https://github.com/eddow/omni18n-svelte4)
+- [SvelteKit](https://github.com/eddow/omni18n-svelte4) (Svelte4)
 
 ## TODO
 
@@ -174,4 +171,4 @@ The best way to report a bug is to PR a failing unit test.
 
 Any DB or framework adaptation can be published separately, just report it and the reference will be added here.
 
-I made this functionality roughly ~10 times from scratch for a lot of different projects. It means the interface comes out of a shitload of years of trials/errors/fixes and so there is few breaking changes to expect, if not none at all.
+I made this functionality roughly ~10 times from scratch for a lot of different projects. It means the interface comes out of years of trials/errors/fixes and so there are few breaking changes to expect, if not none at all.
