@@ -20,12 +20,12 @@ To play with interpolation giving direct values for test purpose, one can use:
 client.interpolate('test', 'qwe {$1} asd {$2} zxc', 'abc', 'xyz')
 ```
 
-## Arguments
+## Dollars
 
-> :information_source: While interpolating, the argument nr 0 is the key, the first argument is the argument nr 1. This is meant to be used by translators - literacy peeps - so of course the first argument has the number "1".
+> :information_source: While interpolating, the argument nr 0 is the key, the first argument is the argument nr 1. This is meant to be used by translators - literary peeps - so of course the first argument has the number "1".
 
 The parameters (given in the code) can be accessed as such:
-First, the last parameter is the one used for naming. If a named parameter is accessed, the last (or only) parameter should be an object with named properties
+The last parameter is the one used for naming. If a named parameter is accessed, the last (or only) parameter should be an object with named properties
 
 - `$0` is the key, `$1` the first argument, `$2`...
 - `$arg` access the argument named `arg`
@@ -33,7 +33,7 @@ First, the last parameter is the one used for naming. If a named parameter is ac
 
 To add a default, `$arg[default value]` can be used, as well as `$[name: John]`
 
-Also, a sub-translation can be made with `$.text.key`
+Also, not an argument but a sub-translation can be made with `$.text.key`
 
 ## Processing
 
@@ -55,7 +55,9 @@ example: `{question: ?, exclamation: !, default: ... | $1}`
 
 To use another translation can be useful, when for example one translation is a number format centralization common to all languages, or when a centralized (all-language) format string needs to use conjunctions or words that are language-specific.
 
-The syntax `{other.text.key | arg1 | arg2}` can be used to do such.
+The syntax `{other.text.key :: arg1 | arg2}` can be used to do such.
+
+> :information_source: The presence of a `.` will tell the interpolator it's a text key and not a processor
 
 ### Processors
 

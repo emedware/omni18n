@@ -1,5 +1,5 @@
 export default class Defer {
-	private promise: Promise<void> = Promise.resolve()
+	public promise: Promise<void> = Promise.resolve()
 	private rejecter?: (reason?: any) => void
 	private resolver?: (value?: any) => void
 	timeout: any

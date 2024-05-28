@@ -12,7 +12,7 @@ In order to acquire translations, the client just has to `enter` a zone to retri
 I18nClient(locales: Locale[], condense: Condense, onModification?: OnModification)
 ```
 
-- `locales`: A list of locales: from preferred to fallback
+- `locales`: A list of locales: from preferred to fallback (the list will be deduplicated internally so can be redundant)
 - `condense`: A function that will query the server for the condensed dictionary
 - `onModification`: A function that will be called when the dictionary is modified
 
@@ -25,6 +25,10 @@ const client = new I18nClient(['fr', 'en'], server.condense, frontend.refreshTex
 Locales default to the more generic ones. Here, we can give several for fall-back purpose. In the case `['fr', 'en']`, if a french translation is not found while an english one is, the english version will be displayed while triggering the [`missing` report](./client.md#reports)
 
 If the locales `['fr-CA', 'en-UK', 'de-DE']` are given, the actual list of locales that will be used is `['fr-CA', 'fr', '', 'en-UK', 'en', 'de-DE', 'de']`. The `missing` report will be called when the used locale is english or german.
+
+Setting the locales can be done with `i18nClient.setLocales([...])`.
+
+> Note that duplicate locales will be deduplicated. To change the main language, don't change `locales[0]`, just `setLocales([newLocale, ...locales])`
 
 ### Other locales
 

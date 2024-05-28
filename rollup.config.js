@@ -3,9 +3,12 @@ import commonjs from '@rollup/plugin-commonjs'
 import typescript from 'rollup-plugin-typescript2'
 import pluginDts from 'rollup-plugin-dts'
 import { rm } from 'node:fs/promises'
+import terser from '@rollup/plugin-terser'
+import umd from './rollup.umd.js'
 
 // clean out the destination folder
 await rm('lib', { recursive: true, force: true })
+umd.plugins.push(terser())
 
 export default [
 	{
@@ -64,23 +67,5 @@ export default [
 			})
 		]
 	},
-	{
-		input: 'src/client.ts',
-		output: {
-			file: 'lib/omni18n.js',
-			sourcemap: true,
-			format: 'umd',
-			name: 'OmnI18n'
-		},
-		plugins: [
-			resolve(),
-			commonjs(),
-			typescript({
-				tsconfigOverride: {
-					include: ['./src'],
-					exclude: ['./node_modules']
-				}
-			})
-		]
-	}
+	umd
 ]

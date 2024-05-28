@@ -34,6 +34,11 @@ import {
 export type TContext = RootContext<I18nClient>
 export type PartialLoad = [Zone[], CondensedDictionary]
 
+export function removeDuplicates(arr: Locale[]) {
+	const done = new Set<Locale>()
+	return arr.filter((k) => !done.has(k) && done.add(k))
+}
+
 export default class I18nClient implements OmnI18nClient {
 	readonly ordinalRules: Intl.PluralRules
 	readonly cardinalRules: Intl.PluralRules
@@ -41,8 +46,13 @@ export default class I18nClient implements OmnI18nClient {
 	dictionary: ClientDictionary = {}
 	protected loadedZones = new Set<Zone>()
 	private toLoadZones = new Set<Zone>()
-	private loadDefer = new Defer()
+	private loadDefer = new Defer(async () => {
+		const toLoad = this.toLoadZones
+		this.toLoadZones = new Set()
+		await this.download(Array.from(toLoad))
+	})
 
+	public locales: Locale[]
 	public timeZone?: string
 	public currency?: string
 
@@ -56,11 +66,12 @@ export default class I18nClient implements OmnI18nClient {
 	 * @example new I18nClient(['fr', 'en'], server.condense, frontend.refreshTexts)
 	 */
 	constructor(
-		public locales: Locale[],
+		locales: Locale[],
 		// On the server side, this is `server.condensed`. From the client-side this is an http request of some sort
 		public condense: Condense,
 		public onModification?: OnModification
 	) {
+		this.locales = removeDuplicates(locales)
 		this.ordinalRules = new Intl.PluralRules(locales[0], { type: 'ordinal' })
 		this.cardinalRules = new Intl.PluralRules(locales[0], { type: 'cardinal' })
 	}
@@ -78,12 +89,8 @@ export default class I18nClient implements OmnI18nClient {
 			toAdd = zones.filter((zone) => !knownZones.has(zone))
 		if (toAdd.length) {
 			for (const t of toAdd) this.toLoadZones.add(t)
-			await this.loadDefer.defer(async () => {
-				const toLoad = this.toLoadZones
-				this.toLoadZones = new Set()
-				await this.download(Array.from(toLoad))
-			})
-		}
+			await this.loadDefer.defer()
+		} else await this.loadDefer.promise
 		return translator({ client: this, key: '' })
 	}
 
@@ -125,17 +132,18 @@ export default class I18nClient implements OmnI18nClient {
 	}
 
 	async setLocales(locales: Locale[]) {
+		locales = removeDuplicates(locales)
 		if (
 			this.locales.length === locales.length &&
 			this.locales.every((locale, i) => locale == locales[i])
 		)
 			return
 		this.locales = locales
-		const toLoad = Array.from(this.loadedZones)
+		this.toLoadZones = this.loadedZones
 		this.loadedZones = new Set()
 		this.dictionary = {}
 		this.internals = {}
-		await this.download(toLoad)
+		await this.loadDefer.defer()
 	}
 
 	modified(entries: Record<TextKey, Translation | undefined>) {

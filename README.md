@@ -4,8 +4,8 @@ Generic i18n library managing the fullstack interaction in a CI/CD pace. The dic
 
 - 1.0.x - ~~alpha~~
 - 1.1.x - [beta](https://www.youtube.com/watch?v=1gSZfX91zYk)
-
-🎉 1.1.5 🥳 The library finally has well-set entry points and export bundles
+- 1.1.5 - The library finally has well-set entry points and export bundles
+- 1.1.8 - UMD-able
 
 [![view on npm](https://badgen.net/npm/v/omni18n)](https://www.npmjs.org/package/omni18n)
 [![npm module downloads](https://badgen.net/npm/dt/omni18n)](https://www.npmjs.org/package/omni18n)
@@ -33,6 +33,8 @@ This client will produce `Translator`s who are described in typescript by the ty
 
 ### Server side
 
+Note: For some obscure reasons, the library is completely working on [static applications](./docs/umd.md)
+
 ```ts
 import { I18nServer, I18nClient } from 'omni18n'
 
@@ -42,7 +44,7 @@ const T = await client.enter()
 
 // Will both display the entry `msg.hello` for the `en-US` (or `en`) locale
 console.log(`${T.msg.hello}, ...`)
-console.log(T('msg.hello') + ', ...')
+console.log(T['msg.hello'] + ', ...')
 ```
 
 ### Full-stack usage
@@ -164,6 +166,7 @@ error(key: string, error: string, spec: object): string
   - interpolation errors
   - deserialization errors
   - using client.onModification
+  - UMD E2E
 
 ## Contributing
 
