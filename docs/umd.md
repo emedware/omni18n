@@ -13,7 +13,7 @@ UMD (static websites) use no zones (only the main one). Therefore, a global `T` 
 The regularly exported values are retrievable in the `OmnI18n` global variable, plus some more for UMD usage.
 
 ```ts
-init(locales: Locale[], fileNameTemplate: string, rawType: RawType)
+init(locales: Locale[], fileNameTemplate: string)
 ```
 
 This has to be called once. Ex: `OmnI18n.init(['en', 'fr'], "/dictionaries/$.i18n")`
@@ -35,6 +35,35 @@ Beside,
 - `locale` is the currently selected locale
 - `i18nClient` is the globally used [I18nClient](./client.md)
 
+### Script-less
+
+A script-less way to use the library is by providing the arguments (`locales`, `fileNameTemplate`) directly in the script tag as js values
+```html
+<script src="/omni18n.js">["en", "fr"], "/dictionaries/$.js"</script>
+```
+
+`fileNameTemplate` is obsolete if all the needed locales are loaded on a hard-coded way
+
+### Translation blinking
+
+We speak about the "blink" when the page is just loaded and still displayed in its native language for half a second before being translated in the target language.
+
+[*For now*](#todo), the solution needs to specify manually all the locales who shouldn't blink.
+```html
+<script src="dictionary_hu.js"></script>
+```
+
+Also, as many mobile webapp tend to let the resource loading at the end of the page, hurrying the translation by inserting a `translatePage` between the page content and the late loads (audio/scripts/...) can show useful.
+```html
+<script type="application/javascript">OmnI18n.translatePage()</script>
+```
+
+#### TODO
+
+The script manually inserts a script element for the dictionary after itself when loading, in an attempt to make that script element to be waited before rendering.
+
+It seems dynamically inserted script elements are not forcing the wait for the rendering.
+
 ## HTML
 
 In the html, elements can have an `i18n` attribute:
@@ -51,6 +80,12 @@ Though, the value can contain an attribute
 
 And indeed, several attributes and the content separated by `,`s
 
+A special (non-)attribute is `html`. Normally, the *text* is set. 
+
+```html
+<div i18n="html: long.termsAndConditions"></div>
+```
+
 ### Generated language picker
 
 If an element has an id `languages-list`, its content will be replaced on each page translation with the list of locales with a list of those:
@@ -66,35 +101,6 @@ Having a div id-ed such and some CSS is enough to have a default language picker
 
 ## Static dictionary files
 
-These are either `json-list`, `json-tree` or `omni18n`.
+Dictionary files are javascript files that have to be generated from a regular `I18nServer`.
 
-`json-list` are basically: one object `{[key: string]: string}`, one key -> one translation
-`json-tree` are a hierarchical key-part -> sub-dictionary/translation (indeed, the internal representation)
-
-```json
-"key1": {
-	"": "This is key one",
-	"sub": "This is its sub-key"
-}
-```
-
-`T.key1` and `T.key1.sub` are defined
-
-### omni18n
-
-This format is made to be usable by the machine and the human
-
-There are even line comments beginning with `#`.
-
-Idea: indentation based (**TABS** indentation based). The equivalent of the previous example is:
-
-```
-key1: This is key one
-	sub: This is its sub-key
-```
-
-Notes:
-
-- Multiline entries are surrounded with `<<<` and `>>>`
-- Multiline entries that are supposed to be HTML directly begin with `<<<!`
-- Multiline entries can by on one line: `<<<! <i>Ok!</i> >>>` is a valid html entry
+A [script](../src/umd/extractLocales.ts) is provided to generate them from a [FileDB](./db.md#filedb) in `bin/extractLocales.mjs` and can easily be extended to any other DB source (it interfaces with `I18nServer` only)

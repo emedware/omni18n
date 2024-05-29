@@ -1,6 +1,6 @@
 {
 	"name": "omni18n",
-	"version": "1.1.8",
+	"version": "1.1.9",
 	"exports": {
 		".": {
 			"browser": {
@@ -19,6 +19,9 @@
 			"default": "./src/index.ts"
 		}
 	},
+	"bin": {
+		"extractLocales": "./bin/extractLocales.js"
+	},
 	"description": "",
 	"types": "./lib/src/index.d.ts",
 	"type": "module",
@@ -28,6 +31,7 @@
 		"prettier": "prettier --write .",
 		"build": "rollup -c",
 		"build-umd": "rollup -c rollup.umd.js --watch",
+		"build-extract": "rollup -c rollup.extract.js",
 		"prepare": "npm run prettier && npm run build"
 	},
 	"repository": {
@@ -48,7 +52,9 @@
 		"@rollup/plugin-commonjs": "^25.0.7",
 		"@rollup/plugin-node-resolve": "^15.2.3",
 		"@rollup/plugin-terser": "^0.4.4",
+		"@types/command-line-args": "^5.2.3",
 		"@types/jest": "^29.5.12",
+		"command-line-args": "^5.2.1",
 		"eslint": "^9.1.1",
 		"jest": "^29.7.0",
 		"jsdoc-to-markdown": "^8.0.1",

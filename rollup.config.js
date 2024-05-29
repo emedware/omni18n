@@ -5,9 +5,11 @@ import pluginDts from 'rollup-plugin-dts'
 import { rm } from 'node:fs/promises'
 import terser from '@rollup/plugin-terser'
 import umd from './rollup.umd.js'
+import extract from './rollup.extract.js'
 
 // clean out the destination folder
 await rm('lib', { recursive: true, force: true })
+await rm('bin', { recursive: true, force: true })
 umd.plugins.push(terser())
 
 export default [
@@ -67,5 +69,6 @@ export default [
 			})
 		]
 	},
-	umd
+	umd,
+	extract
 ]

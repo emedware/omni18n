@@ -3,11 +3,9 @@ import commonjs from '@rollup/plugin-commonjs'
 import typescript from 'rollup-plugin-typescript2'
 
 export default {
-	input: 'src/umd/client.ts',
+	input: 'src/umd/extractLocales.ts',
 	output: {
-		file: 'lib/omni18n.js',
-		format: 'umd',
-		name: 'OmnI18n'
+		file: 'bin/extractLocales.mjs'
 	},
 	plugins: [
 		resolve(),

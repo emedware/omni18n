@@ -50,6 +50,7 @@ export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} =
 	 * @returns
 	 */
 	async condense(locales: Locale[], zones: Zone[] = ['']): Promise<CondensedDictionary[]> {
+		locales = removeDuplicates(locales)
 		const raws = await Promise.all(zones.map((zone) => this.list(locales, zone))),
 			results: CondensedDictionary[] = []
 		for (const raw of raws) {

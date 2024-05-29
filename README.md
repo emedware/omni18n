@@ -40,11 +40,12 @@ import { I18nServer, I18nClient } from 'omni18n'
 
 const server = new I18nServer(myDBinterface)
 const client = new I18nClient(['en-US'], server.condense)
-const T = await client.enter()
+const T = await client.enter()	// Here is where the actual DB-query occurs
 
-// Will both display the entry `msg.hello` for the `en-US` (or `en`) locale
+// Will all display the entry `msg.hello` for the `en-US` (or `en`) locale
 console.log(`${T.msg.hello}, ...`)
-console.log(T['msg.hello'] + ', ...')
+console.log(T.msg['hello'] + ', ...')
+console.log(T('msg.hello') + ', ...')
 ```
 
 ### Full-stack usage
@@ -54,6 +55,20 @@ The full-stack case will insert the http protocol between [`client`](./docs/clie
 The "Omni" part is that it can be integrated for various asynchronous scenarios and in many frameworks.
 
 `I18nServer` will never be instantiated in the browser, only a `condense` function that will be linked to an HTTP request
+
+```ts
+import { I18nClient, type Condense } from 'omni18n'
+
+const fetchCondensed: Condense = async (locales: Locale[], zones: string[])=>  {
+	...
+	return result as CondensedDictionary[]
+}
+const client = new I18nClient(['en-US'], fetchCondensed)
+client.usePartial(preloadedData)	// With many frameworks, dictionary data might be available on page load
+const T = await client.enter()	// Here is where the actual download occurs if needed
+```
+
+The `usePartial` usage is described [here](./docs/client.md#ssr-between-clients)
 
 ### Interactive mode
 
