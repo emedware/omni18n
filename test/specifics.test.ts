@@ -1,6 +1,6 @@
 import { readFile, unlink, writeFile } from 'node:fs/promises'
 import {
-	FileDB,
+	serialization,
 	I18nClient,
 	InteractiveServer,
 	MemDBDictionary,
@@ -10,7 +10,8 @@ import {
 	bulkObject,
 	reports,
 	localeFlags,
-	flagCodeExceptions
+	flagCodeExceptions,
+	FileDB
 } from '../src/index'
 import { localStack } from './utils'
 
@@ -133,8 +134,8 @@ describe('fileDB', () => {
 			['.keyInfos']: { a: 1 },
 			['.textInfos']: { en: { a: '"\'`' }, hu: { a: 3 } }
 		})
-		const serialized = FileDB.serialize<any, any>(content)
-		expect(FileDB.deserialize(serialized)).toEqual(content)
+		const serialized = serialization.serialize<any, any>(content)
+		expect(serialization.deserialize(serialized)).toEqual(content)
 	})
 	test('file DB', async () => {
 		await writeFile(

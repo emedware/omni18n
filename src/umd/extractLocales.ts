@@ -1,9 +1,8 @@
 import { mkdir, writeFile, watch } from 'fs/promises'
 import { dirname, join, basename } from 'path'
 import commandLineArgs from 'command-line-args'
+import { FileDB, I18nServer } from 'src'
 import json5 from 'json5'
-import { FileDB } from 'src/db'
-import { I18nServer } from 'src/server'
 const { stringify } = json5
 
 const options = commandLineArgs(

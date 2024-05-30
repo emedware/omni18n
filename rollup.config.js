@@ -14,7 +14,7 @@ umd.plugins.push(terser())
 
 export default [
 	{
-		input: ['src/index.ts', 'src/client.ts'],
+		input: ['src/index.ts', 'src/s-a.ts', 'src/client.ts'],
 		output: {
 			dir: 'lib'
 		},
@@ -32,7 +32,7 @@ export default [
 		]
 	},
 	{
-		input: ['src/index.ts', 'src/client.ts'],
+		input: ['src/index.ts', 'src/s-a.ts', 'src/client.ts'],
 		output: {
 			dir: 'lib/cjs',
 			sourcemap: true,
@@ -51,7 +51,7 @@ export default [
 		]
 	},
 	{
-		input: ['src/index.ts', 'src/client.ts'],
+		input: ['src/index.ts', 'src/s-a.ts', 'src/client.ts'],
 		output: {
 			dir: 'lib/esm',
 			sourcemap: true,
