@@ -1,5 +1,5 @@
 import { mkdir, writeFile, watch } from 'fs/promises'
-import { dirname, join } from 'path'
+import { dirname, join, basename } from 'path'
 import commandLineArgs from 'command-line-args'
 import json5 from 'json5'
 import { FileDB } from 'src/db'
@@ -18,6 +18,11 @@ const options = commandLineArgs(
 			name: 'watch',
 			alias: 'w',
 			type: Boolean
+		},
+		{
+			name: 'grouped',
+			alias: 'g',
+			type: String
 		},
 		{
 			name: 'input',
@@ -50,12 +55,29 @@ if (!options.input) fatal('Input must be specified')
 const fdb = new FileDB(options.input),
 	server = new I18nServer(fdb)
 
-async function exportLocales() {
+async function* exported() {
 	for (const locale of options.locales) {
-		const condensed = await server.condense([locale, ...options.locales]),
-			output = join(options.output, options.pattern.replace('$', locale))
+		const condensed = stringify(await server.condense([locale, ...options.locales]))
+		yield {
+			locale,
+			content: `OmnI18n.preload('${locale}', ${condensed})`
+		}
+	}
+}
+
+async function exportLocales() {
+	if (options.grouped) {
+		let total = ''
+		for await (const { content } of exported()) total += content + '\n'
+		const output = join(options.output, options.grouped)
 		console.log('->', output)
-		await writeFile(output, `OmnI18n.preload('${locale}', ${stringify(condensed)})`, 'utf8')
+		await writeFile(output, total, 'utf8')
+	} else {
+		for await (const { locale, content } of exported()) {
+			const output = join(options.output, options.pattern.replace('$', locale))
+			console.log('->', output)
+			await writeFile(output, content, 'utf8')
+		}
 	}
 }
 

@@ -29,18 +29,18 @@ The server:
 - exposes a `condense` function that retrieve a condensed (processed) version of the dictionary for a locale (completely json-able).
 
 The client part is a [`I18nClient`](./docs/client.md) that will remember a locale and manage the queries to a server and language changes.
-This client will produce `Translator`s who are described in typescript by the type `any`, or you can specify yours for your dictionary structure.
+This client will produce [`Translator`](./docs/translator.md)s who make some wizardry like a proxy on a function that can be a string to describe text retrieval.
 
 ### Server side
 
-Note: For some obscure reasons, the library is completely working on [static applications](./docs/umd.md)
+> :information_source: For some obscure reasons, the library is completely working on [static applications](./docs/umd.md)
 
 ```ts
 import { I18nServer, I18nClient } from 'omni18n'
 
 const server = new I18nServer(myDBinterface)
 const client = new I18nClient(['en-US'], server.condense)
-const T = await client.enter()	// Here is where the actual DB-query occurs
+const T = await client.enter() // Here is where the actual DB-query occurs
 
 // Will all display the entry `msg.hello` for the `en-US` (or `en`) locale
 console.log(`${T.msg.hello}, ...`)

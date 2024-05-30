@@ -38,24 +38,39 @@ Beside,
 ### Script-less
 
 A script-less way to use the library is by providing the arguments (`locales`, `fileNameTemplate`) directly in the script tag as js values
+
 ```html
-<script src="/omni18n.js">["en", "fr"], "/dictionaries/$.js"</script>
+<script src="omni18n.js">
+	["en", "fr"], "/dictionaries/$.js"
+</script>
 ```
 
 `fileNameTemplate` is obsolete if all the needed locales are loaded on a hard-coded way
+
+```html
+<script src="omni18n.js">
+	["en", "fr"]
+</script>
+<script src="dictionaries/en.js"></script>
+<script src="dictionaries/fr.js"></script>
+```
 
 ### Translation blinking
 
 We speak about the "blink" when the page is just loaded and still displayed in its native language for half a second before being translated in the target language.
 
-[*For now*](#todo), the solution needs to specify manually all the locales who shouldn't blink.
+[_For now_](#todo), the solution needs to specify manually all the locales who shouldn't blink.
+
 ```html
 <script src="dictionary_hu.js"></script>
 ```
 
 Also, as many mobile webapp tend to let the resource loading at the end of the page, hurrying the translation by inserting a `translatePage` between the page content and the late loads (audio/scripts/...) can show useful.
+
 ```html
-<script type="application/javascript">OmnI18n.translatePage()</script>
+<script type="application/javascript">
+	OmnI18n.translatePage()
+</script>
 ```
 
 #### TODO
@@ -80,7 +95,7 @@ Though, the value can contain an attribute
 
 And indeed, several attributes and the content separated by `,`s
 
-A special (non-)attribute is `html`. Normally, the *text* is set. 
+A special (non-)attribute is `html`. Normally, the _text_ is set.
 
 ```html
 <div i18n="html: long.termsAndConditions"></div>
@@ -104,3 +119,18 @@ Having a div id-ed such and some CSS is enough to have a default language picker
 Dictionary files are javascript files that have to be generated from a regular `I18nServer`.
 
 A [script](../src/umd/extractLocales.ts) is provided to generate them from a [FileDB](./db.md#filedb) in `bin/extractLocales.mjs` and can easily be extended to any other DB source (it interfaces with `I18nServer` only)
+
+```sh
+node extractLocales -i myFile.db en fr hu
+```
+
+The script accept these arguments:
+- without flags - `locales`: The locales to extract (will be the ones used by the application)
+- `--input`/`-i` - input (**mandatory**): the input file (a serialized [FileDB](db.md#filedb))
+- `--output`/`-o` - output directory: if different from the directory where the input is
+- `--watch`/`-w`: stay active until killed and extract each time the DB file is modified
+
+Then, 2 possibilities:
+- `--pattern`/`-p`: Gives a pattern for each file. This is a filename where `$` is replaced by the locale
+- `--grouped`/`-g`: Gives the filename who will contain all the locales
+- By default, `pattern` is `$.js`
