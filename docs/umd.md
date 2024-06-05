@@ -4,7 +4,7 @@ Static websites will have to expose static translations files, import a library 
 
 For now, the file `lib/omni18n.js` is the file to be copied and referred to in the html script tag.
 
-Note: until now (1.1.8), the compressed library is 40k - it might be an overkill as the library is designed for fullstack optimization. The big thing that can still be profitable even in static websites is the [interpolation engine](./interpolation.md). And that it works out of the box.
+Note: until now (1.1.8), the compressed library is 40k - it might be an overkill as the library is designed for fullstack optimization. The big thing that can still be profitable even in static websites is the [interpolation engine](./interpolation.md), that it translates on-the-fly (without reloading the page) and that it works out of the box.
 
 ## Script
 

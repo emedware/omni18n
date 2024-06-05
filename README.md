@@ -175,7 +175,7 @@ error(key: string, error: string, spec: object): string
 
 - [SvelteKit](https://github.com/eddow/omni18n-svelte4) - Svelte4
 - [Nuxt](https://github.com/eddow/omni18n-vue) - Vue3
-- [Translator](https://github.com/eddow/omni18n-edit/releases) - To edit `FileDB` dictionaries and give an idea of "translation page"
+- [Editor](https://github.com/eddow/omni18n-edit/releases) - To edit `FileDB` dictionaries and give an idea of "translation page"
 
 ## TODO
 

@@ -3,8 +3,6 @@ import Defer from '../defer'
 import { WorkDictionary, type Locale, type TextKey, type Translation, type Zone } from '../types'
 import MemDB from './memDb'
 import serialization from './serialization'
-import json5 from 'json5'
-const { parse, stringify } = json5
 
 export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends MemDB<
 	KeyInfos,
