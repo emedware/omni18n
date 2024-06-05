@@ -1,3 +1,4 @@
+import { split2 } from 'src/client/helpers'
 import {
 	I18nClient,
 	CondensedDictionary,
@@ -47,7 +48,7 @@ export function translatePage() {
 		for (const element of document.querySelectorAll('[i18n]')) {
 			const parts = element.getAttribute('i18n')!.split(',')
 			for (const part of parts) {
-				const [attr, key] = part.split(':', 2).map((k) => k.trim())
+				const [attr, key] = split2(part, ':').map((k) => k.trim())
 				if (attr === 'html') element.innerHTML = T[key]()
 				if (key) element.setAttribute(attr, T[key]())
 				else element.textContent = T[attr]()
@@ -59,7 +60,7 @@ export function translatePage() {
 		for (const element of document.querySelectorAll('[i18n]')) {
 			const parts = element.getAttribute('i18n')!.split(',')
 			for (const part of parts) {
-				const [attr, key] = part.split(':', 2).map((k) => k.trim())
+				const [attr, key] = split2(part, ':').map((k) => k.trim())
 				if (attr === 'html' || !key) element.textContent = ''
 			}
 		}
@@ -80,7 +81,7 @@ export function translatePage() {
 				localeName = new Intl.DisplayNames(locale, { type: 'language' }).of(locale),
 				selected = usedLocale === locale ? 'selected' : ''
 			selectionList.push(`
-<button class="locale ${selected}" onclick="OmnI18n.setLocale('${locale}')" title="${localeName}">
+<button class="locale ${selected}" onclick="OmnI18n.setLocale('${locale}')">
 	<span class="flag">${flagsStr}</span>
 	<span class="name">${localeName}</span>
 </button>
@@ -102,7 +103,7 @@ export function translatePage() {
 `,
 			localeName = new Intl.DisplayNames(locale, { type: 'language' }).of(locale)
 		currentLocaleElm.innerHTML = `
-<button class="locale" title="${localeName}">
+<button class="locale">
 	<span class="flag">${flagsStr}</span>
 	<span class="name">${localeName}</span>
 </button>

@@ -72,13 +72,17 @@ export function translate(context: TContext, args: any[]): string {
 
 export function translator(context: TContext): Translator {
 	Object.freeze(context)
+	function escapeArgs(args: any[]) {
+		// TODO? replace more that \ and :
+		return args.map((a) => (typeof a === 'string' ? a.replace(/([\\:])/g, '\\$1') : a))
+	}
 	const translation = context.key
 		? function (...args: any[]): string {
-				return translate(context, args)
+				return translate(context, escapeArgs(args))
 			}
 		: function (key?: TextKey, ...args: any[]): string {
 				if (!key) throw new TranslationError('Root translator called without key')
-				if (typeof key === 'string') return translate({ ...context, key }, args)
+				if (typeof key === 'string') return translate({ ...context, key }, escapeArgs(args))
 				return translate({ ...context, key }, args)
 			}
 	const primitive = <Translator>new Proxy(translation, {
@@ -231,4 +235,10 @@ export function bulkDictionary<T extends Translatable = Translatable>(
 		return <T>rv
 	}
 	return dictionaryToTranslation(current, key)
+}
+
+export function split2(s: string, sep: string) {
+	const ndx = s.indexOf(sep)
+	if (ndx === -1) return [s]
+	return [s.slice(0, ndx), s.slice(ndx + sep.length)]
 }

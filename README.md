@@ -2,10 +2,7 @@
 
 Generic i18n library managing the fullstack interaction in a CI/CD pace. The dictionaries are stored in a DB edited by the translators through a(/the same) web application - managing translation errors, missing keys, ...
 
-- 1.0.x - ~~alpha~~
 - 1.1.x - [beta](https://www.youtube.com/watch?v=1gSZfX91zYk)
-- 1.1.5 - The library finally has well-set entry points and export bundles
-- 1.1.8 - UMD-able
 
 [![view on npm](https://badgen.net/npm/v/omni18n)](https://www.npmjs.org/package/omni18n)
 [![npm module downloads](https://badgen.net/npm/dt/omni18n)](https://www.npmjs.org/package/omni18n)

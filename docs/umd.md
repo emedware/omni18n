@@ -59,11 +59,7 @@ A script-less way to use the library is by providing the arguments (`locales`, `
 
 We speak about the "blink" when the page is just loaded and still displayed in its native language for half a second before being translated in the target language.
 
-[_For now_](#todo), the solution needs to specify manually all the locales who shouldn't blink.
-
-```html
-<script src="dictionary_hu.js"></script>
-```
+[_For now_](#todo), the best solution is to let the texts empty when an `i18n` attribute is specified
 
 Also, as many mobile webapp tend to let the resource loading at the end of the page, hurrying the translation by inserting a `translatePage` between the page content and the late loads (audio/scripts/...) can show useful.
 

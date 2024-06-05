@@ -1,4 +1,4 @@
-import { reportMissing, reportError, translate } from './helpers'
+import { reportMissing, reportError, translate, split2 } from './helpers'
 import { TContext, TranslationError } from './types'
 
 export const formats: Record<'date' | 'number' | 'relative', Record<string, object>> = {
@@ -165,9 +165,9 @@ function objectArgument(
 	if (typeof arg === 'object') return arg
 	// Here we throw as it means the code gave a wrong argument
 	if (typeof arg !== 'string') throw new TranslationError(`Invalid argument type: ${typeof arg}`)
-	if (!/:/.test(arg)) return arg
+	if (!/:[^\/\\]/.test(arg)) return arg
 	return Object.fromEntries(
-		arg.split(',').map((part) => part.split(':', 2).map((part) => unescape(part.trim())))
+		arg.split(',').map((part) => split2(part, ':').map((part) => unescape(part.trim())))
 	)
 }
 
@@ -189,13 +189,17 @@ export function interpolate(context: TContext, text: string, args: any[]): strin
 			const escapements: Record<string, string> = { '/': '/' },
 				unescapements: Record<number, string> = {}
 			let escapementCounter = 0
-			placeholder = placeholder.replace(/\\(.)/g, (_, c) => {
-				if (!escapements[c]) {
-					unescapements[escapementCounter] = c
-					escapements[c] = '\u0004' + escapementCounter++ + '\u0005'
-				}
-				return escapements[c]
-			})
+			function escaped(s: string) {
+				return s.replace(/\\(.)/g, (_, c) => {
+					if (!escapements[c]) {
+						unescapements[escapementCounter] = c
+						escapements[c] = '\u0004' + escapementCounter++ + '\u0005'
+					}
+					return escapements[c]
+				})
+			}
+			placeholder = escaped(placeholder)
+			args = args.map((arg) => (typeof arg === 'string' ? escaped(arg) : arg))
 			function unescape(s: string) {
 				return s
 					.replace(/\u0003/g, '\n')
