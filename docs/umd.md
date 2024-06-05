@@ -125,12 +125,14 @@ node extractLocales -i myFile.db en fr hu
 ```
 
 The script accept these arguments:
+
 - without flags - `locales`: The locales to extract (will be the ones used by the application)
 - `--input`/`-i` - input (**mandatory**): the input file (a serialized [FileDB](db.md#filedb))
 - `--output`/`-o` - output directory: if different from the directory where the input is
 - `--watch`/`-w`: stay active until killed and extract each time the DB file is modified
 
 Then, 2 possibilities:
+
 - `--pattern`/`-p`: Gives a pattern for each file. This is a filename where `$` is replaced by the locale
 - `--grouped`/`-g`: Gives the filename who will contain all the locales
 - By default, `pattern` is `$.js`

@@ -46,6 +46,9 @@ beforeAll(async () => {
 				'format.language': { '': '{language::$1}' },
 				'format.script': { '': '{script::$1}' },
 				'format.currency': { '': '{currency::$1}' },
+				'format.list.lc': { '': '{list::$1| style: long, type: conjunction }' },
+				'format.list.sd': { '': '{list::$1| style: short, type: disjunction }' },
+				'format.list.nu': { '': '{list::$1| style: narrow, type: unit }' },
 				'msg.entries': {
 					en: 'There {plural::$1|is|are} {number::$1} {plural::$1|entry|entries}',
 					fr: 'Il y a {number::$1} {plural::$1|entrée}'
@@ -214,6 +217,11 @@ describe('formatting', () => {
 		expect(T.be.format.script('Arab')).toBe('arabe')
 		expect(T.en.format.currency('RON')).toBe('Romanian Leu')
 		expect(T.be.format.currency('HUF')).toBe('forint hongrois')
+	})
+	test('lists', () => {
+		expect(T.en.format.list.lc(['a', 'b', 'c'])).toBe('a, b, and c')
+		expect(T.en.format.list.sd(['a', 'b', 'c'])).toBe('a, b, or c')
+		expect(T.en.format.list.nu(['a', 'b', 'c'])).toBe('a b c')
 	})
 })
 describe('parameters', () => {

@@ -34,7 +34,7 @@ export interface TranslatableDB<TextInfos extends {} = {}> extends DB {
 	modify(
 		key: TextKey,
 		locale: Locale,
-		text: Translation,
+		text: Translation | undefined,
 		textInfos?: Partial<TextInfos>
 	): Promise<void>
 }

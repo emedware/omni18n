@@ -9,7 +9,7 @@ Projects using OmnI18n use it in 4 layers
 3. [The `server`](./server.md): The server exposes functions to interact with the languages
 4. [The `database`](./db.md): A class implementing some interface that interacts directly with a database
 
-The library can be imported in a static website.
+The library can be imported in a [static website](umd.md).
 
 ## Bonus
 

@@ -12,7 +12,6 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 > {
 	private saving: Defer
 	public readonly loaded: Promise<void>
-	private metadata: any // DbInfos
 	constructor(
 		private path: string,
 		saveDelay = 1e3 // 1 second
@@ -21,31 +20,17 @@ export default class FileDB<KeyInfos extends {}, TextInfos extends {}> extends M
 		this.loaded = this.reload()
 		this.saving = new Defer(async () => {
 			let data = serialization.serialize(this.dictionary)
-			if (this.metadata) data = `#${stringify(this.metadata)}\n` + data
 			await writeFile(this.path, data, 'utf16le')
 		}, saveDelay)
-	}
-
-	get meta() {
-		return this.metadata
-	}
-
-	set meta(meta: any) {
-		this.metadata = meta
-		this.saving.defer()
 	}
 
 	async reload() {
 		// In case of too much time, write a "modified" call
 		const fStat = await stat(this.path)
-		if (fStat.isFile() && fStat.size > 0) {
-			const data = await readFile(this.path, 'utf16le'),
-				mda = /^#(.*?)\n/g.exec(data)
-			if (mda) {
-				this.metadata = parse(mda[1])
-				this.dictionary = serialization.deserialize<KeyInfos, TextInfos>(data.slice(mda.index))
-			} else this.dictionary = serialization.deserialize<KeyInfos, TextInfos>(data)
-		}
+		if (fStat.isFile() && fStat.size > 0)
+			this.dictionary = serialization.deserialize<KeyInfos, TextInfos>(
+				await readFile(this.path, 'utf16le')
+			)
 	}
 
 	async save() {

@@ -18,39 +18,46 @@ const serialization = {
 			const stringified = stringify(obj)
 			return preTabs ? stringified.replace(/\n/g, '\n' + '\t'.repeat(preTabs)) : stringified
 		}
-		let rv = ''
-		for (const [key, value] of Object.entries(dictionary)) {
-			const ti = value['.textInfos']
-			rv +=
-				key.replace(/:/g, '::') +
-				(value['.keyInfos'] ? optioned(value['.keyInfos']) : '') +
-				':' +
-				value['.zone'] +
-				'\n' +
-				Object.entries(value)
-					.filter(([k]) => !k.startsWith('.'))
-					.map(
-						([k, v]) =>
-							'\t' +
-							k +
-							(ti?.[k] ? optioned(ti[k], 1) : '') +
-							':' +
-							v!.replace(/\n/g, '\n\t\t') +
-							'\n'
-					)
-					.join('')
-			if (ti)
-				rv += Object.entries(ti)
-					.filter(([k]) => !(k in value))
-					.map(([k, v]) => '\t' + k + optioned(v, 1) + '\n')
-					.join('')
-		}
+		let rv = dictionary['.dbInfos'] ? `#${stringify(dictionary['.dbInfos'])}\n` : ''
+		for (const [key, value] of Object.entries(dictionary))
+			if (key[0] !== '.') {
+				const ti = value['.textInfos']
+				rv +=
+					key.replace(/:/g, '::') +
+					(value['.keyInfos'] ? optioned(value['.keyInfos']) : '') +
+					':' +
+					value['.zone'] +
+					'\n' +
+					Object.entries(value)
+						.filter(([k]) => !k.startsWith('.'))
+						.map(
+							([k, v]) =>
+								'\t' +
+								k +
+								(ti?.[k] ? optioned(ti[k], 1) : '') +
+								':' +
+								(<string>v!).replace(/\n/g, '\n\t\t') +
+								'\n'
+						)
+						.join('')
+				if (ti)
+					rv += Object.entries(ti)
+						.filter(([k]) => !(k in value))
+						.map(([k, v]) => '\t' + k + optioned(v, 1) + '\n')
+						.join('')
+			}
 		return rv
 	},
 
 	deserialize<KeyInfos extends {} = {}, TextInfos extends {} = {}>(data: string) {
-		if (!data.endsWith('\n')) data += '\n'
 		const dictionary: MemDBDictionary<KeyInfos, TextInfos> = {}
+		if (!data.endsWith('\n')) data += '\n'
+		if (data.charCodeAt(0) > 255) data = data.slice(1)
+		const mda = /^#(.*?)\n/g.exec(data)
+		if (mda) {
+			dictionary['.dbInfos'] = parse(mda[1])
+			data = data.slice(mda[0].length)
+		}
 		serialization.analyze<KeyInfos, TextInfos>(
 			data,
 			(key, zone, infos) => {

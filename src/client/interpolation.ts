@@ -139,6 +139,22 @@ export const processors: Record<string, (...args: any[]) => string> = {
 			new Intl.DisplayNames(this.client.locales[0], { type: 'currency' }).of(str) ||
 			reportError(this, 'Invalid currency', { str })
 		)
+	},
+	list(this: TContext, ...args: any[]) {
+		function makeArray(arg: Record<string, any> | any[] | string) {
+			if (Array.isArray(arg) || typeof arg !== 'object') return arg
+			const rv = []
+			for (const key in arg) rv[parseInt(key)] = arg[key]
+			return rv
+		}
+		let opts = args.pop()
+		if (typeof opts !== 'object' || Array.isArray(opts)) {
+			args.push(opts)
+			opts = {}
+		}
+		return new Intl.ListFormat(this.client.locales[0], opts).format(
+			args.map((arg) => makeArray(arg)).flat()
+		)
 	}
 }
 

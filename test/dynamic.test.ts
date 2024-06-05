@@ -44,13 +44,15 @@ describe('Dynamic functionality', () => {
 	})
 
 	test('workList', async () => {
-		expect(await server.workList(['en'])).toEqual({
-			'fld.name': { zone: '', texts: { en: { text: 'Name' } } },
-			'cmd.customize': {
+		expect(await server.workList(['en'])).toEqual([
+			{ key: 'fld.name', zone: '', texts: { en: { text: 'Name' } } },
+			{
+				key: 'cmd.customize',
 				zone: '',
 				texts: { en: { text: 'Customize' }, 'en-UK': { text: 'Customise' } }
 			},
-			'cmd.save': {
+			{
+				key: 'cmd.save',
 				zone: 'adm',
 				texts: {
 					en: { text: 'Save' },
@@ -61,8 +63,8 @@ describe('Dynamic functionality', () => {
 					}
 				}
 			},
-			'cmd.modify': { zone: 'adm', texts: { en: { text: 'Modify' } } }
-		})
+			{ key: 'cmd.modify', zone: 'adm', texts: { en: { text: 'Modify' } } }
+		])
 	})
 
 	test('regular feedback', async () => {

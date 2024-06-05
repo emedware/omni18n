@@ -48,9 +48,19 @@ export function translatePage() {
 			const parts = element.getAttribute('i18n')!.split(',')
 			for (const part of parts) {
 				const [attr, key] = part.split(':', 2).map((k) => k.trim())
-				if (key === 'html') element.innerHTML = T[key]()
+				if (attr === 'html') element.innerHTML = T[key]()
 				if (key) element.setAttribute(attr, T[key]())
 				else element.textContent = T[attr]()
+			}
+		}
+	// Translate before text is loaded
+	// Just empty the translated elements before their rendering to avoid blinking
+	else
+		for (const element of document.querySelectorAll('[i18n]')) {
+			const parts = element.getAttribute('i18n')!.split(',')
+			for (const part of parts) {
+				const [attr, key] = part.split(':', 2).map((k) => k.trim())
+				if (attr === 'html' || !key) element.textContent = ''
 			}
 		}
 	const localesListElm = document.getElementById('locales-list')
@@ -125,6 +135,7 @@ export async function init(acceptedLocales: Locale[], fileNameTemplate?: string)
 const localeChangeCBs: ((locale: Locale) => void)[] = []
 export function onLocaleChange(cb: (locale: Locale) => void) {
 	localeChangeCBs.push(cb)
+	if (<any>globalThis.T) cb(locale)
 	return () => localeChangeCBs.splice(localeChangeCBs.indexOf(cb), 1)
 }
 

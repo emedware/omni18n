@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"moduleResolution": "Node",
-		"target": "es2015",
+		"target": "es2021",
 		"module": "ESNext",
 		"outDir": "docs/lib",
 		"declaration": false,

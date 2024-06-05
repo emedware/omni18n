@@ -23,7 +23,7 @@
 			"require": "./lib/cjs/s-a.js",
 			"types": "./lib/src/s-a.d.ts"
 		},
-		"./s-a/ts": "./src/s-a.ts"
+		"./ts/s-a": "./src/s-a.ts"
 	},
 	"bin": {
 		"extractLocales": "./bin/extractLocales.js"

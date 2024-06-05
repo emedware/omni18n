@@ -21,6 +21,8 @@ export type MemDBDictionaryEntry<KeyInfos extends {} = {}, TextInfos extends {} 
 
 export type MemDBDictionary<KeyInfos extends {} = {}, TextInfos extends {} = {}> = {
 	[key in TextKey]: MemDBDictionaryEntry<KeyInfos, TextInfos>
+} & {
+	'.dbInfos'?: any
 }
 
 export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
@@ -40,9 +42,10 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 	}
 
 	async workList(locales: Locale[]) {
-		const result: WorkDictionary = {}
+		const result: WorkDictionary = []
 		Object.entries(this.dictionary).forEach(([key, value]) => {
 			const entry: WorkDictionaryEntry<KeyInfos, TextInfos> = {
+				key,
 				zone: value['.zone'] || '',
 				texts: {},
 				...(value['.keyInfos'] && { infos: value['.keyInfos'] })
@@ -58,7 +61,7 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 					}
 				}
 			}
-			result[key] = entry
+			result.push(entry)
 		})
 		return result
 	}
@@ -72,11 +75,17 @@ export default class MemDB<KeyInfos extends {} = {}, TextInfos extends {} = {}>
 			: false
 	}
 
-	async modify(key: TextKey, locale: Locale, value: Translation, textInfos?: Partial<TextInfos>) {
+	async modify(
+		key: TextKey,
+		locale: Locale,
+		value: Translation | undefined,
+		textInfos?: Partial<TextInfos>
+	) {
 		if (!this.dictionary[key]) throw new Error(`Key "${key}" not found`)
 		if (!/^[\w-]*$/g.test(locale))
 			throw new Error(`Bad locale: ${locale} (only letters, digits, "_" and "-" allowed)`)
-		this.dictionary[key][locale] = value
+		if (value === undefined) delete this.dictionary[key][locale]
+		else this.dictionary[key][locale] = value
 		if (textInfos) {
 			const tis = <Record<Locale, TextInfos>>this.dictionary[key]['.textInfos']
 			tis[locale] = {

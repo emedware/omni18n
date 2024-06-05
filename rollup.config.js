@@ -16,6 +16,7 @@ export default [
 	{
 		input: ['src/index.ts', 'src/s-a.ts', 'src/client.ts'],
 		output: {
+			banner: '/** https://www.npmjs.com/package/omni18n */',
 			dir: 'lib'
 		},
 		external: ['json5'],
@@ -34,6 +35,7 @@ export default [
 	{
 		input: ['src/index.ts', 'src/s-a.ts', 'src/client.ts'],
 		output: {
+			banner: '/** https://www.npmjs.com/package/omni18n */',
 			dir: 'lib/cjs',
 			sourcemap: true,
 			format: 'cjs',
@@ -53,6 +55,7 @@ export default [
 	{
 		input: ['src/index.ts', 'src/s-a.ts', 'src/client.ts'],
 		output: {
+			banner: '/** https://www.npmjs.com/package/omni18n */',
 			dir: 'lib/esm',
 			sourcemap: true,
 			format: 'esm'

@@ -40,7 +40,8 @@ import { I18nServer, I18nClient } from 'omni18n'
 
 const server = new I18nServer(myDBinterface)
 const client = new I18nClient(['en-US'], server.condense)
-const T = await client.enter() // Here is where the actual DB-query occurs
+// Here is where the actual DB-query occurs
+const T = await client.enter()
 
 // Will all display the entry `msg.hello` for the `en-US` (or `en`) locale
 console.log(`${T.msg.hello}, ...`)
@@ -64,8 +65,10 @@ const fetchCondensed: Condense = async (locales: Locale[], zones: string[])=>  {
 	return result as CondensedDictionary[]
 }
 const client = new I18nClient(['en-US'], fetchCondensed)
-client.usePartial(preloadedData)	// With many frameworks, dictionary data might be available on page load
-const T = await client.enter()	// Here is where the actual download occurs if needed
+// With many frameworks, dictionary data might be available on page load
+client.usePartial(preloadedData)
+// Here is where the actual download occurs if needed
+const T = await client.enter()
 ```
 
 The `usePartial` usage is described [here](./docs/client.md#ssr-between-clients)
@@ -173,7 +176,9 @@ error(key: string, error: string, spec: object): string
 
 ## Integrations
 
-- [SvelteKit](https://github.com/eddow/omni18n-svelte4) (Svelte4)
+- [SvelteKit](https://github.com/eddow/omni18n-svelte4) - Svelte4
+- [Translator](https://github.com/eddow/omni18n-edit/releases) - To edit `FileDB` dictionaries
+
 
 ## TODO
 

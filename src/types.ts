@@ -2,7 +2,10 @@
 export type Locale = Intl.UnicodeBCP47LocaleIdentifier
 export type Zone = string
 // No `then` as it would become `thenable` and no async function could return a `Translator`
-export type TextKey = Exclude<string, '' | '.' | 'then' | '.zone' | '.textInfos' | '.keyInfos'>
+export type TextKey = Exclude<
+	string,
+	'' | '.' | 'then' | '.zone' | '.textInfos' | '.keyInfos' | '.dbInfos'
+>
 export type Translation = string
 
 export type CondensedDictionary = {
@@ -19,6 +22,7 @@ export type WorkDictionaryText<TextInfos extends {} = {}> = {
 	infos?: TextInfos
 }
 export type WorkDictionaryEntry<KeyInfos extends {} = {}, TextInfos extends {} = {}> = {
+	key: TextKey
 	texts: { [locale: Locale]: WorkDictionaryText<TextInfos> }
 	zone: Zone
 	infos?: KeyInfos
@@ -26,4 +30,4 @@ export type WorkDictionaryEntry<KeyInfos extends {} = {}, TextInfos extends {} =
 /**
  * Dictionary used for translator-related operations
  */
-export type WorkDictionary = Record<TextKey, WorkDictionaryEntry>
+export type WorkDictionary = WorkDictionaryEntry[]
