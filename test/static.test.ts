@@ -238,10 +238,11 @@ describe('parameters', () => {
 	})
 
 	test('change locale', async () => {
-		const client = new I18nClient(['en-US'], server.condense),
-			T: Translator = await client.enter()
+		const client = new I18nClient(['en-US'], server.condense)
+		let T: Translator = await client.enter()
 		expect(T.msg.greet()).toBe('Hello here')
-		await client.setLocales(['fr'])
+		client.setLocales(['fr'])
+		T = await client.enter()
 		expect(T.msg.greet()).toBe('Salut tout le monde')
 	})
 })

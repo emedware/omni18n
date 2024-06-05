@@ -12,6 +12,14 @@ import {
 	text
 } from './types'
 
+const untranslatable = {
+	// Must be un-then-able in order to be awaited
+	then: undefined,
+	// Vue reference mechanism
+	__v_isRef: undefined,
+	__v_raw: undefined
+}
+
 function entry(t: Translation, isFallback?: boolean): ClientDictionary {
 	return { [text]: t, ...(isFallback ? { [fallback]: true } : {}) }
 }
@@ -87,7 +95,9 @@ export function translator(context: TContext): Translator {
 			}
 	const primitive = <Translator>new Proxy(translation, {
 		get(target, key) {
+			if (key in untranslatable) return untranslatable[key as keyof typeof untranslatable]
 			switch (key) {
+				//? case 'toJSON':	// Occurs on JSON.stringify
 				case 'toString':
 				case Symbol.toStringTag:
 				case 'valueOf':
@@ -96,17 +106,6 @@ export function translator(context: TContext): Translator {
 					return primitive
 				case 'constructor':
 					return String
-				case 'then': // Must be un-then-able in order to be awaited
-					return new Proxy(
-						{},
-						{
-							get(target, p, receiver) {
-								const msg = 'Translators must be unthenable. `then` cannot be used as a text key.'
-								if (p === 'toString') return msg
-								throw new TranslationError(msg)
-							}
-						}
-					)
 				case contextKey:
 					return context
 			}

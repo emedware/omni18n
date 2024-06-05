@@ -131,7 +131,7 @@ export default class I18nClient implements OmnI18nClient {
 		if (toLoad.length) this.received(toLoad, await this.condense(this.locales, toLoad))
 	}
 
-	async setLocales(locales: Locale[]) {
+	setLocales(locales: Locale[], partial?: PartialLoad) {
 		locales = removeDuplicates(locales)
 		if (
 			this.locales.length === locales.length &&
@@ -143,7 +143,7 @@ export default class I18nClient implements OmnI18nClient {
 		this.loadedZones = new Set()
 		this.dictionary = {}
 		this.internals = {}
-		await this.loadDefer.defer()
+		this.loadDefer.defer()
 	}
 
 	modified(entries: Record<TextKey, Translation | undefined>) {

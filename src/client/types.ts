@@ -44,9 +44,10 @@ export class TranslationError extends Error {
 	name = 'TranslationError'
 }
 
-export type Translator = ((...args: any[]) => string) & {
-	[k: TextKey]: Translator
-	[contextKey]: TContext
-}
+export type Translator = ((...args: any[]) => string) &
+	string & {
+		[k: TextKey]: Translator
+		[contextKey]: TContext
+	}
 
 export type Translatable = { [key: TextKey]: Translatable | string }
