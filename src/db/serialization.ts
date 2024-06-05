@@ -1,5 +1,4 @@
-import json5 from 'json5'
-const { parse, stringify } = json5
+import { parse, stringify } from '../cgpt-js'
 import { Locale, TextKey, Translation, Zone } from 'src/types'
 import { MemDBDictionary, MemDBDictionaryEntry } from './memDb'
 
@@ -117,7 +116,7 @@ const serialization = {
 					key,
 					localeFetch[1] as Locale,
 					localeFetch[3] && localeFetch[3].replace(/\u0000\t\t/g, '\n'),
-					localeFetch[2] ? parse<TextInfos>(localeFetch[2].replace(/\u0000/g, '\n')) : undefined
+					localeFetch[2] ? <TextInfos>parse(localeFetch[2].replace(/\u0000/g, '\n')) : undefined
 				)
 			}
 			endKey?.(key)

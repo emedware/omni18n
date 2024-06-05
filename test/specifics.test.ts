@@ -11,7 +11,9 @@ import {
 	reports,
 	localeFlags,
 	flagCodeExceptions,
-	FileDB
+	FileDB,
+	parse,
+	stringify
 } from '../src/index'
 import { localStack } from './utils'
 
@@ -159,14 +161,91 @@ test.multiline:
 		await server.modify('fld.name', 'hu', 'Név')
 		await db.save()
 		const content = await readFile('./db.test', 'utf16le')
-		expect(content).toBe(`fld.name{note:'the name of the person'}:
+		expect(content).toBe(`fld.name{note: "the name of the person"}:
 	en:Name
-	fr{obvious:true}:Nom
+	fr{obvious: true}:Nom
 	hu:Név
 test.multiline:
 	:Line 1
 		Line 2
 `)
 		await unlink('./db.test')
+	})
+})
+
+describe('cgpt-js', () => {
+	describe('stringify function', () => {
+		test('should stringify a simple object', () => {
+			const obj = { name: 'John', age: 30 }
+			const expected = '{name: "John", age: 30}'
+			expect(stringify(obj)).toBe(expected)
+		})
+
+		test('should stringify an object with indentation', () => {
+			const obj = { name: 'John', 'age-': 30 }
+			const expected = `{
+\tname: "John",
+\t"age-": 30
+}`
+			expect(stringify(obj, 10, '\t')).toBe(expected)
+		})
+
+		test('complex stringify', () => {
+			const obj = {
+				name: 'John',
+				age: 30,
+				isAdmin: true,
+				hobbies: ['reading', 'coding', 'swimming'],
+				address: {
+					city: 'New\nYork',
+					country: 'USA'
+				}
+			}
+			const expected = `{
+	name: "John",
+	age: 30,
+	isAdmin: true,
+	hobbies: ["reading", "coding", "swimming"],
+	address: {city: "New
+York", country: "USA"}
+}`
+			expect(stringify(obj, 40, '\t')).toBe(expected)
+		})
+	})
+	describe('parse function', () => {
+		test('should parse a simple JSON string', () => {
+			const jsonString = '{"name":"John","age":30}'
+			const expected = { name: 'John', age: 30 }
+			expect(parse(jsonString)).toEqual(expected)
+		})
+
+		test('should throw SyntaxError when parsing invalid JSON', () => {
+			const invalidJsonString = '{"name":"John","age":}'
+			expect(() => parse(invalidJsonString)).toThrow(SyntaxError)
+		})
+
+		test('complex parse', () => {
+			const jsonString = `{
+     // This is a comment
+	name: "John",// Another comment
+	age: 30/* multi
+line*/,
+	isAdmin: true,
+	hobbies: ["reading", "coding", "swimming"],
+	address: {city: "New
+York", country: "USA"/* -- */}
+}`
+			const expected = {
+				name: 'John',
+				age: 30,
+				isAdmin: true,
+				hobbies: ['reading', 'coding', 'swimming'],
+				address: {
+					city: 'New\nYork',
+					country: 'USA'
+				}
+			}
+			expect(parse(jsonString)).toEqual(expected)
+		})
 	})
 })

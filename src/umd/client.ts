@@ -9,8 +9,7 @@ import {
 	reports,
 	TContext
 } from '../client'
-import json5 from 'json5'
-const { parse } = json5
+import { parse } from '../cgpt-js'
 
 declare global {
 	var T: Translator
@@ -171,4 +170,4 @@ try {
 	let textContent = document.currentScript?.textContent
 	if (textContent) hcArgs = parse('[' + textContent + ']')
 } catch (e) {}
-if (hcArgs) init.apply(null, hcArgs)
+if (hcArgs) init.apply(null, <any>hcArgs)

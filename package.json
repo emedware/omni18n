@@ -73,7 +73,5 @@
 		"tsx": "^4.7.3",
 		"typescript": "^5.4.5"
 	},
-	"dependencies": {
-		"json5": "^2.2.3"
-	}
+	"dependencies": {}
 }

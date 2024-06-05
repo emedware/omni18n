@@ -2,8 +2,7 @@ import { mkdir, writeFile, watch } from 'fs/promises'
 import { dirname, join, basename } from 'path'
 import commandLineArgs from 'command-line-args'
 import { FileDB, I18nServer } from 'src'
-import json5 from 'json5'
-const { stringify } = json5
+import { stringify } from '../cgpt-js'
 
 const options = commandLineArgs(
 	[

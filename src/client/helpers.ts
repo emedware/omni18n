@@ -1,6 +1,5 @@
-import json5 from 'json5'
-const { parse } = json5
-import { type CondensedDictionary, type TextKey, type Translation, type Zone } from '../types'
+import { parse } from '../cgpt-js'
+import { type CondensedDictionary, type TextKey, type Translation } from '../types'
 import {
 	ClientDictionary,
 	TContext,
@@ -119,7 +118,7 @@ export function translator(context: TContext): Translator {
 export function parseInternals(dictionary: ClientDictionary | string) {
 	if (!dictionary) return {}
 	if (typeof dictionary === 'string') return parse(dictionary)
-	const result = text in dictionary ? parse(dictionary[text]!) : {}
+	const result = text in dictionary ? <any>parse(dictionary[text]!) : {}
 	for (const key in dictionary) if (key !== '') result[key] = parseInternals(dictionary[key])
 	return result
 }

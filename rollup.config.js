@@ -19,7 +19,6 @@ export default [
 			banner: '/** https://www.npmjs.com/package/omni18n */',
 			dir: 'lib'
 		},
-		external: ['json5'],
 		plugins: [
 			resolve(),
 			commonjs(),
@@ -60,7 +59,6 @@ export default [
 			sourcemap: true,
 			format: 'esm'
 		},
-		external: ['json5'],
 		plugins: [
 			resolve(),
 			commonjs(),

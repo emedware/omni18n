@@ -83,7 +83,7 @@ Two are provided: a [`MemDB`](./docs/db.md#memdb) who is basically an "in-memory
 - reading from a file
 - maintaining the files when changes are brought
 
-The `FileDB` uses a human-accessible (using [json5](https://json5.org/) for custom types) and based on `\t` indentation file format only proper for this usage.
+The `FileDB` uses a human-accessible js-like format for custom types) and based on `\t` indentation file format only proper for this usage.
 
 Having the translators managing translations in the UI while the devs have to access the file to add/remove keys, change their zone, ... and all this to go through git commits (so, to have local changes that will be integrated in the project after push/merge) can be done with `FileDB` - for this, just interface a `PUT` to a call on `InteractiveServer::modify` (while that server has a `FileDB` as a source) then the new file will be saved soon with the modified values.
 
