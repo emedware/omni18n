@@ -89,6 +89,25 @@ export function translatePage() {
 
 		localesListElm.innerHTML = selectionList.join('')
 	}
+
+	const currentLocaleElm = document.getElementById('current-locale')
+	if (currentLocaleElm) {
+		const flags = localeFlags(locale),
+			flagsStr =
+				flags.length === 1
+					? flags[0]
+					: `
+	<span class="flag-main">${flags[0]}</span>
+	<span class="flag-loc">${flags[1]}</span>
+`,
+			localeName = new Intl.DisplayNames(locale, { type: 'language' }).of(locale)
+		currentLocaleElm.innerHTML = `
+<button class="locale" title="${localeName}">
+	<span class="flag">${flagsStr}</span>
+	<span class="name">${localeName}</span>
+</button>
+`
+	}
 }
 
 async function loadLanguage() {

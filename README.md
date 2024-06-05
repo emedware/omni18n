@@ -179,7 +179,6 @@ error(key: string, error: string, spec: object): string
 - [SvelteKit](https://github.com/eddow/omni18n-svelte4) - Svelte4
 - [Translator](https://github.com/eddow/omni18n-edit/releases) - To edit `FileDB` dictionaries
 
-
 ## TODO
 
 - tests:
