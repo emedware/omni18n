@@ -1,3 +1,3 @@
-export * from './server-shared/s-a'
+export * from './s-a'
 import FileDB from './db/fileDb'
 export { FileDB }

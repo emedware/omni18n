@@ -10,7 +10,7 @@ import {
 	bulkObject,
 	reports,
 	localeFlags,
-	flagCodeExceptions,
+	flagEmojiExceptions,
 	parse,
 	stringify
 } from '~/s-a'
@@ -91,7 +91,7 @@ describe('specifics', () => {
 		expect(localeFlags('en')).toEqual(['🇬🇧'])
 		expect(localeFlags('en-GB')).toEqual(['🇬🇧'])
 		expect(localeFlags('en-US-gb')).toEqual(['🇬🇧', '🇺🇸'])
-		flagCodeExceptions.en = '🏴󠁧󠁢󠁥󠁮󠁧󠁿'
+		flagEmojiExceptions.en = '🏴󠁧󠁢󠁥󠁮󠁧󠁿'
 		expect(localeFlags('en-GB')).toEqual(['🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🇬🇧'])
 		expect(localeFlags('fr')).toEqual(['🇫🇷'])
 		expect(localeFlags('fr-FR')).toEqual(['🇫🇷'])

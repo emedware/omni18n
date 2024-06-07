@@ -7,3 +7,4 @@
 *.config.json
 .gitignore
 /.svelte-kit
+package-lock.json

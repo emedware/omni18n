@@ -11,16 +11,4 @@ Projects using OmnI18n use it in 4 layers
 
 The library can be imported in a [static website](umd.md).
 
-## Bonus
-
-### Flags
-
-Just realized it was [not working on windows](https://answers.microsoft.com/en-us/windows/forum/all/flag-emoji/85b163bc-786a-4918-9042-763ccf4b6c05)...
-
-```js
-import { localeFlags, flagCodeExceptions }
-localeFlags('en-GB')	// ['🇬🇧']
-localeFlags('en-US')	//['🇬🇧', '🇺🇸']
-flagCodeExceptions.en = '🏴󠁧󠁢󠁥󠁮󠁧󠁿'
-localeFlags('en-GB')	// ['🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🇬🇧']
-```
+There are [some utils that have been done for the library](./bonus.md) and are exported with it (flags, js-like json & defer)
