@@ -1,10 +1,4 @@
-import {
-	I18nClient,
-	InteractiveServer,
-	MemDB,
-	MemDBDictionaryEntry,
-	Translator
-} from '../src/index'
+import { I18nClient, InteractiveServer, MemDB, MemDBDictionaryEntry, Translator } from '~/server'
 import { WaitingDB } from './db'
 
 describe('Dynamic functionality', () => {

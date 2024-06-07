@@ -11,10 +11,10 @@ import {
 	reports,
 	localeFlags,
 	flagCodeExceptions,
-	FileDB,
 	parse,
 	stringify
-} from '../src/index'
+} from '~/s-a'
+import { FileDB } from '~/server'
 import { localStack } from './utils'
 
 const misses = jest.fn()

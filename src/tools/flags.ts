@@ -1,4 +1,4 @@
-import { Locale } from './types'
+import { Locale } from '../types'
 
 function toEmoji(name: string) {
 	return String.fromCodePoint(...Array.from(name).map((k) => k.charCodeAt(0) + 127365))

@@ -1,4 +1,4 @@
-import { I18nClient, I18nServer, Locale, MemDB, MemDBDictionary, Zone } from '../src/index'
+import { I18nClient, I18nServer, Locale, MemDB, MemDBDictionary, Zone } from '~/server'
 import { WaitingDB } from './db'
 
 export function localStack<KeyInfos extends {} = {}, TextInfos extends {} = {}>(

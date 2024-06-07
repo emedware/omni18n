@@ -1,5 +1,5 @@
 import { readFile, stat, writeFile } from 'node:fs/promises'
-import Defer from '../defer'
+import Defer from '../tools/defer'
 import { WorkDictionary, type Locale, type TextKey, type Translation, type Zone } from '../types'
 import MemDB from './memDb'
 import serialization from './serialization'

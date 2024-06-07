@@ -10,7 +10,7 @@ import {
 /**
  * i18n consumption/usage, both client and server side.
  */
-import Defer from '../defer'
+import Defer from '../tools/defer'
 import '../polyfill'
 import {
 	longKeyList,

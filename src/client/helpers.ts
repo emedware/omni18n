@@ -1,4 +1,4 @@
-import { parse } from '../cgpt-js'
+import { parse } from '../tools/cgpt-js'
 import { type CondensedDictionary, type TextKey, type Translation } from '../types'
 import {
 	ClientDictionary,

@@ -1,4 +1,4 @@
-import { parse, stringify } from '../cgpt-js'
+import { parse, stringify } from '../tools/cgpt-js'
 import { Locale, TextKey, Translation, Zone } from 'src/types'
 import { MemDBDictionary, MemDBDictionaryEntry } from './memDb'
 

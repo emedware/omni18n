@@ -9,14 +9,14 @@
 				"types": "./lib/src/client.d.ts"
 			},
 			"default": {
-				"import": "./lib/esm/index.js",
-				"require": "./lib/cjs/index.js",
-				"types": "./lib/src/index.d.ts"
+				"import": "./lib/esm/server.js",
+				"require": "./lib/cjs/server.js",
+				"types": "./lib/src/server.d.ts"
 			}
 		},
 		"./ts": {
 			"browser": "./src/client.ts",
-			"default": "./src/index.ts"
+			"default": "./src/server.ts"
 		},
 		"./s-a": {
 			"import": "./lib/esm/s-a.js",
@@ -29,7 +29,6 @@
 		"extractLocales": "./bin/extractLocales.js"
 	},
 	"description": "",
-	"types": "./lib/src/index.d.ts",
 	"type": "module",
 	"scripts": {
 		"test": "jest",
@@ -72,6 +71,5 @@
 		"tslib": "^2.6.2",
 		"tsx": "^4.7.3",
 		"typescript": "^5.4.5"
-	},
-	"dependencies": {}
+	}
 }

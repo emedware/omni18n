@@ -14,7 +14,7 @@ umd.plugins.push(terser())
 
 export default [
 	{
-		input: ['src/index.ts', 'src/s-a.ts', 'src/client.ts'],
+		input: ['src/server.ts', 'src/s-a.ts', 'src/client.ts'],
 		output: {
 			banner: '/** https://www.npmjs.com/package/omni18n */',
 			dir: 'lib'
@@ -32,7 +32,7 @@ export default [
 		]
 	},
 	{
-		input: ['src/index.ts', 'src/s-a.ts', 'src/client.ts'],
+		input: ['src/server.ts', 'src/s-a.ts', 'src/client.ts'],
 		output: {
 			banner: '/** https://www.npmjs.com/package/omni18n */',
 			dir: 'lib/cjs',
@@ -52,7 +52,7 @@ export default [
 		]
 	},
 	{
-		input: ['src/index.ts', 'src/s-a.ts', 'src/client.ts'],
+		input: ['src/server.ts', 'src/s-a.ts', 'src/client.ts'],
 		output: {
 			banner: '/** https://www.npmjs.com/package/omni18n */',
 			dir: 'lib/esm',

@@ -15,6 +15,8 @@ The library can be imported in a [static website](umd.md).
 
 ### Flags
 
+Just realized it was [not working on windows](https://answers.microsoft.com/en-us/windows/forum/all/flag-emoji/85b163bc-786a-4918-9042-763ccf4b6c05)...
+
 ```js
 import { localeFlags, flagCodeExceptions }
 localeFlags('en-GB')	// ['🇬🇧']

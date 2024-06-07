@@ -1,4 +1,4 @@
-import { I18nClient, I18nServer, Locale, MemDB, Translator } from '../src/index'
+import { I18nClient, I18nServer, Locale, MemDB, Translator } from '~/s-a'
 import { WaitingDB } from './db'
 
 // This is for test purpose: in general usage, only one locale/T is used

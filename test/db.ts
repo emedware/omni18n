@@ -1,4 +1,4 @@
-import { InteractiveDB, Locale, TextKey, Translation, WorkDictionary, Zone } from 'src/index'
+import { InteractiveDB, Locale, TextKey, Translation, WorkDictionary, Zone } from '~/server'
 
 // As this is for test purpose, actually wait even for direct-memory operations
 function waiting<RV>(func: () => Promise<RV>) {
