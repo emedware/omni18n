@@ -30,4 +30,7 @@ export type WorkDictionaryEntry<KeyInfos extends {} = {}, TextInfos extends {} =
 /**
  * Dictionary used for translator-related operations
  */
-export type WorkDictionary = WorkDictionaryEntry[]
+export type WorkDictionary<
+	KeyInfos extends {} = {},
+	TextInfos extends {} = {}
+> = WorkDictionaryEntry<KeyInfos, TextInfos>[]

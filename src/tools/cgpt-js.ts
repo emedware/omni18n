@@ -27,18 +27,18 @@ export function stringify(
 				return stringifyObject(value, currentIndent, currentLength)
 			}
 		} else if (typeof value === 'string') {
-			return '"' + value.replace(/"/g, '\\"') + '"'
+			return stringifyString(value)
 		} else {
 			return String(value)
 		}
 	}
-
+	function stringifyString(value: string): string {
+		let quote = ''
+		for (quote of "'\"`'") if (!value.includes(quote)) break
+		return quote + value.replace(new RegExp(quote, 'g'), '\\' + quote) + quote
+	}
 	function stringifyKey(key: string): string {
-		if (/^[a-zA-Z_]\w*$/.test(key)) {
-			return key
-		} else {
-			return '"' + key.replace(/"/g, '\\"') + '"'
-		}
+		return /^[a-zA-Z_]\w*$/.test(key) ? key : stringifyString(key)
 	}
 
 	function stringifyObject(obj: JSONObject, currentIndent: number, currentLength: number): string {
@@ -133,8 +133,10 @@ export function stringify(
 }
 
 export function parse(jsonString: string): JSONValue {
-	function syntaxErrorDtl() {
-		return `\nat line ${lineNumber} column ${columnNumber}: ` + jsonString.slice(index, index + 20)
+	function syntaxError(dtl: string) {
+		return new SyntaxError(
+			`${dtl}\nat line ${lineNumber} column ${columnNumber}: ` + jsonString.slice(index, index + 20)
+		)
 	}
 	let index = 0
 	let lineNumber = 1
@@ -176,9 +178,7 @@ export function parse(jsonString: string): JSONValue {
 				index++
 			}
 			if (index >= jsonString.length) {
-				throw new SyntaxError(
-					`Unexpected end of input while parsing multiline comment ${syntaxErrorDtl()}`
-				)
+				throw syntaxError(`Unexpected end of input while parsing multiline comment`)
 			}
 			index += 2 // Skip the closing '*/'
 			columnNumber += 2
@@ -187,9 +187,7 @@ export function parse(jsonString: string): JSONValue {
 
 	function parseString(): string {
 		const quote = jsonString[index]
-		if (quote !== '"' && quote !== "'") {
-			throw new SyntaxError(`Unexpected character '${quote}' ${syntaxErrorDtl()}`)
-		}
+		if (!'\'"`'.includes(quote)) throw syntaxError(`Unexpected character`)
 		let value = ''
 		index++ // Skip opening quote
 		columnNumber++
@@ -208,9 +206,8 @@ export function parse(jsonString: string): JSONValue {
 				columnNumber++
 			}
 		}
-		if (index >= jsonString.length) {
-			throw new SyntaxError(`Unexpected end of input while parsing string ${syntaxErrorDtl()}`)
-		}
+		if (index >= jsonString.length)
+			throw syntaxError(`Unexpected end of input while parsing string`)
 		index++ // Skip closing quote
 		columnNumber++
 		return value
@@ -219,7 +216,7 @@ export function parse(jsonString: string): JSONValue {
 	function parseKey(): string {
 		skipWhitespace()
 		const quote = jsonString[index]
-		if (quote === '"' || quote === "'") {
+		if ('\'"`'.includes(quote)) {
 			// If the key starts with a quote, parse it as a string
 			return parseString()
 		} else {
@@ -230,7 +227,7 @@ export function parse(jsonString: string): JSONValue {
 				key += jsonString[index++]
 				columnNumber++
 			} else {
-				throw new SyntaxError(`Unexpected character ${syntaxErrorDtl()}`)
+				throw syntaxError(`Unexpected character`)
 			}
 			// Continue adding valid characters to the key
 			while (index < jsonString.length && /[a-zA-Z0-9_$]/.test(jsonString[index])) {
@@ -269,7 +266,7 @@ export function parse(jsonString: string): JSONValue {
 		} else if (!isNaN(parseFloat(literal))) {
 			return parseFloat(literal)
 		}
-		throw new SyntaxError(`Unexpected character ${syntaxErrorDtl()}`)
+		throw syntaxError(`Unexpected character`)
 	}
 
 	function parseArray(): JSONArray {
@@ -283,12 +280,12 @@ export function parse(jsonString: string): JSONValue {
 				index++ // Skip comma
 				columnNumber++
 			} else if (jsonString[index] !== ']') {
-				throw new SyntaxError(`Unexpected character ${syntaxErrorDtl()}`)
+				throw syntaxError(`Unexpected character`)
 			}
 			skipWhitespace()
 		}
 		if (index >= jsonString.length) {
-			throw new SyntaxError(`Unexpected end of input while parsing array ${syntaxErrorDtl()}`)
+			throw syntaxError(`Unexpected end of input while parsing array`)
 		}
 		index++ // Skip closing bracket
 		columnNumber++
@@ -304,7 +301,7 @@ export function parse(jsonString: string): JSONValue {
 			const key = parseKey()
 			skipAllIgnored()
 			if (jsonString[index++] !== ':') {
-				throw new SyntaxError(`Expected ':' ${syntaxErrorDtl()}`)
+				throw syntaxError(`Expected ':'`)
 			}
 			skipAllIgnored()
 			const value = parseValue()
@@ -315,11 +312,11 @@ export function parse(jsonString: string): JSONValue {
 				columnNumber++
 				skipAllIgnored()
 			} else if (jsonString[index] !== '}') {
-				throw new SyntaxError(`Unexpected character ${syntaxErrorDtl()}`)
+				throw syntaxError(`Unexpected character`)
 			}
 		}
 		if (index >= jsonString.length) {
-			throw new SyntaxError(`Unexpected end of input while parsing object ${syntaxErrorDtl()}`)
+			throw syntaxError(`Unexpected end of input while parsing object`)
 		}
 		index++ // Skip closing brace
 		columnNumber++
