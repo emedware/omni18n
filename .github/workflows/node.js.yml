@@ -18,8 +18,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Disable lock file check
-        run: echo "::set-output name=check-run::false"
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:

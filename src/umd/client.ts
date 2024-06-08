@@ -5,10 +5,9 @@ import {
 	Locale,
 	Translator,
 	Translation,
-	localeFlags,
+	localeFlagsEngine,
 	reports,
-	TContext,
-	gotUserAgent
+	TContext
 } from '../client'
 import { parse } from '../tools/cgpt-js'
 
@@ -16,7 +15,7 @@ declare global {
 	var T: Translator
 }
 
-gotUserAgent(navigator.userAgent)
+export const localeFlags = localeFlagsEngine()
 
 Object.assign(reports, {
 	error(context: TContext, error: string, spec: object) {

@@ -9,8 +9,9 @@ import {
 	bulkDictionary,
 	bulkObject,
 	reports,
-	localeFlags,
+	localeFlagsEngine,
 	flagEmojiExceptions,
+	flagClassExceptions,
 	parse,
 	stringify
 } from '~/s-a'
@@ -87,7 +88,8 @@ describe('specifics', () => {
 		const T = await CSC.enter()
 		expect(T.test.only()).toBe('only')
 	})
-	test('flags', async () => {
+	test('emojis flags', async () => {
+		const localeFlags = localeFlagsEngine('emojis')
 		expect(localeFlags('en')).toEqual(['🇬🇧'])
 		expect(localeFlags('en-GB')).toEqual(['🇬🇧'])
 		expect(localeFlags('en-US-gb')).toEqual(['🇬🇧', '🇺🇸'])
@@ -96,6 +98,26 @@ describe('specifics', () => {
 		expect(localeFlags('fr')).toEqual(['🇫🇷'])
 		expect(localeFlags('fr-FR')).toEqual(['🇫🇷'])
 		expect(localeFlags('fr-BE')).toEqual(['🇫🇷', '🇧🇪'])
+	})
+	test('flag-icons flags', async () => {
+		const localeFlags = localeFlagsEngine('flag-icons')
+		expect(localeFlags('en')).toEqual(['<span class="fi fi-gb"></span>'])
+		expect(localeFlags('en-GB')).toEqual(['<span class="fi fi-gb"></span>'])
+		expect(localeFlags('en-US-gb')).toEqual([
+			'<span class="fi fi-gb"></span>',
+			'<span class="fi fi-us"></span>'
+		])
+		flagClassExceptions.en = 'gb-eng'
+		expect(localeFlags('en-GB')).toEqual([
+			'<span class="fi fi-gb-eng"></span>',
+			'<span class="fi fi-gb"></span>'
+		])
+		expect(localeFlags('fr')).toEqual(['<span class="fi fi-fr"></span>'])
+		expect(localeFlags('fr-FR')).toEqual(['<span class="fi fi-fr"></span>'])
+		expect(localeFlags('fr-BE')).toEqual([
+			'<span class="fi fi-fr"></span>',
+			'<span class="fi fi-be"></span>'
+		])
 	})
 	test('errors', async () => {
 		// TODO test errors
