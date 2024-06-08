@@ -244,7 +244,7 @@ export function parse(jsonString: string): JSONValue {
 			return parseObject()
 		} else if (jsonString[index] === '[') {
 			return parseArray()
-		} else if (jsonString[index] === '"' || jsonString[index] === "'") {
+		} else if ('"\'`'.includes(jsonString[index])) {
 			return parseString()
 		} else {
 			return parseLiteral()
