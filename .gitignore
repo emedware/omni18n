@@ -15,5 +15,3 @@ node_modules
 /coverage
 .vercel
 .vscode/settings.json
-# rollup has different setup on linux/windows, so dependencies are different
-#package-lock.json

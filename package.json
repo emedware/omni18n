@@ -71,5 +71,9 @@
 		"tslib": "^2.6.2",
 		"tsx": "^4.7.3",
 		"typescript": "^5.4.5"
+	},
+	"optionalDependencies": {
+		"@rollup/rollup-linux-x64-gnu": "^4.18.0",
+		"@rollup/rollup-win32-x64-msvc": "^4.18.0"
 	}
 }
