@@ -7,7 +7,7 @@ The library takes in consideration two cases:
 - On systems who support flags emojis, flags will just be this, a 2~3 unicode characters that form the emoji
 - On windows, the library `flag-icons` will be downloaded dynamically from [cdnjs.com](https://cdnjs.com/libraries/flag-icon-css) (~28k) and `localeFlag` will return a `<span...` string. This is done transparently client-side
 
-Therefore, 
+Therefore,
 
 Two `exceptions` lists are kept (one for emojis, one for flag class name): `flagEmojiExceptions` and `flagClassExceptions`. These are for languages who are not bound to a country (by default, it only contains `en` -> `gb`)
 
@@ -42,6 +42,7 @@ In order to retrieve the engine name, when transferring data to "client" (SSR/br
 ### But ... why ?
 
 Why asking the server to tell the client if it runs on windows ? It's indeed the only way to solve two somehow contradictory issues :
+
 - Make sure no extra download is done. Each Kb file to be downloaded is latency on mobile app
 - Make sure there is no "blinking" on load (when the generated page differs from the `onMount` result), even on windows machines
 
