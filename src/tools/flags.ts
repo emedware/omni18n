@@ -8,7 +8,15 @@ import { Locale } from '../types'
 export const flagEmojiExceptions: Record<string, string> = { en: '🇬🇧' }
 export const flagClassExceptions: Record<string, string> = { en: 'gb' }
 
-const styleSheet = `\n<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/7.2.3/css/flag-icons.min.css" integrity="sha512-bZBu2H0+FGFz/stDN/L0k8J0G8qVsAL0ht1qg5kTwtAheiXwiRKyCq1frwfbSFSJN3jooR5kauE0YjtPzhZtJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />`
+const styleSheet = `\n<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/7.2.3/css/flag-icons.min.css" integrity="sha512-bZBu2H0+FGFz/stDN/L0k8J0G8qVsAL0ht1qg5kTwtAheiXwiRKyCq1frwfbSFSJN3jooR5kauE0YjtPzhZtJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />`,
+	styleSheetProps = {
+		rel: 'stylesheet',
+		href: 'https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/7.2.3/css/flag-icons.min.css',
+		integrity:
+			'sha512-bZBu2H0+FGFz/stDN/L0k8J0G8qVsAL0ht1qg5kTwtAheiXwiRKyCq1frwfbSFSJN3jooR5kauE0YjtPzhZtJQ==',
+		crossorigin: 'anonymous',
+		referrerpolicy: 'no-referrer'
+	}
 
 export let flagEngine: 'emojis' | 'flag-icons'
 export let headStyle: string = ''
@@ -16,6 +24,7 @@ export let headStyle: string = ''
 export interface LocaleFlagsEngine {
 	(locale: Locale): string[]
 	headerContent?: string
+	styleSheetProps?: any
 }
 
 const engines: Record<'emojis' | 'flag-icons', LocaleFlagsEngine> = {
@@ -43,6 +52,7 @@ const engines: Record<'emojis' | 'flag-icons', LocaleFlagsEngine> = {
 	}
 }
 engines['flag-icons'].headerContent = styleSheet
+engines['flag-icons'].styleSheetProps = styleSheetProps
 engines.emojis.headerContent = ''
 
 export function localeFlagsEngine(
