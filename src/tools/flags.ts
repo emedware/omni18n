@@ -31,14 +31,14 @@ export function setFlagEngine(engine: 'emojis' | 'flag-icons') {
 	}
 }
 
-if (typeof navigator !== 'undefined') gotUserAgent(navigator.userAgent)
-
 /**
  * Set the global flag engine based on the user agent
  * @param userAgent The kind of string returned by `navigator.userAgent` or given in the `user-agent` request header
  */
-export function gotUserAgent(userAgent: string) {
-	if (userAgent.toLowerCase().includes('windows')) setFlagEngine('flag-icons')
+export function gotUserAgent(userAgent?: string) {
+	let dftUA: string | undefined
+	if (typeof navigator !== 'undefined') dftUA = navigator.userAgent
+	if ((dftUA ?? userAgent)?.toLowerCase()?.includes('windows')) setFlagEngine('flag-icons')
 }
 
 function localeFlagsEmojis(locale: Locale) {

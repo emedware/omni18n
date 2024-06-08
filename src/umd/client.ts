@@ -7,13 +7,16 @@ import {
 	Translation,
 	localeFlags,
 	reports,
-	TContext
+	TContext,
+	gotUserAgent
 } from '../client'
 import { parse } from '../tools/cgpt-js'
 
 declare global {
 	var T: Translator
 }
+
+gotUserAgent(navigator.userAgent)
 
 Object.assign(reports, {
 	error(context: TContext, error: string, spec: object) {
