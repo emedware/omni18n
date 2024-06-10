@@ -78,11 +78,11 @@ Object.assign(processors, {
 Where `TContext` contains mostly the `client` (the object containing all the language specification)
 The arguments will mainly be strings or object when flat named lists are specified
 
-The syntax to use them is `{processor | arg1 | arg2}`.
+The syntax to use them is `{processor:: arg1 | arg2}`.
 
-example: `{upper | $1}` will render the first argument in upper-case
+example: `{upper :: $1}` will render the first argument in upper-case
 
-> :information_source: `{$2[upper] | $1}` is also possible, in which case the second argument can both specify a text key, a processor or be defaulted to the `upper` processor.
+> :information_source: `{$2[upper] :: $1}` is also possible, in which case the second argument can both specify a text key, a processor or be defaulted to the `upper` processor.
 
 #### Casing
 

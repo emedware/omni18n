@@ -32,7 +32,7 @@ Setting the locales can be done with `i18nClient.setLocales([...])`.
 
 ### Other locales
 
-The `I18nClient` also have 2 properties:
+The `I18nClient` also has 2 properties:
 
 - `timeZone`: A timezone used when displaying dates (if none is specified) with [this format](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat)
 - `currency`: A currency to use when displaying a number with `style: currency` (3-uppercase code: USD, EUR, ...)
