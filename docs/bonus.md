@@ -27,7 +27,7 @@ localeFlags('en-GB')	// ['🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🇬🇧']
 
 `localeFlagsEngine` can be called either with an engine name (`emojis`/`flag-icons`) either with a userAgent (from the request header) either with nothing if called from the client.
 
-`localeFlagsEngine` return a scpecific type (`LocaleFlagsEngine`) who has a property `headerContent` who perhaps contain a style node (html) to add to the header
+`localeFlagsEngine` return a scpecific type (`LocaleFlagsEngine`) who has a property `headerContent` who perhaps contain a style node (html) to add to the header, along with an object property `styleSheetProps` who, if defined, contains all the properties of such a `<link ... />` tag
 
 ### For client-only
 
