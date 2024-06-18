@@ -119,9 +119,6 @@ describe('specifics', () => {
 			'<span class="fi fi-be"></span>'
 		])
 	})
-	test('errors', async () => {
-		// TODO test errors
-	})
 	test('fallbacks', async () => {
 		misses.mockClear()
 		const { Tp } = localStack({
@@ -260,7 +257,7 @@ line*/,
 	isAdmin: true,
 	hobbies: ["reading", "coding", "swimming"],
 	address: {city: "New
-York", country: "USA"/* -- */}
+York", country: \`USA\`/* -- */}
 }`
 			const expected = {
 				name: 'John',

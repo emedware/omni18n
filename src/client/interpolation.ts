@@ -30,6 +30,7 @@ export const formats: Record<'date' | 'number' | 'relative', Record<string, obje
 }
 
 export const processors: Record<string, (...args: any[]) => string> = {
+	// TODO Interpolation should have access to localeFlagsEngine
 	upper(str: string) {
 		return str.toUpperCase()
 	},
