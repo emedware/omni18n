@@ -179,6 +179,7 @@ error(key: string, error: string, spec: object): string
 
 ## TODO
 
+- make the difference between a missing key (dev issue) or a missing translation in the key (translator issue)
 - tests:
   - interpolation errors
   - deserialization errors

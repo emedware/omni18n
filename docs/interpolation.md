@@ -116,15 +116,17 @@ Its format is the one taken by `Date.toLocaleString()`
 We of course speak about the ones hard-coded in the Intl javascript core of Node and the browsers.
 
 - `relative(n, opt?)` where `n` is number+unit (ex. `1month` or `-2 seconds`) - just forwards to `Intl.RelativeTimeFormat`. Note that there is a `formats.relative` like for dates or number
-- `DisplayNames`: relative to `Intl.DisplayNames`
+- relative to `Intl.DisplayNames`:
   - `region(c)` ex: 'HU' -> "Hungary"
   - `language(c)` ex: 'en-UK' -> "British English"
   - `script(c)` ex: 'Kana' -> "Katakana"
   - `currency(c)` ex: 'USD' -> "Us dollars"
+- `list(x, y, z, ..., opt?)` where arguments can be array (this will be flattened) allows the "..., ... and ..." auto-formating - cfr. `Intl.ListFormat`
+- 
 
 ### Plurals and ordinals
 
-These two processors use a specific key, respectively `internals.plurals` and `internal.ordinals`.
+These two processors use a specific key, respectively `internals.plurals` and `internals.ordinals`.
 These key contain js-like object who, for english would be:
 
 ```

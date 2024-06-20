@@ -101,7 +101,7 @@ We'll call them for commodity the client-side client (CSC) and server-side clien
 
 When the application knows well it enters several zones while doing an action (like login-in if zoned by rights), it might be interesting for the SSC to provide a differential in the loaded dictionary in one packet instead of relying on further requests through the regular `condense` mechanism.
 
-For this, **after** SSR-rendering, `payload = SSC.getPartialLoad(excludedZones: Zone[] = [])` can be called with the list of zones the CSC **already** possess. It will return a completely json-able in a compact format of the loaded dictionary
+For this, **after** SSR-rendering, `payload = SSC.getPartialLoad(excludedZones: Zone[] = [])` can be called with the list of zones the CSC **already** possess. It will return a completely json-able differential of the zones the CSC misses.
 
 This partial answer can be conveyed in the answer with the action' results (especially useful in a page load action) and given to the CSC with `CSC.usePartial(payload)`
 
