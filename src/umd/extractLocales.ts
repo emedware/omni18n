@@ -2,7 +2,7 @@ import { mkdir, writeFile, watch } from 'fs/promises'
 import { dirname, join, basename } from 'path'
 import commandLineArgs from 'command-line-args'
 import { FileDB, I18nServer } from '../server'
-import { stringify } from '../tools/cgpt-js'
+import { stringify } from '../tools/gpt-js'
 
 const options = commandLineArgs(
 	[

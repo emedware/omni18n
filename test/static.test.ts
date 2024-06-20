@@ -1,6 +1,13 @@
 import { I18nClient, I18nServer, Locale, MemDB, Translator } from '~/s-a'
 import { WaitingDB } from './db'
 
+function norm(str: string) {
+	return str.replace(
+		/[\u200B-\u200D\uFEFF\u00A0\u202F\u205F\u3000\u180E\u2000-\u200A\u1680\u2028\u2029\u202F\u205F]/g,
+		' '
+	)
+}
+
 // This is for test purpose: in general usage, only one locale/T is used
 let server: I18nServer,
 	T: Record<string, any>,
@@ -49,6 +56,20 @@ beforeAll(async () => {
 				'format.list.lc': { '': '{list::$1| style: long, type: conjunction }' },
 				'format.list.sd': { '': '{list::$1| style: short, type: disjunction }' },
 				'format.list.nu': { '': '{list::$1| style: narrow, type: unit }' },
+				'format.duration': {
+					'': '{duration::$1| \
+						style: $style, \
+						minUnit: $minUnit, \
+						showZeros: $showZeros, \
+						useWeeks: $useWeeks, \
+						calculate: $calculate, \
+						empty: $.format.duration.empty \
+					}'
+				},
+				'format.duration.empty': {
+					en: 'instantaneous',
+					fr: 'instantané'
+				},
 				'msg.entries': {
 					en: 'There {plural::$1|is|are} {number::$1} {plural::$1|entry|entries}',
 					fr: 'Il y a {number::$1} {plural::$1|entrée}'
@@ -177,20 +198,13 @@ describe('numbers', () => {
 })
 describe('formatting', () => {
 	test('numbers', () => {
-		// Warning: direct strings fail as the "space" used is some kind of special "&nbsp;" or sth
 		const big = 123456789.123456789,
 			price = 6752.52
-		expect(T.en.format.number(big)).toBe(big.toLocaleString('en-US'))
-		expect(T.en.format.number.engineering(big)).toBe(
-			big.toLocaleString('en-US', { notation: 'engineering' })
-		)
-		expect(T.en.format.price('USD', price)).toBe(
-			price.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
-		)
-		expect(T.be.format.number(big)).toBe(big.toLocaleString('fr-BE'))
-		expect(T.be.format.price('EUR', price)).toBe(
-			price.toLocaleString('fr-BE', { style: 'currency', currency: 'EUR' })
-		)
+		expect(norm(T.en.format.number(big))).toBe('123,456,789.123')
+		expect(norm(T.en.format.number.engineering(big))).toBe('123.457E6')
+		expect(norm(T.en.format.price('USD', price))).toBe('$6,752.52')
+		expect(norm(T.be.format.number(big))).toBe('123 456 789,123')
+		expect(norm(T.be.format.price('EUR', price))).toBe('6 752,52 €')
 	})
 
 	test('dates', () => {
@@ -222,6 +236,37 @@ describe('formatting', () => {
 		expect(T.en.format.list.lc(['a', 'b', 'c'])).toBe('a, b, and c')
 		expect(T.en.format.list.sd(['a', 'b', 'c'])).toBe('a, b, or c')
 		expect(T.en.format.list.nu(['a', 'b', 'c'])).toBe('a b c')
+	})
+	test('durations', () => {
+		expect(T.en.format.duration({ hours: 1200.5678 }, { style: 'long', calculate: false })).toBe(
+			'1,200.568 hours'
+		)
+		expect(
+			T.en.format.duration(
+				{ hours: 1200.5678 },
+				{ minUnit: 'second', style: 'long', useWeeks: false }
+			)
+		).toBe('50 days, 34 minutes, and 4 seconds')
+		expect(
+			T.en.format.duration(
+				{ hours: 1200.5678 },
+				{ minUnit: 'second', style: 'long', useWeeks: true, showZeros: true }
+			)
+		).toBe('7 weeks, 1 day, 0 hours, 34 minutes, and 4 seconds')
+		const ts = norm(T.be.format.duration({ years: 2, month: 5, days: 2 }, { style: 'short' }))
+		expect(norm(T.be.format.duration({ years: 2, month: 5, days: 2 }, { style: 'short' }))).toBe(
+			'2 ans, 5 m. et 2 j'
+		)
+		expect(
+			T.be.format.duration(
+				{ years: 2, month: 5, days: 2.4567 },
+				{ minUnit: 'minute', style: 'narrow' }
+			)
+		).toBe('2a 5m. 2j 10h 57min')
+		expect(T.en.format.duration({ nanosecond: 0 }, { style: 'narrow' })).toBe('instantaneous')
+		expect(
+			T.be.format.duration({ days: 0 }, { style: 'narrow', minUnit: 'minute', showZeros: true })
+		).toBe('0j 0h 0min')
 	})
 })
 describe('parameters', () => {

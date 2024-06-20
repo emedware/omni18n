@@ -122,7 +122,26 @@ We of course speak about the ones hard-coded in the Intl javascript core of Node
   - `script(c)` ex: 'Kana' -> "Katakana"
   - `currency(c)` ex: 'USD' -> "Us dollars"
 - `list(x, y, z, ..., opt?)` where arguments can be array (this will be flattened) allows the "..., ... and ..." auto-formating - cfr. `Intl.ListFormat`
-- 
+
+#### Duration
+
+As `Intl.DurationFormat` is not widely implemented, that the polyfill is 100k while the functionality is widely used, the library provide its own processor `duration` - widely based on `Intl.NumberFormat` and `Intl.ListFormat`
+
+The argument takes an object describing the duration by units, eg. `{years: 1, days: 4}` (with or without ending 's')
+
+The units are: `year`, `month`, `week`, `day`, `hour`, `minute`, `second`, `millisecond`, `microsecond`, `nanosecond`
+
+The behavior is standard if the provided numbers are integers, in-bounds (eg. no more than 59 seconds) or if the option `calculate` is specified as `false`
+
+Ex: Giving the argument `{ hours: 1200.5678 }` to the processor can produce `7 weeks, 1 day, 34 minutes, and 4 seconds`
+
+##### Options
+
+- `showZeros` - The most significant (year, ...) and least significant (picoseconds, ...) zeroes won't be shown, but the ones in the middle will be if this option is set to true: `"2 years, 0 months, and 1 day"`
+- `minUnit` specifies toe minimum unit until where to calculate the precision ("day", "second", ... - singular)
+- `style`: `long` | `short` | `narrow`
+- `useWeeks`: Wether to include weeks in calculations, and display it if zero while specifying `showZeros`
+- `calculate`: `true` by default, `false` will force ignoring values and just display the given arguments
 
 ### Plurals and ordinals
 

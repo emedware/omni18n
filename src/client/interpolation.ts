@@ -156,8 +156,103 @@ export const processors: Record<string, (...args: any[]) => string> = {
 		return new Intl.ListFormat(this.client.locales[0], opts).format(
 			args.map((arg) => makeArray(arg)).flat()
 		)
+	},
+	duration(this: TContext, duration: DurationDescription, options?: DurationOptions) {
+		if (typeof duration !== 'object') return reportError(this, 'Invalid duration', { duration })
+		let { showZeros, minUnit, style, useWeeks, calculate, empty } = options || {}
+		if (!style) style = 'long'
+		useWeeks = useWeeks && <any>useWeeks !== 'false'
+		showZeros = showZeros && <any>showZeros !== 'false'
+		calculate = ![false, 'false'].includes(<any>calculate)
+		const parts: [number, string][] = []
+		// First, clone the duration ascending (nanoseconds->years) and add units above if needed (70 seconds = 1 minute, 10 seconds)
+		const cappedDuration: DurationDescription = {}
+		let remainder = 0
+		for (let unitIndex = timeUnits.length - 1; unitIndex >= 0; unitIndex--) {
+			const unit = timeUnits[unitIndex]
+			let multiplier = timeUnits[unitIndex - 1]?.[1]
+			if (multiplier === 7 && !useWeeks) multiplier = undefined
+			// `+'s'` to accept "years", "hours", ...
+			const given = duration[unit[0]] || (<any>duration)[unit[0] + 's']
+			let value = (given === undefined ? 0 : parseFloat(given)) + remainder
+			if (calculate && multiplier && value > multiplier) {
+				remainder = Math.floor(value / multiplier)
+				value = value % multiplier
+			} else remainder = 0
+			if (given !== undefined || value) cappedDuration[unit[0]] = value
+		}
+
+		// Make all time units descending (year->nanoseconds) keeping a remainder
+		let hadValue = false
+		remainder = 0
+		for (const unit of timeUnits) {
+			const value = (cappedDuration[unit[0]] || 0) + remainder,
+				displayValue = calculate && unit[1] ? Math.floor(value) : value
+			if (cappedDuration[unit[0]] !== undefined) hadValue = true
+			if (displayValue) {
+				hadValue = true
+				parts.push([displayValue, unit[0]])
+			} else if (showZeros && hadValue && (unit[0] != 'week' || useWeeks)) parts.push([0, unit[0]])
+			if (unit[0] === minUnit) break
+			if (calculate && unit[1]) {
+				const floor = Math.floor(value)
+				remainder = (value - floor) * unit[1]
+			}
+		}
+		if (!minUnit)
+			// remove least-significant zeros
+			while (parts.length) {
+				const last = parts.pop()!
+				if (last[0] !== 0) {
+					parts.push(last)
+					break
+				}
+			}
+		if (!parts.length)
+			return empty || reportError(this, 'Empty duration', { duration: cappedDuration })
+		const translatedParts = parts.map(([value, unit]) =>
+			new Intl.NumberFormat(this.client.locales[0], {
+				style: 'unit',
+				unit,
+				unitDisplay: style
+			}).format(value)
+		)
+		return style === 'narrow'
+			? translatedParts.join(' ')
+			: new Intl.ListFormat(this.client.locales[0], {
+					style,
+					type: 'conjunction'
+				}).format(translatedParts)
 	}
 }
+
+//#region Duration structures
+
+const timeUnits = [
+	['year'] as const,
+	['month'] as const,
+	['week', 7] as const,
+	['day', 24] as const,
+	['hour', 60] as const,
+	['minute', 60] as const,
+	['second', 1000] as const,
+	['millisecond', 1000] as const,
+	['microsecond', 1000] as const,
+	['nanosecond'] as const
+] as const
+
+type DurationRecord = (typeof timeUnits)[number][0]
+export type DurationDescription = Partial<Record<DurationRecord, number>>
+export interface DurationOptions {
+	showZeros?: boolean
+	minUnit?: DurationRecord
+	style?: 'long' | 'short' | 'narrow'
+	useWeeks?: boolean
+	calculate?: boolean
+	empty?: string
+}
+
+//#endregion
 
 function objectArgument(
 	arg: any,

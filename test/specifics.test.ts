@@ -192,7 +192,7 @@ test.multiline:
 	})
 })
 
-describe('cgpt-js', () => {
+describe('gpt-js', () => {
 	describe('stringify function', () => {
 		test('should stringify a simple object', () => {
 			const obj = { name: 'John', age: 30 }

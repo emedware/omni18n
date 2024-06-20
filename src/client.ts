@@ -1,6 +1,6 @@
 export * from './types'
 export * from './client/index'
-export * from './tools/cgpt-js'
+export * from './tools/gpt-js'
 export * from './tools/flags'
 import { default as Defer } from './tools/defer'
 export { Defer }

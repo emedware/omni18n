@@ -9,7 +9,7 @@ import {
 	reports,
 	TContext
 } from '../client'
-import { parse } from '../tools/cgpt-js'
+import { parse } from '../tools/gpt-js'
 
 declare global {
 	var T: Translator
