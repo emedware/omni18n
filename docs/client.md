@@ -65,3 +65,20 @@ This partial answer can be conveyed in the answer with the action' results (espe
 ## Overriding `interpolate`
 
 `I18nClient.interpolate` is called on _each_ translation, and can be used to add a transformation or have a list of "last 20 translations" in the translator's UI
+
+## Native `Intl` helpers
+
+Cached (taking care of locale change)
+
+```ts
+class I18nClient {
+	...
+
+	numberFormat(options: Intl.NumberFormatOptions): Intl.NumberFormat
+	listFormat(options: Intl.ListFormatOptions): Intl.ListFormat
+	pluralRules(options: Intl.PluralRulesOptions): Intl.PluralRules
+	relativeTimeFormat(options: Intl.RelativeTimeFormatOptions): Intl.RelativeTimeFormat
+	displayNames(options: Intl.DisplayNamesOptions): Intl.DisplayNames
+	dateTimeFormat(options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat
+}
+```

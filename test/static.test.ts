@@ -43,7 +43,7 @@ beforeAll(async () => {
 				'format.number': { '': '{number::$1}' },
 				'format.number.engineering': { '': '{number::$1|engineering}' },
 				'format.price': { '': '{number::$2|style: currency, currency: $1}' },
-				'format.dateTime': { '': '{date::$1}' },
+				'format.dateTime': { '': '{date::$1|dateStyle: short, timeStyle: short}' },
 				'format.medium': { '': '{date::$1|dateStyle: medium}' },
 				'format.date': { '': '{date::$1|date}' },
 				'format.time': { '': '{date::$1|time}' },
@@ -211,8 +211,8 @@ describe('formatting', () => {
 		const date = new Date('2021-05-01T12:34:56.789Z')
 		expect(T.en.format.date(date)).toBe('5/1/21')
 		expect(T.be.format.date(date)).toBe('1/05/21')
-		expect(T.en.format.dateTime(date)).toBe('5/1/2021, 12:34:56 PM')
-		expect(T.be.format.dateTime(date)).toBe('01/05/2021 14:34:56')
+		expect(T.en.format.dateTime(date)).toBe('5/1/21, 12:34 PM')
+		expect(T.be.format.dateTime(date)).toBe('1/05/21 14:34')
 		expect(T.en.format.medium(date)).toBe('May 1, 2021')
 		expect(T.be.format.medium(date)).toBe('1 mai 2021')
 		expect(T.en.format.time(date)).toBe('12:34 PM')

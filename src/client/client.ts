@@ -32,6 +32,14 @@ export function removeDuplicates(arr: Locale[]) {
 	return arr.filter((k) => !done.has(k) && done.add(k))
 }
 
+const options2uniqueString = (options: any) =>
+	Object.entries(options)
+		.sort((a, b) => a[0].localeCompare(b[0]))
+		.map(([k, v]) => `${k}:${v}`)
+		.join('|')
+
+type IntlConstructor<T> = new (locale: string, options?: any) => T
+
 export default class I18nClient implements OmnI18nClient {
 	internals: Internals = {}
 	dictionary: ClientDictionary = {}
@@ -127,6 +135,7 @@ export default class I18nClient implements OmnI18nClient {
 			this.locales.every((locale, i) => locale == locales[i])
 		)
 			return
+		if (this.locales[0] !== locales[0]) this.nativeIntl = {}
 		this.locales = locales
 		this.toLoadZones = this.loadedZones
 		this.loadedZones = new Set()
@@ -161,6 +170,8 @@ export default class I18nClient implements OmnI18nClient {
 		return interpolate({ client: this, key }, text, args)
 	}
 
+	//#region Reports
+
 	missing(key: string, fallback?: Translation): string {
 		this.report(key, fallback !== undefined ? 'Missing translation' : 'Missing key')
 		return fallback ?? `[${key}]`
@@ -172,6 +183,37 @@ export default class I18nClient implements OmnI18nClient {
 	report(key: string, error: string, spec?: object): void {
 		// To be overridden
 	}
+
+	//#endregion
+	//#region Natives
+
+	private nativeIntl: Record<string, Record<string, any>> = {}
+	private cachedNative<T>(ctor: IntlConstructor<T>, options: any): T {
+		const key = ctor.name
+		if (!this.nativeIntl[key]) this.nativeIntl[key] = {}
+		const optionsString = options2uniqueString(options || {})
+		return (this.nativeIntl[key][optionsString] ??= new ctor(this.locales[0], options))
+	}
+	numberFormat(options: Intl.NumberFormatOptions) {
+		return this.cachedNative(Intl.NumberFormat, options)
+	}
+	listFormat(options: Intl.ListFormatOptions) {
+		return this.cachedNative(Intl.ListFormat, options)
+	}
+	pluralRules(options: Intl.PluralRulesOptions) {
+		return this.cachedNative(Intl.PluralRules, options)
+	}
+	relativeTimeFormat(options: Intl.RelativeTimeFormatOptions) {
+		return this.cachedNative(Intl.RelativeTimeFormat, options)
+	}
+	displayNames(options: Intl.DisplayNamesOptions) {
+		return this.cachedNative(Intl.DisplayNames, options)
+	}
+	dateTimeFormat(options: Intl.DateTimeFormatOptions) {
+		return this.cachedNative(Intl.DateTimeFormat, options)
+	}
+
+	//#endregion
 }
 
 export function getContext(translator: Translator): TContext {

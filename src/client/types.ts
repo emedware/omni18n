@@ -31,6 +31,13 @@ export interface OmnI18nClient {
 	onModification?: OnModification
 	missing(key: string, fallback?: Translation): string
 	error(key: string, error: string, spec: object): string
+
+	numberFormat(options: Intl.NumberFormatOptions): Intl.NumberFormat
+	listFormat(options: Intl.ListFormatOptions): Intl.ListFormat
+	pluralRules(options: Intl.PluralRulesOptions): Intl.PluralRules
+	relativeTimeFormat(options: Intl.RelativeTimeFormatOptions): Intl.RelativeTimeFormat
+	displayNames(options: Intl.DisplayNamesOptions): Intl.DisplayNames
+	dateTimeFormat(options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat
 }
 
 export interface TContext<Client extends OmnI18nClient = OmnI18nClient> {

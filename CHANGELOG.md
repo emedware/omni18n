@@ -1,5 +1,9 @@
 # 1.1.17
 
+## Modified
+
+- `Intl.*****Format` are now cached
+
 ## Added
 
 - Missing key/translation nuance based on fallback

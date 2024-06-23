@@ -45,15 +45,16 @@ export const processors: Record<string, (...args: any[]) => string> = {
 		if (!client.internals.ordinals) return client.missing('internals.ordinals')
 		const num = parseInt(str)
 		if (isNaN(num)) return client.error(key, 'NaN', { str })
-		return client.internals.ordinals[
-			new Intl.PluralRules(client.locales[0], { type: 'ordinal' }).select(num)
-		].replace('$', str)
+		return client.internals.ordinals[client.pluralRules({ type: 'ordinal' }).select(num)].replace(
+			'$',
+			str
+		)
 	},
 	plural(this: TContext, str: string, designation: string, plural?: string) {
 		const num = parseInt(str),
 			{ client, key } = this
 		if (isNaN(num)) return client.error(key, 'NaN', { str })
-		const rule = new Intl.PluralRules(client.locales[0], { type: 'cardinal' }).select(num)
+		const rule = client.pluralRules({ type: 'cardinal' }).select(num)
 		const rules: string | Record<string, string> = plural
 			? { one: designation, other: plural }
 			: designation
@@ -80,7 +81,7 @@ export const processors: Record<string, (...args: any[]) => string> = {
 				currency: this.client.currency,
 				...options
 			}
-		return num.toLocaleString(client.locales, options)
+		return client.numberFormat(options).format(num)
 	},
 	date(this: TContext, str: string, options?: any) {
 		const nbr = parseInt(str),
@@ -96,7 +97,7 @@ export const processors: Record<string, (...args: any[]) => string> = {
 				timeZone: client.timeZone,
 				...options
 			}
-		return date.toLocaleString(client.locales, options)
+		return client.dateTimeFormat(options).format(date)
 	},
 	relative(this: TContext, str: string, options?: any) {
 		const content = /(-?\d+)\s*(\w+)/.exec(str),
@@ -114,32 +115,29 @@ export const processors: Record<string, (...args: any[]) => string> = {
 				return client.error(key, 'Invalid date options', { options })
 			options = formats.date[options]
 		}
-		return new Intl.RelativeTimeFormat(client.locales[0], options).format(
-			nbr,
-			<Intl.RelativeTimeFormatUnit>unit
-		)
+		return client.relativeTimeFormat(options).format(nbr, <Intl.RelativeTimeFormatUnit>unit)
 	},
 	region(this: TContext, str: string) {
 		return (
-			new Intl.DisplayNames(this.client.locales[0], { type: 'region' }).of(str) ||
+			this.client.displayNames({ type: 'region' }).of(str) ||
 			this.client.error(this.key, 'Invalid region', { str })
 		)
 	},
 	language(this: TContext, str: string) {
 		return (
-			new Intl.DisplayNames(this.client.locales[0], { type: 'language' }).of(str) ||
+			this.client.displayNames({ type: 'language' }).of(str) ||
 			this.client.error(this.key, 'Invalid language', { str })
 		)
 	},
 	script(this: TContext, str: string) {
 		return (
-			new Intl.DisplayNames(this.client.locales[0], { type: 'script' }).of(str) ||
+			this.client.displayNames({ type: 'script' }).of(str) ||
 			this.client.error(this.key, 'Invalid script', { str })
 		)
 	},
 	currency(this: TContext, str: string) {
 		return (
-			new Intl.DisplayNames(this.client.locales[0], { type: 'currency' }).of(str) ||
+			this.client.displayNames({ type: 'currency' }).of(str) ||
 			this.client.error(this.key, 'Invalid currency', { str })
 		)
 	},
@@ -155,9 +153,7 @@ export const processors: Record<string, (...args: any[]) => string> = {
 			args.push(opts)
 			opts = {}
 		}
-		return new Intl.ListFormat(this.client.locales[0], opts).format(
-			args.map((arg) => makeArray(arg)).flat()
-		)
+		return this.client.listFormat(opts).format(args.map((arg) => makeArray(arg)).flat())
 	},
 	duration(this: TContext, duration: DurationDescription, options?: DurationOptions) {
 		const { client, key } = this
@@ -214,16 +210,20 @@ export const processors: Record<string, (...args: any[]) => string> = {
 		if (!parts.length)
 			return empty || client.error(key, 'Empty duration', { duration: cappedDuration })
 		const translatedParts = parts.map(([value, unit]) =>
-			new Intl.NumberFormat(this.client.locales[0], {
-				style: 'unit',
-				unit,
-				unitDisplay: style
-			}).format(value)
+			this.client
+				.numberFormat({
+					style: 'unit',
+					unit,
+					unitDisplay: style
+				})
+				.format(value)
 		)
-		return new Intl.ListFormat(this.client.locales[0], {
-			style,
-			type: style === 'narrow' ? 'unit' : 'conjunction'
-		}).format(translatedParts)
+		return this.client
+			.listFormat({
+				style,
+				type: style === 'narrow' ? 'unit' : 'conjunction'
+			})
+			.format(translatedParts)
 	}
 }
 
