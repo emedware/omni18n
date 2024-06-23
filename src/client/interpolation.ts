@@ -222,7 +222,7 @@ export const processors: Record<string, (...args: any[]) => string> = {
 		)
 		return new Intl.ListFormat(this.client.locales[0], {
 			style,
-			type: 'conjunction'
+			type: style === 'narrow' ? 'unit' : 'conjunction'
 		}).format(translatedParts)
 	}
 }
