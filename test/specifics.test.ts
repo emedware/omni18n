@@ -4,11 +4,9 @@ import {
 	I18nClient,
 	InteractiveServer,
 	MemDBDictionary,
-	TContext,
 	Translator,
 	bulkDictionary,
 	bulkObject,
-	reports,
 	localeFlagsEngine,
 	flagEmojiExceptions,
 	flagClassExceptions,
@@ -19,54 +17,67 @@ import { FileDB } from '~/server'
 import { localStack } from './utils'
 
 const misses = jest.fn()
-reports.missing = ({ key }: TContext, fallback?: string) => {
-	misses(key)
-	return fallback ?? '[no]'
+
+class TestI18nClient extends I18nClient {
+	report(key: string, error: string, spec?: object | undefined): void {
+		misses(error, key, spec)
+	}
 }
 
 describe('bulk', () => {
 	let T: Translator, client: I18nClient
-	const expected = {
-		ok: 'fr-v1.42',
-		missing: 'en-v2',
-		sub: { v3: 'fr-v3' }
-	}
 
 	beforeAll(async () => {
-		const { Tp, client: lclClient } = localStack({
-			'obj.v1': { fr: 'fr-v1.{$parm}' },
-			'obj.v2': { en: 'en-v2' },
-			'obj.v3': { fr: 'fr-v3' },
-			'struct.ok': { fr: 'fr-v1.{$parm}' },
-			'struct.missing': { en: 'en-v2' },
-			'struct.sub.v3': { fr: 'fr-v3' },
-			'struct.sub': { fr: 'toString' }
-		})
+		const { Tp, client: lclClient } = localStack(
+			{
+				'obj.v1': { fr: 'fr-v1.{$parm}' },
+				'obj.v2': { en: 'en-v2' },
+				'obj.v3': { fr: 'fr-v3' },
+				'struct.ok': { fr: 'fr-v1.{$parm}' },
+				'struct.missing': { en: 'en-v2' },
+				'struct.sub.v3': { fr: 'fr-v3' },
+				'struct.sub': { fr: 'toString' }
+			},
+			TestI18nClient
+		)
 		T = await Tp
 		client = lclClient
 	})
 
 	test('from object', async () => {
 		misses.mockClear()
+		const expected = {
+			ok: 'fr-v1.42',
+			missingT: 'en-v2',
+			missingK: '[obj.v4]',
+			sub: { v3: 'fr-v3' }
+		}
 		expect(
 			bulkObject(
 				T,
 				{
 					ok: 'obj.v1',
-					missing: 'obj.v2',
+					missingT: 'obj.v2',
+					missingK: 'obj.v4',
 					sub: { v3: 'obj.v3' }
 				},
 				{ parm: 42 }
 			)
 		).toEqual(expected)
-		expect(misses).toHaveBeenCalledWith('obj.v2')
+		expect(misses).toHaveBeenCalledWith('Missing translation', 'obj.v2', undefined)
+		expect(misses).toHaveBeenCalledWith('Missing key', 'obj.v4', undefined)
 	})
 
 	test('from dictionary', async () => {
+		const expected = {
+			ok: 'fr-v1.42',
+			missing: 'en-v2',
+			sub: { v3: 'fr-v3' }
+		}
 		misses.mockClear()
 		const built = bulkDictionary(T.struct, { parm: 42 })
 		expect(built).toEqual(expected)
-		expect(misses).toHaveBeenCalledWith('struct.missing')
+		expect(misses).toHaveBeenCalledWith('Missing translation', 'struct.missing', undefined)
 		expect('' + built.sub).toBe('toString')
 	})
 })
@@ -121,20 +132,23 @@ describe('specifics', () => {
 	})
 	test('fallbacks', async () => {
 		misses.mockClear()
-		const { Tp } = localStack({
-			'fld.name': { en: 'Name' },
-			'fld.bday': { en: 'Birthday', fr: 'Anniversaire' },
-			'fld.bday.short': { en: 'Bday' }
-		})
+		const { Tp } = localStack(
+			{
+				'fld.name': { en: 'Name' },
+				'fld.bday': { en: 'Birthday', fr: 'Anniversaire' },
+				'fld.bday.short': { en: 'Bday' }
+			},
+			TestI18nClient
+		)
 		const T = await Tp
 		misses.mockClear()
 		expect('' + T.fld.name).toBe('Name')
-		expect(misses).toHaveBeenCalledWith('fld.name')
+		expect(misses).toHaveBeenCalledWith('Missing translation', 'fld.name', undefined)
 		misses.mockClear()
 		expect('' + T.fld.bday.short).toBe('Anniversaire')
 		expect(misses).not.toHaveBeenCalled()
-		expect('' + T.fld.inexistent).toBe('[no]')
-		expect(misses).toHaveBeenCalledWith('fld.inexistent')
+		expect('' + T.fld.inexistent).toBe('[fld.inexistent]')
+		expect(misses).toHaveBeenCalledWith('Missing key', 'fld.inexistent', undefined)
 	})
 })
 

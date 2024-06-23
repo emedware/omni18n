@@ -24,8 +24,6 @@ export type ClientDictionary = {
 export interface OmnI18nClient {
 	dictionary: ClientDictionary
 	internals: Internals
-	readonly ordinalRules: Intl.PluralRules
-	readonly cardinalRules: Intl.PluralRules
 	locales: Locale[]
 	timeZone?: string
 	currency?: string

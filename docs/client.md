@@ -39,59 +39,16 @@ The `I18nClient` also has 2 properties:
 
 ## Reports
 
-There are two ways to manage reports. There are also two report types : missing and error. The first one is for when a key is missing, the second one only happens when interpolating.
+Reporting is done in 2 cases: interpolation error (as it involves TypeScript code to be executed with given arguments) who can come from wrong arguments given, bug in a processor, &c., along with missing key/translation errors. A `Missing key` error happens when no translation has been found at all, meaning the language containing that translation was not included in the fallbacks - or simply that the key does not exist. All errors should be reported to developers but the `Missing translation` that should be reported to translator(s)
 
-Both return a string to display instead of the translated value.
+The function `I18nClient::report(key: string, error: string, spec?: object): void` is the one called when something has to be reported (and by default does nothing)
 
-### Global reporting
+The TypeScript-way is to have one's own `Client` class implementing `I18nClient` and overriding `report`, though a really low-level JavaScript-way might be to just replace `I18nClient.prototype.report`
 
-`reports` is a variable imported from `omni18n` who can (and should) be edited. It is called by the engine reporting mechanism in case of problem. They both take an argument of type `TContext` describing mainly the client and the key where the problem occurred
+### Reporting functions
 
-```ts
-export interface TContext {
-	key: string
-	client: I18nClient
-}
-```
-
-These reports will:
-
-- have any side effect, like logging or making a request that will log
-- return a string that will be used instead of the expected translation
-
-`reports` contain:
-
-- A missing key report
-
-```ts
-reports.missing = ({ key, client }: TContext, fallback?: string) => {
-	// report
-	return fallback ?? `[${key}]`
-}
-```
-
-> The fallback comes from a locale that was specified in the list the client' locale but was not first-choice
-
-- An interpolation error
-  When interpolating, an error calls this report with a textual description and some specifications depending on the error.
-
-> The specification is json-able _except_ in the case of `error: "Error in processor"`, in which case `spec.error` is whatever has been thrown and might be an `Error`
-
-```ts
-reports.error = ({ key, client }: TContext, error: string, spec: object) => {
-	// report
-	return '[!error!]'
-}
-```
-
-### OO reporting
-
-Just override the `missing` and `error` members of `I18nClient` (who call the global `reports` by default)
-
-```ts
-missing(key: string, fallback: string | undefined): string
-error(key: string, error: string, spec: object): string
-```
+`error` and `missing` are both `I18nClient` functions reporting. They also return a string to be displayed. `missing` can be called with a fallback, and if not, the default are `[${key}]` in case of missing and `[!${error}!]` in case of interpolation error.
+On the server for example, these function can throw instead of returning a defaulted string in order not to send such emails
 
 ## SSR: Between clients
 

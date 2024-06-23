@@ -16,6 +16,14 @@ Generic i18n library managing the fullstack interaction in a CI/CD pace. The dic
 
 The main documentation is in [the repository](./docs/README.md)
 
+## Another internationalization library ... ?
+
+After re-implementing again and again internationalization as I was happy with none, I built up the minimum requirements I'd ask an 18n library to do:
+- Having a json-file (or alike) per language is perfect when the website/web-app is done. Nowadays, applications are *never* done, there is always a bug to fix, an error to add, a new functionality to implement, ... Most go through a shared document with "new keys to translate" or, worst, use the english sentence as a key and, after some typos, the sentence is translated in some language only after a user has reported it. A complete i18n library ought to offer a centralized way for coders to manage keys that allow translators to know what has to be translated, what has been modified (imagine the fuss when a dev changes a bit the meaning of an entry)
+- Even if interpolation is based on a [regular language](https://en.wikipedia.org/wiki/Regular_language) and not a [context-free one](https://en.wikipedia.org/wiki/Context-free_language), it should allow wide customization, even JS(/TS) processors to be implemented by the developer. Also, some interpolation should be done once for all (like durations, ...) and use as much as possible the [native Intl](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl) capacities
+- Changing the displayed language should just retrieve the smallest needed dictionary, not the whole page, and re-translate the page dynamically - especially with modern frameworks like svelte, vue, ... (but not only)
+- `Zones` is something I never found in any i18n library: allowing the translator to translate all the texts (emails sent by the server, messages, admin pages, ...) a centralized way, while the programer specifies which text has to be downloaded (or not) by whom (minimum needed dictionary transferred)
+
 ## General structure
 
 The library is composed of a server part and a client part.
@@ -155,21 +163,7 @@ There {plural::$1|is|are} {number::$1} {plural::$1|entry|entries}
 
 ## Error reporting
 
-[Error reporting](./docs/client.md#reports) can be done either with a [global value](./docs/client.md#global-reporting) as such:
-
-```ts
-import { reports, type TContext } from "omni18n/client";
-
-reports.missing: ({ key, client }: TContext, fallback?: string) => string
-reports.error: (context: TContext, error: string, spec: object) => string
-```
-
-Or the [object-oriented way](./docs/client.md#oo-reporting) by overriding these two reports function (who by default call the global values)
-
-```ts
-missing(key: string, fallback: Translation | undefined): string
-error(key: string, error: string, spec: object): string
-```
+[Error reporting](./docs/client.md#reports) can be done eby overriding the `report(key: string, error: string, spec?: object): void` function of `I18nClient`
 
 ## Integrations
 
@@ -179,7 +173,6 @@ error(key: string, error: string, spec: object): string
 
 ## TODO
 
-- make the difference between a missing key (dev issue) or a missing translation in the key (translator issue)
 - tests:
   - interpolation errors
   - deserialization errors
@@ -191,5 +184,3 @@ error(key: string, error: string, spec: object): string
 The best way to report a bug is to PR a failing unit test.
 
 Any DB or framework adaptation can be published separately, just report it and the reference will be added here.
-
-I made this functionality roughly ~10 times from scratch for a lot of different projects. It means the interface comes out of years of trials/errors/fixes and so there are few breaking changes to expect, if not none at all.

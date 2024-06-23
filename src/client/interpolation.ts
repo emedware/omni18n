@@ -1,4 +1,4 @@
-import { reportMissing, reportError, translate, split2 } from './helpers'
+import { translate, split2 } from './helpers'
 import { TContext, TranslationError } from './types'
 
 export const formats: Record<'date' | 'number' | 'relative', Record<string, object>> = {
@@ -41,36 +41,38 @@ export const processors: Record<string, (...args: any[]) => string> = {
 		return str.replace(/\b\w/g, (letter) => letter.toUpperCase())
 	},
 	ordinal(this: TContext, str: string) {
-		const { client } = this
-		if (!client.internals.ordinals) return reportMissing({ ...this, key: 'internals.ordinals' })
+		const { client, key } = this
+		if (!client.internals.ordinals) return client.missing('internals.ordinals')
 		const num = parseInt(str)
-		if (isNaN(num)) return reportError(this, 'NaN', { str })
-		return client.internals.ordinals[client.ordinalRules.select(num)].replace('$', str)
+		if (isNaN(num)) return client.error(key, 'NaN', { str })
+		return client.internals.ordinals[
+			new Intl.PluralRules(client.locales[0], { type: 'ordinal' }).select(num)
+		].replace('$', str)
 	},
 	plural(this: TContext, str: string, designation: string, plural?: string) {
 		const num = parseInt(str),
-			{ client } = this
-		if (isNaN(num)) return reportError(this, 'NaN', { str })
-		const rule = client.cardinalRules.select(num)
+			{ client, key } = this
+		if (isNaN(num)) return client.error(key, 'NaN', { str })
+		const rule = new Intl.PluralRules(client.locales[0], { type: 'cardinal' }).select(num)
 		const rules: string | Record<string, string> = plural
 			? { one: designation, other: plural }
 			: designation
 
 		if (typeof rules === 'string') {
-			if (!client.internals.plurals) return reportMissing({ ...this, key: 'internals.plurals' })
+			if (!client.internals.plurals) return client.missing('internals.plurals')
 			if (!client.internals.plurals[rule])
-				return reportError(this, 'Missing rule in plurals', { rule })
+				return client.error(key, 'Missing rule in plurals', { rule })
 			return client.internals.plurals[rule].replace('$', designation)
 		}
-		return rule in rules ? rules[rule] : reportError(this, 'Rule not found', { rule, designation })
+		return rule in rules ? rules[rule] : client.error(key, 'Rule not found', { rule, designation })
 	},
 	number(this: TContext, str: string, options?: any) {
 		const num = parseFloat(str),
-			{ client } = this
-		if (isNaN(num)) return reportError(this, 'NaN', { str })
+			{ client, key } = this
+		if (isNaN(num)) return client.error(key, 'NaN', { str })
 		if (typeof options === 'string') {
 			if (!(options in formats.number))
-				return reportError(this, 'Invalid number options', { options })
+				return client.error(key, 'Invalid number options', { options })
 			options = formats.number[options]
 		}
 		if (this.client.currency)
@@ -83,10 +85,10 @@ export const processors: Record<string, (...args: any[]) => string> = {
 	date(this: TContext, str: string, options?: any) {
 		const nbr = parseInt(str),
 			date = new Date(nbr),
-			{ client } = this
-		if (isNaN(nbr)) return reportError(this, 'Invalid date', { str })
+			{ client, key } = this
+		if (isNaN(nbr)) return client.error(key, 'Invalid date', { str })
 		if (typeof options === 'string') {
-			if (!(options in formats.date)) return reportError(this, 'Invalid date options', { options })
+			if (!(options in formats.date)) return client.error(key, 'Invalid date options', { options })
 			options = formats.date[options]
 		}
 		if (client.timeZone)
@@ -98,21 +100,21 @@ export const processors: Record<string, (...args: any[]) => string> = {
 	},
 	relative(this: TContext, str: string, options?: any) {
 		const content = /(-?\d+)\s*(\w+)/.exec(str),
-			{ client } = this
-		if (!content) return reportError(this, 'Invalid relative format', { str })
+			{ client, key } = this
+		if (!content) return client.error(key, 'Invalid relative format', { str })
 		const nbr = parseInt(content[1]),
 			unit = content[2]
 		const units = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year']
 		units.push(...units.map((unit) => unit + 's'))
 
-		if (isNaN(nbr)) return reportError(this, 'Invalid number', { str })
-		if (!units.includes(unit)) return reportError(this, 'Invalid unit', { unit })
+		if (isNaN(nbr)) return client.error(key, 'Invalid number', { str })
+		if (!units.includes(unit)) return client.error(key, 'Invalid unit', { unit })
 		if (typeof options === 'string') {
 			if (!(options in formats.relative))
-				return reportError(this, 'Invalid date options', { options })
+				return client.error(key, 'Invalid date options', { options })
 			options = formats.date[options]
 		}
-		return new Intl.RelativeTimeFormat(client.locales, options).format(
+		return new Intl.RelativeTimeFormat(client.locales[0], options).format(
 			nbr,
 			<Intl.RelativeTimeFormatUnit>unit
 		)
@@ -120,25 +122,25 @@ export const processors: Record<string, (...args: any[]) => string> = {
 	region(this: TContext, str: string) {
 		return (
 			new Intl.DisplayNames(this.client.locales[0], { type: 'region' }).of(str) ||
-			reportError(this, 'Invalid region', { str })
+			this.client.error(this.key, 'Invalid region', { str })
 		)
 	},
 	language(this: TContext, str: string) {
 		return (
 			new Intl.DisplayNames(this.client.locales[0], { type: 'language' }).of(str) ||
-			reportError(this, 'Invalid language', { str })
+			this.client.error(this.key, 'Invalid language', { str })
 		)
 	},
 	script(this: TContext, str: string) {
 		return (
 			new Intl.DisplayNames(this.client.locales[0], { type: 'script' }).of(str) ||
-			reportError(this, 'Invalid script', { str })
+			this.client.error(this.key, 'Invalid script', { str })
 		)
 	},
 	currency(this: TContext, str: string) {
 		return (
 			new Intl.DisplayNames(this.client.locales[0], { type: 'currency' }).of(str) ||
-			reportError(this, 'Invalid currency', { str })
+			this.client.error(this.key, 'Invalid currency', { str })
 		)
 	},
 	list(this: TContext, ...args: any[]) {
@@ -158,7 +160,8 @@ export const processors: Record<string, (...args: any[]) => string> = {
 		)
 	},
 	duration(this: TContext, duration: DurationDescription, options?: DurationOptions) {
-		if (typeof duration !== 'object') return reportError(this, 'Invalid duration', { duration })
+		const { client, key } = this
+		if (typeof duration !== 'object') return client.error(key, 'Invalid duration', { duration })
 		let { showZeros, minUnit, style, useWeeks, calculate, empty } = options || {}
 		if (!style) style = 'long'
 		useWeeks = useWeeks && <any>useWeeks !== 'false'
@@ -209,7 +212,7 @@ export const processors: Record<string, (...args: any[]) => string> = {
 				}
 			}
 		if (!parts.length)
-			return empty || reportError(this, 'Empty duration', { duration: cappedDuration })
+			return empty || client.error(key, 'Empty duration', { duration: cappedDuration })
 		const translatedParts = parts.map(([value, unit]) =>
 			new Intl.NumberFormat(this.client.locales[0], {
 				style: 'unit',
@@ -217,12 +220,10 @@ export const processors: Record<string, (...args: any[]) => string> = {
 				unitDisplay: style
 			}).format(value)
 		)
-		return style === 'narrow'
-			? translatedParts.join(' ')
-			: new Intl.ListFormat(this.client.locales[0], {
-					style,
-					type: 'conjunction'
-				}).format(translatedParts)
+		return new Intl.ListFormat(this.client.locales[0], {
+			style,
+			type: 'conjunction'
+		}).format(translatedParts)
 	}
 }
 
@@ -276,6 +277,7 @@ u0004-u0005: escapement parenthesis
 */
 
 export function interpolate(context: TContext, text: string, args: any[]): string {
+	const { client, key } = context
 	text = text.replace(/\\{/g, '\u0001').replace(/\\}/g, '\u0002').replace(/\n/g, '\u0003')
 	const placeholders = (text.match(/{(.*?)}/g) || []).map((placeholder) => {
 			placeholder = placeholder
@@ -303,7 +305,6 @@ export function interpolate(context: TContext, text: string, args: any[]): strin
 			}
 
 			function useArgument(i: string | number, dft?: string) {
-				const { key } = context
 				if (typeof i === 'string' && /^\d+$/.test(i)) i = parseInt(i)
 				if (i === 0) return key
 				const lastArg = nextArgs[nextArgs.length - 1],
@@ -321,7 +322,7 @@ export function interpolate(context: TContext, text: string, args: any[]): strin
 						.map(([key, value]) => `${key}: ${value}`)
 						.join(', ')
 				if (typeof val === 'number') return '' + val
-				return val !== undefined ? val : dft !== undefined ? dft : '' //reportError(context, 'Missing arg', { arg: i, key })
+				return val !== undefined ? val : dft !== undefined ? dft : '' //client.error(key, 'Missing arg', { arg: i, key })
 			}
 			function processPart(part: string) {
 				return objectArgument(
@@ -342,17 +343,17 @@ export function interpolate(context: TContext, text: string, args: any[]): strin
 				let processed: string | null = null
 				if (typeof proc === 'object') {
 					if (params.length !== 1 || typeof params[0] !== 'string')
-						return reportError(context, 'Case needs a string case', { params })
+						return client.error(key, 'Case needs a string case', { params })
 					if (params[0] in proc) processed = proc[params[0]]
 					else if ('default' in proc) processed = proc.default
-					else return reportError(context, 'Case not found', { case: params[0], cases: proc })
+					else return client.error(key, 'Case not found', { case: params[0], cases: proc })
 				} else if (proc.includes('.')) processed = translate({ ...context, key: proc }, params)
-				else if (!(proc in processors)) return reportError(context, 'Unknown processor', { proc })
+				else if (!(proc in processors)) return client.error(key, 'Unknown processor', { proc })
 				else
 					try {
 						processed = processors[proc].call(context, ...params)
 					} catch (error) {
-						return reportError(context, 'Error in processor', { proc, error })
+						return client.error(key, 'Error in processor', { proc, error })
 					}
 				if (processed === null) throw Error(`Unprocessed case: ${proc}`)
 				apps.push((nextArgs = [processed, ...others]))
@@ -360,7 +361,7 @@ export function interpolate(context: TContext, text: string, args: any[]): strin
 			const rv = apps[0].find((cas) => !!cas)
 			return !rv || typeof rv === 'string'
 				? unescape(rv || '')
-				: reportError(context, 'Object return value', { rv })
+				: client.error(key, 'Object return value', { rv })
 		}),
 		parts = text.split(/{.*?}/).map((part) =>
 			part

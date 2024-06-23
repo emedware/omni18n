@@ -12,14 +12,7 @@ import {
  */
 import Defer from '../tools/defer'
 import '../polyfill'
-import {
-	longKeyList,
-	mergeCondensed,
-	parseInternals,
-	recurExtend,
-	reports,
-	translator
-} from './helpers'
+import { longKeyList, mergeCondensed, parseInternals, recurExtend, translator } from './helpers'
 import { interpolate } from './interpolation'
 import {
 	ClientDictionary,
@@ -40,8 +33,6 @@ export function removeDuplicates(arr: Locale[]) {
 }
 
 export default class I18nClient implements OmnI18nClient {
-	readonly ordinalRules: Intl.PluralRules
-	readonly cardinalRules: Intl.PluralRules
 	internals: Internals = {}
 	dictionary: ClientDictionary = {}
 	protected loadedZones = new Set<Zone>()
@@ -72,8 +63,6 @@ export default class I18nClient implements OmnI18nClient {
 		public onModification?: OnModification
 	) {
 		this.locales = removeDuplicates(locales)
-		this.ordinalRules = new Intl.PluralRules(locales[0], { type: 'ordinal' })
-		this.cardinalRules = new Intl.PluralRules(locales[0], { type: 'cardinal' })
 	}
 
 	/**
@@ -173,10 +162,15 @@ export default class I18nClient implements OmnI18nClient {
 	}
 
 	missing(key: string, fallback?: Translation): string {
-		return reports.missing({ key, client: this }, fallback)
+		this.report(key, fallback !== undefined ? 'Missing translation' : 'Missing key')
+		return fallback ?? `[${key}]`
 	}
 	error(key: string, error: string, spec: object): string {
-		return reports.error({ key, client: this }, error, spec)
+		this.report(key, error, spec)
+		return `[!${error}!]`
+	}
+	report(key: string, error: string, spec?: object): void {
+		// To be overridden
 	}
 }
 

@@ -23,41 +23,7 @@ function entry(t: Translation, isFallback?: boolean): ClientDictionary {
 	return { [text]: t, ...(isFallback ? { [fallback]: true } : {}) }
 }
 
-export function reportMissing(context: TContext, fallback?: Translation) {
-	const { client, key } = context
-	return client.missing(key, fallback)
-}
-
-export function reportError(context: TContext, error: string, spec: object) {
-	const { client, key } = context
-	return client.error(key, error, spec)
-}
-
-export const reports = {
-	/**
-	 * Report a missing translation
-	 * @param key The key that is missing
-	 * @param client The client that is missing the translation. The expected locale is in `client.locales[0]`
-	 * @param fallback A fallback from another language if any
-	 * @returns The string to display instead of the expected translation
-	 */
-	missing({ key, client }: TContext, fallback?: Translation): string {
-		return fallback ?? `[${key}]`
-	},
-	/**
-	 * Report a missing translation
-	 * @param key The key that is missing
-	 * @param client The client that is missing the translation. The expected locale is in `client.locales[0]`
-	 * @param fallback A fallback from another language if any
-	 * @returns The string to display instead of the expected translation
-	 */
-	error({ key, client }: TContext, error: string, spec: object): string {
-		return `[!${error}!]`
-	}
-}
-
-export function translate(context: TContext, args: any[]): string {
-	const { client, key } = context
+export function translate({ client, key }: TContext, args: any[]): string {
 	let current = client.dictionary,
 		value: [Translation, true | undefined] | undefined
 
@@ -71,10 +37,10 @@ export function translate(context: TContext, args: any[]): string {
 	}
 
 	return value?.[1]
-		? client.interpolate(key, reportMissing(context, value[0]), ...args)
+		? client.interpolate(key, client.missing(key, value[0]), ...args)
 		: value
 			? client.interpolate(key, value[0], ...args)
-			: reportMissing(context)
+			: client.missing(key)
 }
 
 export function translator(context: TContext): Translator {
@@ -208,24 +174,18 @@ export function bulkDictionary<T extends Translatable = Translatable>(
 	t: Translator,
 	...args: any[]
 ): T | string {
-	const context = t[contextKey],
-		{ client, key } = context
+	const { client, key } = t[contextKey]
 
 	let current = client.dictionary
 	for (const k of key.split('.')) {
 		current = current[k] as ClientDictionary
 		if (!current) break
 	}
-	if (!current) return reportMissing({ ...context, key })
+	if (!current) return client.missing(key)
 	function dictionaryToTranslation(obj: ClientDictionary, key: TextKey): T | string {
 		const rv: any = {}
-		const subCtx = { ...context, key }
 		const value = () =>
-			context.client.interpolate(
-				key,
-				obj[fallback] ? reportMissing(subCtx, obj[text]) : obj[text]!,
-				...args
-			)
+			client.interpolate(key, obj[fallback] ? client.missing(key, obj[text]) : obj[text]!, ...args)
 		if (Object.keys(obj).every((k) => typeof k === 'symbol')) return value()
 		for (const [k, v] of Object.entries(obj))
 			rv[k] = dictionaryToTranslation(v, key ? `${key}.${k}` : k)

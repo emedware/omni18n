@@ -1,14 +1,5 @@
 import { split2 } from 'src/client/helpers'
-import {
-	I18nClient,
-	CondensedDictionary,
-	Locale,
-	Translator,
-	Translation,
-	localeFlagsEngine,
-	reports,
-	TContext
-} from '../client'
+import { I18nClient, CondensedDictionary, Locale, Translator, localeFlagsEngine } from '../client'
 import { parse } from '../tools/gpt-js'
 
 declare global {
@@ -16,20 +7,6 @@ declare global {
 }
 
 export const localeFlags = localeFlagsEngine()
-
-Object.assign(reports, {
-	error(context: TContext, error: string, spec: object) {
-		const { client, key } = context
-		console.log('Translation error', client.locales[0], key, error)
-		console.dir(spec)
-		return `[!${error}!]`
-	},
-	missing(context: TContext, fallback?: Translation) {
-		const { client, key } = context
-		console.log('Missing translation', client.locales[0], key)
-		return fallback ?? `[${key}]`
-	}
-})
 
 export var i18nClient: I18nClient, locale: Locale
 var usedLocales: Locale[] = []
@@ -118,6 +95,13 @@ async function loadLanguage() {
 	for (const cb of localeChangeCBs) cb(locale)
 }
 
+class LocalLogI18nClient extends I18nClient {
+	report(key: string, error: string, spec?: object | undefined): void {
+		console.error(error, key)
+		if (spec) console.dir(spec)
+	}
+}
+
 /**
  * Initializes UMD usage of the library.
  * @param acceptedLocales A list of accepted locales. The first one is used by default if no match is found
@@ -133,7 +117,7 @@ export async function init(acceptedLocales: Locale[], fileNameTemplate?: string)
 		]
 	// exported value
 	locale = locales[0]
-	i18nClient = new I18nClient(locales, async () => {
+	i18nClient = new LocalLogI18nClient(locales, async () => {
 		return (
 			preloaded[locale] ||
 			(fileNameTemplate
