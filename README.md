@@ -128,6 +128,8 @@ So, downloading `en-US` will download `''` overwritten with `en` then overwritte
 
 Common things are formats for example: `format.price: '{number::$2|style: currency, currency: $1}'` for prices allowing `T.format.price(currency, amount)`
 
+> An application can therefore only define an `en` locale and use `en-GB` and `en-US` in order to have different number/date formatting.
+
 #### Fallbacks
 
 `I18nClient` is constructed with an array of locales. These are the locales "most preferred first". One can easily use the user's settings (often the interface propose "fallbacks") and add hard-coded the language(s) used by the developers.
