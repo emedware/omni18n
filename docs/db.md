@@ -21,6 +21,8 @@ interface DB {
 
 That `list` function is a glorified `SELECT` who gives all keys given in a zone and, for them, the [_first locale from the given list_](./client.md#locales) that has a translation - and the translation of course
 
+> Note: In order not to import the whole `omni18n` library, the entry-point `omni18n/db-dev` exposes all the types and the few helpers described [below](#query-simplifications).
+
 ### Role in OmnI18n ecosystem
 
 The DB role is purely to deal with a database. The [`server`](./server.md) will often mimic functions and their signature (`modify`, `reKey`, ...) and while the `server` role is to propagate information to both the client and the DB, a DB's role is purely the one of an adapter toward a database.
@@ -116,6 +118,44 @@ The first one retrieves the list of translations for a key, the second the key's
 ### MemDB
 
 `MemDB` is an in-memory database (a pure JS object) who is build with its internal dictionary (`MemDBDictionary`)
+This is the solution to use to cache the whole translation database in memory once for all.
+
+These can be loaded either from a list of database rows or JSON files, the database can therefore be loaded with
+```ts
+const db = new MemDB(loadDBfromXXX(...))
+
+// And for reloading
+
+db.dictionary = loadDBfromXXX(...)
+```
+
+#### loadDBFromTranslations
+
+When your database is a JSON file per language, just loading them and loading into one memory dictionary.
+```ts
+/**
+ * Load an in-memory structure out of raw DB output
+ * @param translations The list of translation files (recorded per locale)
+ * @returns
+ */
+export function loadDBFromTranslations(
+	translations: Record<Locale, Record<TextKey, Translation>>
+): MemDB
+```
+
+#### loadDBFromList
+
+Cache the whole language database in a memory dictionary. This is the most straightforward way to go from a database: give it a list or database row (or join) key-locale-text, and it's done.
+```ts
+/**
+ * Load an in-memory structure out of raw DB output
+ * @param raw Raw rows from a DB
+ * @returns
+ */
+export function loadDBFromList(
+	raw: Iterable<{text: TextKey, locale: Locale, text: Translation, zone?: Zone}>
+): MemDB
+```
 
 ### FileDB
 
@@ -184,3 +224,55 @@ Will specify `locale: "Line1\nLine2"`
 ##### 3-tabs
 
 A line beginning with three tabs is the continuation of a translation containing a tab ... &c.
+
+## Query simplifications
+
+As the `list` query can really be tricky, some ways are provided so that simpler queries can be written (but will consume more API server time and transfer between API server and DB server).
+
+### SimplifiedMultiQueryDB
+
+Will implement:
+```ts
+	/**
+	 * Retrieves all the values for a certain zone and a certain locales
+	 * @param locale The locale to search for
+	 * @param zone The zone to search in
+	 * @param exclusion A list of keys to exclude
+	 * @returns A dictionary of key => text
+	 */
+	listLocale(
+		locale: Locale,
+		zone: Zone,
+		exclusion: TextKey[]
+	): Promise<[TextKey, Translation][]>
+```
+
+The function will be called for each needed locales with the list of keys *not to* retrieve
+
+### SimplifiedSingleQueryDB
+
+Will implement:
+```ts
+	/**
+	 * Retrieves all the values for a certain zone and a certain locales
+	 * @param locales A list of locales to search for
+	 * @param zone The zone to search in
+	 * @returns A dictionary of key => text
+	 */
+	exhaustiveList(locales: Locale[], zone: Zone): Promise<[Locale, TextKey, Translation][]>
+```
+
+The function will be called once and should retrieve a list of `[Locale, TextKey, Translation]` sorted by the position of the locale in the list.
+
+If ordering is still too complex to make on the DB-side, the class provides for convenience:
+```ts
+	/**
+	 * Call this function if this was not done in the query: if locales are [l1, l2, ...], make sure that all the l1 appear first, then the l2, ...
+	 * @param locales The given list of locale priority
+	 * @param exhaustive The exhaustive list of unsorted [Locale, TextKey, Translation]
+	 */
+	sortByLocales(
+		locales: Locale[],
+		exhaustive: [Locale, TextKey, Translation][]
+	): [Locale, TextKey, Translation][]
+```

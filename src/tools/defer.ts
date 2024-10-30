@@ -6,7 +6,7 @@ export default class Defer {
 	private internalCB?: () => Promise<void>
 
 	constructor(
-		private cb?: () => Promise<void>,
+		private cb?: () => Promise<void> | void,
 		public delay: number = 0
 	) {}
 

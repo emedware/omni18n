@@ -166,8 +166,8 @@ describe('fileDB', () => {
 			}
 		}
 		Object.assign(content['fld.name'], {
-			['.keyInfos']: { a: 1 },
-			['.textInfos']: { en: { a: '"\'`' }, hu: { a: 3 } }
+			'.keyInfos': { a: 1 },
+			'.textInfos': { en: { a: '"\'`' }, hu: { a: 3 } }
 		})
 		const serialized = serialization.serialize<any, any>(content)
 		expect(serialization.deserialize(serialized)).toEqual(content)

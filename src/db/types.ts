@@ -16,30 +16,6 @@ export interface DB {
 	list(locales: Locale[], zone: Zone): Promise<RawDictionary>
 }
 
-/**
- * Because a request retrieving "the first locale from a given list" might get really complex with some engines
- * So, instead of implementing `DB` directly, `SimplifiedDB` can be extended by providing a `listLocale` function
- *
- * The list function will simply retrieve all the zone/locale keys/text and sort them programmatically
- */
-export abstract class SimplifiedQueryDB implements DB {
-	/**
-	 * Retrieves all the values for a certain zone and a certain locales
-	 * @param locale The locale to search for
-	 * @param zone The zone to search in
-	 * @returns A dictionary of key => text
-	 */
-	abstract listLocale(locales: Locale, zone: Zone): Promise<[TextKey, Translation][]>
-	async list(locales: Locale[], zone: Zone) {
-		const rv: RawDictionary = {}
-		for (const locale of locales.reverse())
-			for (const [key, text] of await this.listLocale(locale, zone)) rv[key] = [locale, text]
-		return rv
-	}
-}
-
-// TODO? A caching class
-
 export interface TranslatableDB<TextInfos extends {} = {}> extends DB {
 	/**
 	 * Retrieves all the values for certain locales, in order for translators to work on it

@@ -5,13 +5,6 @@ node_modules
 /.svelte-kit
 .env.*
 !.env.example
-.vercel
-.output
-/src/svemantic
-/static/lib
-/static/modules
-/raw
 /temp
 /coverage
-.vercel
 .vscode/settings.json
