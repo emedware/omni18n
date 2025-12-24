@@ -1,5 +1,5 @@
 import { parse, stringify } from '../tools/gpt-js'
-import { Locale, TextKey, Translation, Zone } from 'src/types'
+import { Locale, TextKey, Translation, Zone } from '../types'
 import { MemDBDictionary, MemDBDictionaryEntry } from './memDb'
 
 function parseError(str: string, position: number, end: number = position + 100) {

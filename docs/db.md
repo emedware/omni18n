@@ -121,6 +121,7 @@ The first one retrieves the list of translations for a key, the second the key's
 This is the solution to use to cache the whole translation database in memory once for all.
 
 These can be loaded either from a list of database rows or JSON files, the database can therefore be loaded with
+
 ```ts
 const db = new MemDB(loadDBfromXXX(...))
 
@@ -132,6 +133,7 @@ db.dictionary = loadDBfromXXX(...)
 #### loadDBFromTranslations
 
 When your database is a JSON file per language, just loading them and loading into one memory dictionary.
+
 ```ts
 /**
  * Load an in-memory structure out of raw DB output
@@ -146,6 +148,7 @@ export function loadDBFromTranslations(
 #### loadDBFromList
 
 Cache the whole language database in a memory dictionary. This is the most straightforward way to go from a database: give it a list or database row (or join) key-locale-text, and it's done.
+
 ```ts
 /**
  * Load an in-memory structure out of raw DB output
@@ -153,7 +156,7 @@ Cache the whole language database in a memory dictionary. This is the most strai
  * @returns
  */
 export function loadDBFromList(
-	raw: Iterable<{text: TextKey, locale: Locale, text: Translation, zone?: Zone}>
+	raw: Iterable<{ text: TextKey; locale: Locale; text: Translation; zone?: Zone }>
 ): MemDB
 ```
 
@@ -232,6 +235,7 @@ As the `list` query can really be tricky, some ways are provided so that simpler
 ### SimplifiedMultiQueryDB
 
 Will implement:
+
 ```ts
 	/**
 	 * Retrieves all the values for a certain zone and a certain locales
@@ -247,11 +251,12 @@ Will implement:
 	): Promise<[TextKey, Translation][]>
 ```
 
-The function will be called for each needed locales with the list of keys *not to* retrieve
+The function will be called for each needed locales with the list of keys _not to_ retrieve
 
 ### SimplifiedSingleQueryDB
 
 Will implement:
+
 ```ts
 	/**
 	 * Retrieves all the values for a certain zone and a certain locales
@@ -265,6 +270,7 @@ Will implement:
 The function will be called once and should retrieve a list of `[Locale, TextKey, Translation]` sorted by the position of the locale in the list.
 
 If ordering is still too complex to make on the DB-side, the class provides for convenience:
+
 ```ts
 	/**
 	 * Call this function if this was not done in the query: if locales are [l1, l2, ...], make sure that all the l1 appear first, then the l2, ...

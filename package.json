@@ -38,7 +38,7 @@
 		"build": "rollup -c",
 		"build-umd": "rollup -c rollup.umd.js --watch",
 		"build-extract": "rollup -c rollup.extract.js",
-		"prepack": "npm run prettier && npm run build"
+		"prepack": "npm run prettier && npm run test && npm run build"
 	},
 	"repository": {
 		"type": "git",

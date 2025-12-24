@@ -20,7 +20,7 @@ The main documentation is in [the repository](./docs/README.md)
 
 After re-implementing again and again internationalization as I was happy with none, I built up the minimum requirements I'd ask an 18n library to do:
 
-- Synchronous translation
+- Synchronous translation. At run-time, byt synchronous.
 - Having a json-file (or alike) per language is perfect when the website/web-app is done. Nowadays, applications are _never_ done, there is always a bug to fix, an error to add, a new functionality to implement, ... Most go through a shared document with "new keys to translate" or, worst, use the english sentence as a key and, after some typos, the sentence is translated in some language only after a user has reported it. A complete i18n library ought to offer a centralized way for coders to manage keys that allow translators to know what has to be translated, what has been modified (imagine the fuss when a dev changes a bit the meaning of an entry)
 - Even if interpolation is based on a [regular language](https://en.wikipedia.org/wiki/Regular_language) and not a [context-free one](https://en.wikipedia.org/wiki/Context-free_language), it should allow wide customization, even JS(/TS) processors to be implemented by the developer. Also, some interpolation should be done once for all (like durations, ...) and use as much as possible the [native Intl](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl) capacities
 - Changing the displayed language should just retrieve the smallest needed dictionary, not the whole page, and re-translate the page dynamically - especially with modern frameworks like svelte, vue, ... (but not only)

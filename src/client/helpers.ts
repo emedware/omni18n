@@ -74,7 +74,7 @@ export function translator(context: TContext): Translator {
 				case contextKey:
 					return context
 			}
-			if (typeof key !== 'string') throw new TranslationError(`Invalid key type: ${typeof key}`)
+			if (typeof key !== 'string') return undefined
 			return translator({ ...context, key: context.key ? `${context.key}.${key}` : key })
 		}
 	})

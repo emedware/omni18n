@@ -1,4 +1,4 @@
-import { split2 } from 'src/client/helpers'
+import { split2 } from '../client/helpers'
 import { I18nClient, CondensedDictionary, Locale, Translator, localeFlagsEngine } from '../client'
 import { parse } from '../tools/gpt-js'
 
