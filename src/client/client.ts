@@ -128,7 +128,7 @@ export default class I18nClient implements OmnI18nClient {
 		if (toLoad.length) this.received(toLoad, await this.condense(this.locales, toLoad))
 	}
 
-	setLocales(locales: Locale[], partial?: PartialLoad) {
+	setLocales(locales: Locale[], _partial?: PartialLoad) {
 		locales = removeDuplicates(locales)
 		if (
 			this.locales.length === locales.length &&
@@ -180,7 +180,7 @@ export default class I18nClient implements OmnI18nClient {
 		this.report(key, error, spec)
 		return `[!${error}!]`
 	}
-	report(key: string, error: string, spec?: object): void {
+	report(_key: string, _error: string, _spec?: object): void {
 		// To be overridden
 	}
 

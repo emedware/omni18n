@@ -31,7 +31,7 @@ export default class InteractiveServer<
 
 	constructor(
 		protected db: InteractiveDB,
-		private modified = (entries: Record<TextKey, Translation | undefined>) => Promise.resolve()
+		private modified = (_entries: Record<TextKey, Translation | undefined>) => Promise.resolve()
 	) {
 		super(db)
 		subscriptions.set(this, { locale: '', zones: [] })
@@ -121,7 +121,7 @@ export default class InteractiveServer<
 		text: Translation,
 		textInfos?: Partial<TextInfos>
 	): Promise<void> {
-		const zone = await this.db.modify(key, locale, text, textInfos)
+		await this.db.modify(key, locale, text, textInfos)
 		this.modifications.push([key, locale, (await this.db.getZone(key, [locale])) as string, text])
 	}
 	/**

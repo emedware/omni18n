@@ -1,5 +1,5 @@
 import { mkdir, writeFile, watch } from 'fs/promises'
-import { dirname, join, basename } from 'path'
+import { dirname, join } from 'path'
 import commandLineArgs from 'command-line-args'
 import { FileDB, I18nServer } from '../server'
 import { stringify } from '../tools/gpt-js'
@@ -86,7 +86,7 @@ async function main() {
 	await exportLocales()
 	if (options.watch) {
 		console.log('Waiting for changes...')
-		for await (const event of watch(options.input)) {
+		for await (const _event of watch(options.input)) {
 			await fdb.reload()
 			await exportLocales()
 			console.log('Waiting for changes...')

@@ -32,6 +32,8 @@ function removeDuplicates(arr: string[]) {
  * Server class that should be instantiated once and used to interact with the database
  */
 export default class I18nServer<KeyInfos extends {} = {}, TextInfos extends {} = {}> {
+	protected declare _keyInfos?: KeyInfos
+	protected declare _textInfos?: TextInfos
 	constructor(protected db: DB) {
 		this.condense = this.condense.bind(this)
 	}

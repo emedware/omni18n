@@ -2,8 +2,7 @@ import {
 	type Locale,
 	type OnModification,
 	type TextKey,
-	type Translation,
-	type Zone
+	type Translation
 } from '../types'
 
 export interface Internals {

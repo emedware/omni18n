@@ -59,7 +59,7 @@ export function translator(context: TContext): Translator {
 				return translate({ ...context, key }, args)
 			}
 	const primitive = <Translator>new Proxy(translation, {
-		get(target, key) {
+		get(_target, key) {
 			if (key in untranslatable) return untranslatable[key as keyof typeof untranslatable]
 			switch (key) {
 				//? case 'toJSON':	// Occurs on JSON.stringify
