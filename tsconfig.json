@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"moduleResolution": "Node",
+		"moduleResolution": "bundler",
 		"target": "ESNext",
 		"module": "ESNext",
 		"outDir": "docs/lib",
@@ -9,7 +9,6 @@
 		"esModuleInterop": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
-		"baseUrl": ".",
 		"paths": {
 			"tslib": ["./node_modules/tslib/tslib.d.ts"],
 			"~/*": ["./src/*"]

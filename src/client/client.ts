@@ -15,11 +15,11 @@ import '../polyfill'
 import { longKeyList, mergeCondensed, parseInternals, recurExtend, translator } from './helpers'
 import { interpolate } from './interpolation'
 import {
-	ClientDictionary,
-	Internals,
-	OmnI18nClient,
-	TContext as RootContext,
-	Translator,
+	type ClientDictionary,
+	type Internals,
+	type OmnI18nClient,
+	type TContext as RootContext,
+	type Translator,
 	contextKey,
 	text
 } from './types'

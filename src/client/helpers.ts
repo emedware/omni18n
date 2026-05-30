@@ -1,11 +1,11 @@
 import { parse } from '../tools/gpt-js'
 import { type CondensedDictionary, type TextKey, type Translation } from '../types'
 import {
-	ClientDictionary,
-	TContext,
-	Translatable,
+	type ClientDictionary,
+	type TContext,
+	type Translatable,
 	TranslationError,
-	Translator,
+	type Translator,
 	contextKey,
 	fallback,
 	text
